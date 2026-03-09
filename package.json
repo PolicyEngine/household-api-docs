@@ -1,0 +1,22 @@
+{
+  "name": "household-api-docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@policyengine/design-system": "^0.3.0",
+    "@tabler/icons-react": "^3.34.0",
+    "next": "^15.3.0",
+    "prismjs": "^1.30.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "tailwindcss": "^4.2.1"
+  }
+}
