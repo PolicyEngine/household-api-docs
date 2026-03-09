@@ -115,58 +115,6 @@
   }
 }
 
-/* Prism.js theme overrides for dark code blocks */
-pre[class*="language-"] {
-  background: #1e293b !important;
-  color: #e2e8f0 !important;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-  color: #6a9955;
-  font-style: italic;
-}
-
-.token.keyword {
-  color: #c586c0;
-  font-weight: 600;
-}
-
-.token.string,
-.token.attr-value {
-  color: #ce9178;
-}
-
-.token.function {
-  color: #dcdcaa;
-}
-
-.token.number {
-  color: #b5cea8;
-}
-
-.token.operator {
-  color: #569cd6;
-}
-
-.token.boolean {
-  color: #569cd6;
-}
-
-.token.punctuation {
-  color: #d4d4d4;
-}
-
-.token.property {
-  color: #9cdcfe;
-}
-
-.token.builtin {
-  color: #4ec9b0;
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

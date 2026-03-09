@@ -1,24 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
 
 export default function CodeBlock({ code, language = 'python', title }) {
-  const codeRef = useRef(null);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      import('prismjs').then((Prism) => {
-        import('prismjs/components/prism-bash');
-        import('prismjs/components/prism-python');
-        import('prismjs/components/prism-json');
-        if (codeRef.current) {
-          Prism.default.highlightElement(codeRef.current);
-        }
-      });
-    }
-  }, [code, language]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
@@ -27,42 +15,33 @@ export default function CodeBlock({ code, language = 'python', title }) {
   };
 
   const langMap = {
-    bash: 'language-bash',
-    curl: 'language-bash',
-    python: 'language-python',
-    json: 'language-json',
+    curl: 'bash',
   };
 
   return (
     <div className="rounded-lg border border-border-light overflow-hidden my-4">
-      {title && (
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-border-light">
-          <span className="text-sm font-medium text-text-secondary">{title}</span>
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
-          >
-            {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-        </div>
-      )}
-      {!title && (
-        <div className="flex justify-end px-4 py-1 bg-gray-50 border-b border-border-light">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
-          >
-            {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-        </div>
-      )}
-      <pre className="p-4 overflow-x-auto bg-gray-900 text-sm leading-relaxed m-0">
-        <code ref={codeRef} className={langMap[language] || 'language-bash'}>
-          {code}
-        </code>
-      </pre>
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-border-light">
+        <span className="text-sm font-medium text-text-secondary">{title || language}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
+        >
+          {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <SyntaxHighlighter
+        language={langMap[language] || language}
+        style={oneDark}
+        customStyle={{
+          margin: 0,
+          borderRadius: 0,
+          fontSize: '14px',
+          lineHeight: '1.6',
+        }}
+      >
+        {code}
+      </SyntaxHighlighter>
     </div>
   );
 }
