@@ -19,7 +19,7 @@ export const metadata = {
       'Simulate tax and benefit policy outcomes for US households using the PolicyEngine REST API.',
   },
   icons: {
-    icon: '/us/api/assets/logos/policyengine/policyengine.png',
+    icon: '/us/api/favicon.svg',
     apple: '/us/api/assets/logos/policyengine/policyengine.png',
   },
   alternates: {
