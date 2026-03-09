@@ -117,7 +117,7 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="hidden lg:flex" style={{ display: 'flex', alignItems: 'center' }}>
+        <div className="hidden lg:flex" style={{ alignItems: 'center' }}>
           <div ref={countryRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setCountryOpen(!countryOpen)}
@@ -147,7 +147,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex lg:hidden" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="flex lg:hidden" style={{ alignItems: 'center', gap: '12px' }}>
           <button
             onClick={() => setCountryOpen(!countryOpen)}
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1 }}

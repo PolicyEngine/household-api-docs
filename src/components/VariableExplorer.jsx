@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { IconSearch, IconLoader2, IconAlertTriangle } from '@tabler/icons-react';
 
-const METADATA_URL = 'https://household.api.policyengine.org/us/metadata';
+const METADATA_URL = 'https://api.policyengine.org/us/metadata';
 const PAGE_SIZE = 20;
 
 function VariableCard({ name, variable }) {
