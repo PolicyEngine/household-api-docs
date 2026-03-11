@@ -1,3 +1,5 @@
+'use client';
+
 import { colors, typography, spacing } from '@policyengine/design-system/tokens';
 
 export default function ModelLink() {
