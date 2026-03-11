@@ -2,14 +2,6 @@
   "framework": null,
   "buildCommand": "bun run build",
   "outputDirectory": "out",
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.policyengine.org" }],
-      "destination": "https://policyengine.org/$1",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     { "source": "/us/api/_next/:path*", "destination": "/_next/:path*" },
     { "source": "/us/api/assets/:path*", "destination": "/assets/:path*" },
