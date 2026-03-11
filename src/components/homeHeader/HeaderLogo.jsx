@@ -1,9 +1,7 @@
 'use client';
 
 import { spacing } from '@policyengine/design-system/tokens';
-import { assetUrl } from '../../utils/basePath';
-
-const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
+const PolicyEngineLogo = '/us/api/assets/logos/policyengine/white.svg';
 
 const logoContainerStyles = {
   display: 'flex',
@@ -18,7 +16,7 @@ const logoImageStyles = {
 };
 
 export default function HeaderLogo() {
-  const logoImage = <img src={assetUrl(PolicyEngineLogo)} alt="PolicyEngine" style={logoImageStyles} />;
+  const logoImage = <img src={PolicyEngineLogo} alt="PolicyEngine" style={logoImageStyles} />;
 
   return (
     <a href="https://policyengine.org/us" style={{ ...logoContainerStyles, marginRight: spacing.md }}>
