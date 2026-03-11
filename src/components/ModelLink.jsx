@@ -38,7 +38,7 @@ export default function ModelLink() {
           full list in the model explorer.
         </p>
         <a
-          href="https://policyengine.org/us/model"
+          href="https://policyengine.org/us/model#/rules/parameters"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
