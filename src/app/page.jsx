@@ -2,7 +2,7 @@ import HeroSection from '@/components/HeroSection';
 import AuthSection from '@/components/AuthSection';
 import RequestSection from '@/components/RequestSection';
 import HouseholdSection from '@/components/HouseholdSection';
-import VariableExplorer from '@/components/VariableExplorer';
+import ModelLink from '@/components/ModelLink';
 
 export default function HomePage() {
   return (
@@ -11,7 +11,7 @@ export default function HomePage() {
       <AuthSection />
       <RequestSection />
       <HouseholdSection />
-      <VariableExplorer />
+      <ModelLink />
     </main>
   );
 }
