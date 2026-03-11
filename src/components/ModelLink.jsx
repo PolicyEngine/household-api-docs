@@ -40,22 +40,32 @@ export default function ModelLink() {
         <a
           href="https://policyengine.org/us/model"
           style={{
-            display: 'inline-block',
-            padding: `${spacing.md} ${spacing['3xl']}`,
-            backgroundColor: colors.primary[600],
-            color: colors.text.inverse,
-            fontSize: typography.fontSize.base,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: `${spacing.lg} ${spacing.xl}`,
+            minHeight: '48px',
+            height: 'auto',
+            backgroundColor: colors.primary[500],
+            color: colors.white,
+            border: `2px solid ${colors.primary[500]}`,
+            fontSize: typography.fontSize.lg,
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
-            borderRadius: spacing.radius.lg,
+            borderRadius: '8px',
             textDecoration: 'none',
-            transition: 'background-color 0.15s ease',
+            textAlign: 'center',
+            transition: 'all 200ms',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colors.primary[700];
+            e.currentTarget.style.backgroundColor = colors.primary[600];
+            e.currentTarget.style.borderColor = colors.primary[600];
+            e.currentTarget.style.transform = 'translateY(-2px)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = colors.primary[600];
+            e.currentTarget.style.backgroundColor = colors.primary[500];
+            e.currentTarget.style.borderColor = colors.primary[500];
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
           Explore variables and parameters →
