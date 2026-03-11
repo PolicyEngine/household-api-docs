@@ -52,7 +52,7 @@ export default function ModelLink() {
             fontSize: typography.fontSize.lg,
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
-            borderRadius: '8px',
+            borderRadius: spacing.radius.container,
             textDecoration: 'none',
             textAlign: 'center',
             transition: 'all 200ms',
