@@ -72,6 +72,12 @@ export default function RequestSection() {
         </div>
 
         <p className="text-text-secondary mb-4">
+          If you are running the public Docker image locally, use{' '}
+          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">http://localhost:8080/us/calculate</code>{' '}
+          instead.
+        </p>
+
+        <p className="text-text-secondary mb-4">
           The request body must contain a <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">household</code> key
           with your household object. The response returns the same structure with all computable variables filled in.
         </p>
