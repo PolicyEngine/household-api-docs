@@ -6,6 +6,29 @@ import { IconLock, IconKey, IconShield } from '@tabler/icons-react';
 const dockerExample = `docker pull ghcr.io/policyengine/policyengine-household-api:latest
 docker run --rm -p 8080:8080 ghcr.io/policyengine/policyengine-household-api:latest`;
 
+const dockerSmokeTestExample = `curl --request POST \\
+  --url http://localhost:8080/us/calculate \\
+  --header 'Content-Type: application/json' \\
+  --data '{
+    "household": {
+      "people": {
+        "you": {
+          "employment_income": { "2025": 50000 }
+        }
+      },
+      "households": {
+        "your household": {
+          "members": ["you"],
+          "state_name": { "2025": "CA" }
+        }
+      },
+      "families": { "your family": { "members": ["you"] } },
+      "tax_units": { "your tax unit": { "members": ["you"] } },
+      "marital_units": { "your marital unit": { "members": ["you"] } },
+      "spm_units": { "your spm unit": { "members": ["you"] } }
+    }
+  }'`;
+
 const pythonModelExample = `pip install policyengine-us`;
 
 const pythonToolkitExample = `pip install "policyengine[us]"`;
@@ -80,6 +103,39 @@ export default function AuthSection() {
           </div>
         </div>
 
+        <div className="overflow-x-auto mb-12">
+          <table className="w-full text-sm border border-border-light rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-3 text-left font-semibold">Option</th>
+                <th className="px-4 py-3 text-left font-semibold">Best for</th>
+                <th className="px-4 py-3 text-left font-semibold">Authentication</th>
+                <th className="px-4 py-3 text-left font-semibold">Wait time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-border-light">
+                <td className="px-4 py-3 font-medium">Hosted API</td>
+                <td className="px-4 py-3 text-text-secondary">Managed infrastructure and remote HTTP access</td>
+                <td className="px-4 py-3 text-text-secondary">OAuth client credentials</td>
+                <td className="px-4 py-3 text-text-secondary">Requires requesting access</td>
+              </tr>
+              <tr className="border-t border-border-light bg-gray-50">
+                <td className="px-4 py-3 font-medium">Docker image</td>
+                <td className="px-4 py-3 text-text-secondary">Self-hosting the HTTP API on your own machine or infra</td>
+                <td className="px-4 py-3 text-text-secondary">None by default</td>
+                <td className="px-4 py-3 text-text-secondary">Immediate</td>
+              </tr>
+              <tr className="border-t border-border-light">
+                <td className="px-4 py-3 font-medium">Python packages</td>
+                <td className="px-4 py-3 text-text-secondary">Direct model access inside Python workflows</td>
+                <td className="px-4 py-3 text-text-secondary">None</td>
+                <td className="px-4 py-3 text-text-secondary">Immediate</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <h3 className="text-2xl font-semibold text-text-primary mb-4">Self-serve without waiting</h3>
         <p className="text-text-secondary mb-6">
           These public options do not require an API key request.
@@ -136,6 +192,7 @@ export default function AuthSection() {
         </div>
 
         <CodeBlock code={dockerExample} language="bash" title="Docker (same HTTP API, self-hosted)" />
+        <CodeBlock code={dockerSmokeTestExample} language="curl" title="Quick Docker smoke test (no auth required)" />
 
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           <CodeBlock code={pythonModelExample} language="bash" title="Direct US model (Python 3.11+)" />

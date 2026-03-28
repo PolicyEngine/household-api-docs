@@ -2,7 +2,7 @@
 
 import CodeBlock from './CodeBlock';
 
-const curlRequest = `curl --request POST \\
+const hostedCurlRequest = `curl --request POST \\
   --url https://household.api.policyengine.org/us/calculate \\
   --header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
   --header 'Content-Type: application/json' \\
@@ -56,6 +56,29 @@ response = requests.post(
 
 result = response.json()`;
 
+const dockerCurlRequest = `curl --request POST \\
+  --url http://localhost:8080/us/calculate \\
+  --header 'Content-Type: application/json' \\
+  --data '{
+    "household": {
+      "people": {
+        "you": {
+          "employment_income": { "2025": 50000 }
+        }
+      },
+      "households": {
+        "your household": {
+          "members": ["you"],
+          "state_name": { "2025": "CA" }
+        }
+      },
+      "families": { "your family": { "members": ["you"] } },
+      "tax_units": { "your tax unit": { "members": ["you"] } },
+      "marital_units": { "your marital unit": { "members": ["you"] } },
+      "spm_units": { "your spm unit": { "members": ["you"] } }
+    }
+  }'`;
+
 export default function RequestSection() {
   return (
     <section id="making-requests" className="py-16 border-b border-border-light">
@@ -82,7 +105,10 @@ export default function RequestSection() {
           with your household object. The response returns the same structure with all computable variables filled in.
         </p>
 
-        <CodeBlock code={curlRequest} language="curl" title="curl" />
+        <div className="grid md:grid-cols-2 gap-6">
+          <CodeBlock code={hostedCurlRequest} language="curl" title="Hosted API (Bearer token required)" />
+          <CodeBlock code={dockerCurlRequest} language="curl" title="Self-hosted Docker (no auth by default)" />
+        </div>
         <CodeBlock code={pythonRequest} language="python" title="Python" />
       </div>
     </section>
