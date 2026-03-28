@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import CodeBlock from './CodeBlock';
 import { IconLock, IconKey, IconShield } from '@tabler/icons-react';
+import { ACCESS_MODE_OPTIONS } from './accessModes';
 
 const dockerExample = `docker pull ghcr.io/policyengine/policyengine-household-api:latest
 docker run --rm -p 8080:8080 ghcr.io/policyengine/policyengine-household-api:latest`;
@@ -44,7 +44,7 @@ household = {
     "households": {
         "your household": {
             "members": ["you"],
-            "state_code": {"2025": "CA"},
+            "state_name": {"2025": "CA"},
         },
     },
     "families": {"your family": {"members": ["you"]}},
@@ -90,8 +90,9 @@ const responseExample = `{
   "token_type": "Bearer"
 }`;
 
-export default function AuthSection() {
-  const [accessTab, setAccessTab] = useState('rest');
+export default function AuthSection({ accessMode }) {
+  const selectedMode =
+    ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
 
   return (
     <section id="getting-started" className="py-16 border-b border-border-light">
@@ -167,61 +168,13 @@ export default function AuthSection() {
           </table>
         </div>
 
-        <h3 className="text-2xl font-semibold text-text-primary mb-4">Choose an access path</h3>
+        <h3 className="text-2xl font-semibold text-text-primary mb-4">Selected access path</h3>
         <p className="text-text-secondary mb-6">
-          Pick the path that matches how you want to use PolicyEngine: hosted REST API, self-hosted Docker,
-          or direct Python access.
+          The page is currently showing <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">{selectedMode.label}</code>{' '}
+          examples. Use the sticky selector above to switch the whole page into a different integration path.
         </p>
 
-        <div className="mb-6">
-          <div
-            className="inline-flex rounded-lg border border-border-light bg-gray-50 p-1"
-            role="tablist"
-            aria-label="Access options"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={accessTab === 'rest'}
-              onClick={() => setAccessTab('rest')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                accessTab === 'rest'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-text-secondary hover:bg-gray-100'
-              }`}
-            >
-              REST API
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={accessTab === 'docker'}
-              onClick={() => setAccessTab('docker')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                accessTab === 'docker'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-text-secondary hover:bg-gray-100'
-              }`}
-            >
-              Docker
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={accessTab === 'python'}
-              onClick={() => setAccessTab('python')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                accessTab === 'python'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-text-secondary hover:bg-gray-100'
-              }`}
-            >
-              Python
-            </button>
-          </div>
-        </div>
-
-        {accessTab === 'rest' ? (
+        {accessMode === 'rest' ? (
           <div className="mb-12">
             <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
               <h4 className="text-lg font-semibold text-text-primary mb-3">Hosted REST API</h4>
@@ -245,7 +198,7 @@ export default function AuthSection() {
             <CodeBlock code={pythonExample} language="python" title="Fetch an access token in Python" />
             <CodeBlock code={responseExample} language="json" title="Token response" />
           </div>
-        ) : accessTab === 'docker' ? (
+        ) : accessMode === 'docker' ? (
           <div className="mb-12">
             <div className="p-5 rounded-lg border border-border-light bg-primary-50 mb-4">
               <h4 className="text-lg font-semibold text-text-primary mb-3">Public Docker image</h4>

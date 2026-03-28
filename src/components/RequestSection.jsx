@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import CodeBlock from './CodeBlock';
+import { ACCESS_MODE_OPTIONS } from './accessModes';
 
 const hostedCurlRequest = `curl --request POST \\
   --url https://household.api.policyengine.org/us/calculate \\
@@ -39,7 +39,7 @@ household = {
     "households": {
         "your household": {
             "members": ["you"],
-            "state_code": {"2025": "CA"},
+            "state_name": {"2025": "CA"},
         },
     },
     "families": {"your family": {"members": ["you"]}},
@@ -80,49 +80,26 @@ const dockerCurlRequest = `curl --request POST \\
     }
   }'`;
 
-export default function RequestSection() {
-  const [requestTab, setRequestTab] = useState('rest');
-  const tabOptions = [
-    { id: 'rest', label: 'REST API' },
-    { id: 'docker', label: 'Docker' },
-    { id: 'python', label: 'Python' },
-  ];
+export default function RequestSection({ accessMode }) {
+  const selectedMode =
+    ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
 
   return (
     <section id="making-requests" className="py-16 border-b border-border-light">
       <div className="max-w-4xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-text-primary mb-6">Running a calculation</h2>
         <p className="text-text-secondary mb-4 text-lg">
-          Choose the interface you are using and start from the matching example. Hosted REST, self-hosted
-          Docker, and direct Python access all let you evaluate the same US household policies.
+          The request examples below follow your selected access path. Hosted REST, self-hosted Docker,
+          and direct Python access all evaluate the same US household policies.
+        </p>
+        <p className="text-sm text-text-tertiary mb-6">
+          Current access path:{' '}
+          <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 font-medium text-primary-700">
+            {selectedMode.label}
+          </span>
         </p>
 
-        <div className="mb-6">
-          <div
-            className="inline-flex rounded-lg border border-border-light bg-gray-50 p-1"
-            role="tablist"
-            aria-label="Request examples"
-          >
-            {tabOptions.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={requestTab === tab.id}
-                onClick={() => setRequestTab(tab.id)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  requestTab === tab.id
-                    ? 'bg-primary-600 text-white'
-                    : 'text-text-secondary hover:bg-gray-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {requestTab === 'rest' ? (
+        {accessMode === 'rest' ? (
           <>
             <p className="text-text-secondary mb-4">
               Send a POST request to the hosted calculate endpoint with your household object and a bearer token.
@@ -139,7 +116,7 @@ export default function RequestSection() {
             </p>
             <CodeBlock code={hostedCurlRequest} language="curl" title="Hosted API request" />
           </>
-        ) : requestTab === 'docker' ? (
+        ) : accessMode === 'docker' ? (
           <>
             <p className="text-text-secondary mb-4">
               Send the same POST request to your local or self-hosted container. The public Docker image does not

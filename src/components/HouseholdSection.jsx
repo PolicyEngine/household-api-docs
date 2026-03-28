@@ -1,6 +1,7 @@
 'use client';
 
 import CodeBlock from './CodeBlock';
+import { ACCESS_MODE_OPTIONS } from './accessModes';
 
 const step1 = `{
   "people": {},
@@ -90,7 +91,7 @@ const step3 = `{
   }
 }`;
 
-const fullExample = `import requests
+const hostedFullExample = `import requests
 
 token = "YOUR_ACCESS_TOKEN"
 
@@ -147,7 +148,123 @@ result = response.json()
 eitc = result["tax_units"]["my tax unit"]["eitc"]["2025"]
 print(f"EITC: \${eitc:,.2f}")`;
 
-export default function HouseholdSection() {
+const dockerFullExample = `import requests
+
+household = {
+    "people": {
+        "adult1": {
+            "age": {"2025": 40},
+            "employment_income": {"2025": 30000},
+        },
+        "adult2": {
+            "age": {"2025": 38},
+            "employment_income": {"2025": 20000},
+        },
+        "child1": {"age": {"2025": 10}},
+        "child2": {"age": {"2025": 7}},
+    },
+    "households": {
+        "my household": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+            "state_name": {"2025": "AZ"},
+        },
+    },
+    "families": {
+        "my family": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+        },
+    },
+    "tax_units": {
+        "my tax unit": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+        },
+    },
+    "marital_units": {
+        "my marital unit": {
+            "members": ["adult1", "adult2"],
+        },
+    },
+    "spm_units": {
+        "my spm unit": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+        },
+    },
+}
+
+response = requests.post(
+    "http://localhost:8080/us/calculate",
+    json={"household": household},
+)
+
+result = response.json()
+
+eitc = result["tax_units"]["my tax unit"]["eitc"]["2025"]
+print(f"EITC: \${eitc:,.2f}")`;
+
+const pythonFullExample = `from policyengine_us import Simulation
+
+household = {
+    "people": {
+        "adult1": {
+            "age": {"2025": 40},
+            "employment_income": {"2025": 30000},
+        },
+        "adult2": {
+            "age": {"2025": 38},
+            "employment_income": {"2025": 20000},
+        },
+        "child1": {"age": {"2025": 10}},
+        "child2": {"age": {"2025": 7}},
+    },
+    "households": {
+        "my household": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+            "state_name": {"2025": "AZ"},
+        },
+    },
+    "families": {
+        "my family": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+        },
+    },
+    "tax_units": {
+        "my tax unit": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+        },
+    },
+    "marital_units": {
+        "my marital unit": {
+            "members": ["adult1", "adult2"],
+        },
+    },
+    "spm_units": {
+        "my spm unit": {
+            "members": ["adult1", "adult2", "child1", "child2"],
+        },
+    },
+}
+
+sim = Simulation(situation=household)
+
+eitc = sim.calculate("eitc", "2025")[0]
+print(f"EITC: \${eitc:,.2f}")`;
+
+export default function HouseholdSection({ accessMode }) {
+  const selectedMode =
+    ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
+  const fullExample =
+    accessMode === 'rest'
+      ? hostedFullExample
+      : accessMode === 'docker'
+        ? dockerFullExample
+        : pythonFullExample;
+  const exampleTitle =
+    accessMode === 'rest'
+      ? 'Complete EITC example via hosted REST API'
+      : accessMode === 'docker'
+        ? 'Complete EITC example via self-hosted Docker'
+        : 'Complete EITC example via policyengine-us';
+
   return (
     <section id="household-objects" className="py-16 border-b border-border-light bg-bg-secondary">
       <div className="max-w-4xl mx-auto px-6">
@@ -260,7 +377,13 @@ export default function HouseholdSection() {
           Putting it all together &mdash; a married couple in Arizona with two children and $50,000 combined income,
           calculating their Earned Income Tax Credit:
         </p>
-        <CodeBlock code={fullExample} language="python" title="Complete EITC example" />
+        <p className="text-sm text-text-tertiary mb-4">
+          Current access path:{' '}
+          <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 font-medium text-primary-700">
+            {selectedMode.label}
+          </span>
+        </p>
+        <CodeBlock code={fullExample} language="python" title={exampleTitle} />
       </div>
     </section>
   );
