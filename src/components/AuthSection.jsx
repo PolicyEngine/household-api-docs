@@ -91,7 +91,7 @@ const responseExample = `{
 }`;
 
 export default function AuthSection() {
-  const [selfServeTab, setSelfServeTab] = useState('docker');
+  const [accessTab, setAccessTab] = useState('rest');
 
   return (
     <section id="getting-started" className="py-16 border-b border-border-light">
@@ -167,24 +167,38 @@ export default function AuthSection() {
           </table>
         </div>
 
-        <h3 className="text-2xl font-semibold text-text-primary mb-4">Self-serve without waiting</h3>
+        <h3 className="text-2xl font-semibold text-text-primary mb-4">Choose an access path</h3>
         <p className="text-text-secondary mb-6">
-          These public options do not require an API key request.
+          Pick the path that matches how you want to use PolicyEngine: hosted REST API, self-hosted Docker,
+          or direct Python access.
         </p>
 
         <div className="mb-6">
           <div
             className="inline-flex rounded-lg border border-border-light bg-gray-50 p-1"
             role="tablist"
-            aria-label="Self-serve options"
+            aria-label="Access options"
           >
             <button
               type="button"
               role="tab"
-              aria-selected={selfServeTab === 'docker'}
-              onClick={() => setSelfServeTab('docker')}
+              aria-selected={accessTab === 'rest'}
+              onClick={() => setAccessTab('rest')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selfServeTab === 'docker'
+                accessTab === 'rest'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-text-secondary hover:bg-gray-100'
+              }`}
+            >
+              REST API
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={accessTab === 'docker'}
+              onClick={() => setAccessTab('docker')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                accessTab === 'docker'
                   ? 'bg-primary-600 text-white'
                   : 'text-text-secondary hover:bg-gray-100'
               }`}
@@ -194,10 +208,10 @@ export default function AuthSection() {
             <button
               type="button"
               role="tab"
-              aria-selected={selfServeTab === 'python'}
-              onClick={() => setSelfServeTab('python')}
+              aria-selected={accessTab === 'python'}
+              onClick={() => setAccessTab('python')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selfServeTab === 'python'
+                accessTab === 'python'
                   ? 'bg-primary-600 text-white'
                   : 'text-text-secondary hover:bg-gray-100'
               }`}
@@ -207,7 +221,31 @@ export default function AuthSection() {
           </div>
         </div>
 
-        {selfServeTab === 'docker' ? (
+        {accessTab === 'rest' ? (
+          <div className="mb-12">
+            <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
+              <h4 className="text-lg font-semibold text-text-primary mb-3">Hosted REST API</h4>
+              <p className="text-text-secondary mb-3">
+                Use PolicyEngine&apos;s managed HTTP endpoint if you want a hosted integration rather than
+                running the API yourself. This path requires OAuth client credentials issued by PolicyEngine.
+              </p>
+              <p className="text-sm text-text-secondary">
+                Contact{' '}
+                <a
+                  href="mailto:hello@policyengine.org"
+                  className="text-primary-600 hover:text-primary-700 underline"
+                >
+                  hello@policyengine.org
+                </a>{' '}
+                to request API credentials.
+              </p>
+            </div>
+
+            <CodeBlock code={curlExample} language="curl" title="Fetch an access token" />
+            <CodeBlock code={pythonExample} language="python" title="Fetch an access token in Python" />
+            <CodeBlock code={responseExample} language="json" title="Token response" />
+          </div>
+        ) : accessTab === 'docker' ? (
           <div className="mb-12">
             <div className="p-5 rounded-lg border border-border-light bg-primary-50 mb-4">
               <h4 className="text-lg font-semibold text-text-primary mb-3">Public Docker image</h4>
@@ -259,22 +297,6 @@ export default function AuthSection() {
             <CodeBlock code={pythonDirectExample} language="python" title="Direct Python household calculation" />
           </div>
         )}
-
-        <h3 className="text-2xl font-semibold text-text-primary mb-4" id="authentication">Hosted API authentication</h3>
-        <p className="text-text-secondary mb-4">
-          If you want PolicyEngine to host the API for you, the managed endpoint uses OAuth 2.0
-          client credentials. Contact{' '}
-          <a href="mailto:hello@policyengine.org" className="text-primary-600 hover:text-primary-700 underline">
-            hello@policyengine.org
-          </a>{' '}
-          to request API credentials, then POST those credentials to the Auth0 token endpoint to receive a JWT access token:
-        </p>
-
-        <CodeBlock code={curlExample} language="curl" title="curl" />
-        <CodeBlock code={pythonExample} language="python" title="Python" />
-
-        <h4 className="text-lg font-semibold text-text-primary mt-8 mb-3">Response</h4>
-        <CodeBlock code={responseExample} language="json" title="JSON response" />
       </div>
     </section>
   );
