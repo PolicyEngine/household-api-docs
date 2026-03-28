@@ -14,7 +14,7 @@ export default function HeroSection() {
         </h1>
         <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto">
           Simulate tax and benefit policy outcomes for any US household with our hosted REST API,
-          public Docker image, or Python packages.
+          public Docker image, or the `policyengine-us` Python package.
         </p>
       </div>
     </section>

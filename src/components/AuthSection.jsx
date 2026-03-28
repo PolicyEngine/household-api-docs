@@ -29,9 +29,36 @@ const dockerSmokeTestExample = `curl --request POST \\
     }
   }'`;
 
-const pythonModelExample = `pip install policyengine-us`;
+const pythonInstallExample = `pip install policyengine-us`;
 
-const pythonToolkitExample = `pip install "policyengine[us]"`;
+const pythonDirectExample = `from policyengine_us import Simulation
+
+household = {
+    "people": {
+        "you": {
+            "age": {"2025": 30},
+            "employment_income": {"2025": 50000},
+        },
+    },
+    "households": {
+        "your household": {
+            "members": ["you"],
+            "state_code": {"2025": "CA"},
+        },
+    },
+    "families": {"your family": {"members": ["you"]}},
+    "tax_units": {"your tax unit": {"members": ["you"]}},
+    "marital_units": {"your marital unit": {"members": ["you"]}},
+    "spm_units": {"your spm unit": {"members": ["you"]}},
+}
+
+sim = Simulation(situation=household)
+
+eitc = sim.calculate("eitc", "2025")[0]
+household_net_income = sim.calculate("household_net_income", "2025")[0]
+
+print(f"EITC: \${eitc:,.2f}")
+print(f"Household net income: \${household_net_income:,.2f}")`;
 
 const curlExample = `curl --request POST \\
   --url https://policyengine.uk.auth0.com/oauth/token \\
@@ -69,7 +96,8 @@ export default function AuthSection() {
         <h2 className="text-3xl font-bold text-text-primary mb-6">Getting started</h2>
         <p className="text-text-secondary mb-8 text-lg">
           You can use PolicyEngine three ways: our hosted API, the public household API Docker image,
-          or our Python packages. If you want to start immediately, use Docker or Python. If you want
+          or the <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> Python package.
+          If you want to start immediately, use Docker or Python. If you want
           a managed hosted endpoint, request API credentials.
         </p>
 
@@ -95,7 +123,7 @@ export default function AuthSection() {
           <div className="p-4 rounded-lg border border-border-light bg-white">
             <div className="flex items-center gap-3 mb-2">
               <IconShield size={20} className="text-primary-600" />
-              <span className="font-semibold text-sm">Python packages</span>
+              <span className="font-semibold text-sm">Python package</span>
             </div>
             <p className="text-sm text-text-secondary">
               Call the US model directly from Python if you do not need an HTTP layer.
@@ -127,7 +155,7 @@ export default function AuthSection() {
                 <td className="px-4 py-3 text-text-secondary">Immediate</td>
               </tr>
               <tr className="border-t border-border-light">
-                <td className="px-4 py-3 font-medium">Python packages</td>
+                <td className="px-4 py-3 font-medium">Python package</td>
                 <td className="px-4 py-3 text-text-secondary">Direct model access inside Python workflows</td>
                 <td className="px-4 py-3 text-text-secondary">None</td>
                 <td className="px-4 py-3 text-text-secondary">Immediate</td>
@@ -167,11 +195,11 @@ export default function AuthSection() {
           </div>
 
           <div className="p-5 rounded-lg border border-border-light bg-white">
-            <h4 className="text-lg font-semibold text-text-primary mb-3">Python packages</h4>
+            <h4 className="text-lg font-semibold text-text-primary mb-3">Python package</h4>
             <p className="text-text-secondary mb-3">
               Use <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> for
-              direct access to the US model in Python 3.11+, or <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine[us]</code>{' '}
-              for the higher-level analysis toolkit in Python 3.13+.
+              direct access to the US model in Python 3.11+. This is the closest Python alternative
+              to the household API for custom household calculations.
             </p>
             <p className="text-sm text-text-secondary">
               <a
@@ -179,13 +207,6 @@ export default function AuthSection() {
                 className="text-primary-600 hover:text-primary-700 underline"
               >
                 policyengine-us
-              </a>{' '}
-              {' '}·{' '}
-              <a
-                href="https://github.com/PolicyEngine/policyengine.py"
-                className="text-primary-600 hover:text-primary-700 underline"
-              >
-                policyengine.py
               </a>
             </p>
           </div>
@@ -194,10 +215,8 @@ export default function AuthSection() {
         <CodeBlock code={dockerExample} language="bash" title="Docker (same HTTP API, self-hosted)" />
         <CodeBlock code={dockerSmokeTestExample} language="curl" title="Quick Docker smoke test (no auth required)" />
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <CodeBlock code={pythonModelExample} language="bash" title="Direct US model (Python 3.11+)" />
-          <CodeBlock code={pythonToolkitExample} language="bash" title="Higher-level toolkit (Python 3.13+)" />
-        </div>
+        <CodeBlock code={pythonInstallExample} language="bash" title="Install policyengine-us" />
+        <CodeBlock code={pythonDirectExample} language="python" title="Direct Python household calculation" />
 
         <h3 className="text-2xl font-semibold text-text-primary mb-4" id="authentication">Hosted API authentication</h3>
         <p className="text-text-secondary mb-4">
