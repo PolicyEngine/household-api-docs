@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import CodeBlock from './CodeBlock';
 
 const hostedCurlRequest = `curl --request POST \\
@@ -26,20 +27,19 @@ const hostedCurlRequest = `curl --request POST \\
     }
   }'`;
 
-const pythonRequest = `import requests
-
-token = "YOUR_ACCESS_TOKEN"
+const pythonRequest = `from policyengine_us import Simulation
 
 household = {
     "people": {
         "you": {
+            "age": {"2025": 30},
             "employment_income": {"2025": 50000},
         },
     },
     "households": {
         "your household": {
             "members": ["you"],
-            "state_name": {"2025": "CA"},
+            "state_code": {"2025": "CA"},
         },
     },
     "families": {"your family": {"members": ["you"]}},
@@ -48,13 +48,14 @@ household = {
     "spm_units": {"your spm unit": {"members": ["you"]}},
 }
 
-response = requests.post(
-    "https://household.api.policyengine.org/us/calculate",
-    json={"household": household},
-    headers={"Authorization": f"Bearer {token}"},
-)
+sim = Simulation(situation=household)
 
-result = response.json()`;
+results = {
+    "eitc": sim.calculate("eitc", "2025")[0],
+    "household_net_income": sim.calculate("household_net_income", "2025")[0],
+}
+
+print(results)`;
 
 const dockerCurlRequest = `curl --request POST \\
   --url http://localhost:8080/us/calculate \\
@@ -80,36 +81,99 @@ const dockerCurlRequest = `curl --request POST \\
   }'`;
 
 export default function RequestSection() {
+  const [requestTab, setRequestTab] = useState('rest');
+  const tabOptions = [
+    { id: 'rest', label: 'REST API' },
+    { id: 'docker', label: 'Docker' },
+    { id: 'python', label: 'Python' },
+  ];
+
   return (
     <section id="making-requests" className="py-16 border-b border-border-light">
       <div className="max-w-4xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-text-primary mb-6">Making requests</h2>
+        <h2 className="text-3xl font-bold text-text-primary mb-6">Running a calculation</h2>
         <p className="text-text-secondary mb-4 text-lg">
-          Send a POST request to the calculate endpoint with your household object:
+          Choose the interface you are using and start from the matching example. Hosted REST, self-hosted
+          Docker, and direct Python access all let you evaluate the same US household policies.
         </p>
 
-        <div className="p-4 rounded-lg bg-primary-50 border border-primary-200 mb-6">
-          <code className="text-sm font-mono font-semibold text-primary-800">
-            POST https://household.api.policyengine.org/us/calculate
-          </code>
+        <div className="mb-6">
+          <div
+            className="inline-flex rounded-lg border border-border-light bg-gray-50 p-1"
+            role="tablist"
+            aria-label="Request examples"
+          >
+            {tabOptions.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={requestTab === tab.id}
+                onClick={() => setRequestTab(tab.id)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  requestTab === tab.id
+                    ? 'bg-primary-600 text-white'
+                    : 'text-text-secondary hover:bg-gray-100'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <p className="text-text-secondary mb-4">
-          If you are running the public Docker image locally, use{' '}
-          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">http://localhost:8080/us/calculate</code>{' '}
-          instead.
-        </p>
-
-        <p className="text-text-secondary mb-4">
-          The request body must contain a <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">household</code> key
-          with your household object. The response returns the same structure with all computable variables filled in.
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <CodeBlock code={hostedCurlRequest} language="curl" title="Hosted API (Bearer token required)" />
-          <CodeBlock code={dockerCurlRequest} language="curl" title="Self-hosted Docker (no auth by default)" />
-        </div>
-        <CodeBlock code={pythonRequest} language="python" title="Python" />
+        {requestTab === 'rest' ? (
+          <>
+            <p className="text-text-secondary mb-4">
+              Send a POST request to the hosted calculate endpoint with your household object and a bearer token.
+            </p>
+            <div className="p-4 rounded-lg bg-primary-50 border border-primary-200 mb-6">
+              <code className="text-sm font-mono font-semibold text-primary-800">
+                POST https://household.api.policyengine.org/us/calculate
+              </code>
+            </div>
+            <p className="text-text-secondary mb-4">
+              The request body must contain a <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">household</code>{' '}
+              key with your household object. The response returns the same structure with all computable variables
+              filled in.
+            </p>
+            <CodeBlock code={hostedCurlRequest} language="curl" title="Hosted API request" />
+          </>
+        ) : requestTab === 'docker' ? (
+          <>
+            <p className="text-text-secondary mb-4">
+              Send the same POST request to your local or self-hosted container. The public Docker image does not
+              require authentication by default.
+            </p>
+            <div className="p-4 rounded-lg bg-primary-50 border border-primary-200 mb-6">
+              <code className="text-sm font-mono font-semibold text-primary-800">
+                POST http://localhost:8080/us/calculate
+              </code>
+            </div>
+            <p className="text-text-secondary mb-4">
+              The request body must contain a <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">household</code>{' '}
+              key with your household object. The response returns the same structure with all computable variables
+              filled in.
+            </p>
+            <CodeBlock code={dockerCurlRequest} language="curl" title="Docker request" />
+          </>
+        ) : (
+          <>
+            <p className="text-text-secondary mb-4">
+              Use <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> when you want
+              to call the US model directly from Python instead of going through HTTP.
+            </p>
+            <div className="p-4 rounded-lg bg-primary-50 border border-primary-200 mb-6">
+              <code className="text-sm font-mono font-semibold text-primary-800">pip install policyengine-us</code>
+            </div>
+            <p className="text-text-secondary mb-4">
+              Build a household object in Python, pass it to{' '}
+              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">Simulation(situation=...)</code>, and
+              calculate the variables you need directly in process.
+            </p>
+            <CodeBlock code={pythonRequest} language="python" title="Python package example" />
+          </>
+        )}
       </div>
     </section>
   );
