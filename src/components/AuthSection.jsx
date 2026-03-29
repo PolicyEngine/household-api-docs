@@ -2,6 +2,43 @@
 
 import CodeBlock from './CodeBlock';
 import { IconLock, IconKey, IconShield } from '@tabler/icons-react';
+import { getAccessModeOption } from './accessModes';
+
+const dockerExample = `docker pull ghcr.io/policyengine/policyengine-household-api:latest
+docker run --rm -p 8080:8080 ghcr.io/policyengine/policyengine-household-api:latest`;
+
+const dockerSmokeTestExample = `curl http://localhost:8080/`;
+
+const pythonInstallExample = `pip install policyengine-us`;
+
+const pythonDirectExample = `from policyengine_us import Simulation
+
+household = {
+    "people": {
+        "you": {
+            "age": {"2025": 30},
+            "employment_income": {"2025": 50000},
+        },
+    },
+    "households": {
+        "your household": {
+            "members": ["you"],
+            "state_name": {"2025": "CA"},
+        },
+    },
+    "families": {"your family": {"members": ["you"]}},
+    "tax_units": {"your tax unit": {"members": ["you"]}},
+    "marital_units": {"your marital unit": {"members": ["you"]}},
+    "spm_units": {"your spm unit": {"members": ["you"]}},
+}
+
+sim = Simulation(situation=household)
+
+eitc = sim.calculate("eitc", "2025")[0]
+household_net_income = sim.calculate("household_net_income", "2025")[0]
+
+print(f"EITC: \${eitc:,.2f}")
+print(f"Household net income: \${household_net_income:,.2f}")`;
 
 const curlExample = `curl --request POST \\
   --url https://policyengine.uk.auth0.com/oauth/token \\
@@ -32,60 +69,164 @@ const responseExample = `{
   "token_type": "Bearer"
 }`;
 
-export default function AuthSection() {
+export default function AuthSection({ accessMode }) {
+  const selectedMode = getAccessModeOption(accessMode);
+
   return (
     <section id="getting-started" className="py-16 border-b border-border-light">
       <div className="max-w-4xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-text-primary mb-6">Getting started</h2>
         <p className="text-text-secondary mb-8 text-lg">
-          The PolicyEngine household API uses OAuth 2.0 client credentials for authentication.
-          Access is not public &mdash; contact{' '}
-          <a href="mailto:hello@policyengine.org" className="text-primary-600 hover:text-primary-700 underline">
-            hello@policyengine.org
-          </a>{' '}
-          to request API credentials.
+          You can use PolicyEngine three ways: our hosted API, the public household API Docker image,
+          or the <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> Python package.
+          If you want to start immediately, use Docker or Python. If you want
+          a managed hosted endpoint, request API credentials.
         </p>
 
         <div className="grid md:grid-cols-3 gap-4 mb-12">
           <div className="p-4 rounded-lg border border-border-light bg-white">
             <div className="flex items-center gap-3 mb-2">
               <IconKey size={20} className="text-primary-600" />
-              <span className="font-semibold text-sm">1. Get credentials</span>
+              <span className="font-semibold text-sm">Hosted API</span>
             </div>
             <p className="text-sm text-text-secondary">
-              PolicyEngine provides a Client ID and Client Secret. These don&apos;t expire. Keep them private.
+              Use our managed endpoint with OAuth credentials issued by PolicyEngine.
             </p>
           </div>
           <div className="p-4 rounded-lg border border-border-light bg-white">
             <div className="flex items-center gap-3 mb-2">
               <IconLock size={20} className="text-primary-600" />
-              <span className="font-semibold text-sm">2. Fetch a token</span>
+              <span className="font-semibold text-sm">Docker image</span>
             </div>
             <p className="text-sm text-text-secondary">
-              Exchange credentials for a Bearer token (valid ~30 days, max 100 requests/month for tokens).
+              Run the same household API yourself via GitHub Container Registry, without waiting for credentials.
             </p>
           </div>
           <div className="p-4 rounded-lg border border-border-light bg-white">
             <div className="flex items-center gap-3 mb-2">
               <IconShield size={20} className="text-primary-600" />
-              <span className="font-semibold text-sm">3. Make requests</span>
+              <span className="font-semibold text-sm">Python package</span>
             </div>
             <p className="text-sm text-text-secondary">
-              Include the Bearer token in the Authorization header of every API call.
+              Call the US model directly from Python if you do not need an HTTP layer.
             </p>
           </div>
         </div>
 
-        <h3 className="text-2xl font-semibold text-text-primary mb-4" id="authentication">Authentication</h3>
-        <p className="text-text-secondary mb-4">
-          POST your credentials to the Auth0 token endpoint to receive a JWT access token:
+        <div className="overflow-x-auto mb-12">
+          <table className="w-full text-sm border border-border-light rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-3 text-left font-semibold">Option</th>
+                <th className="px-4 py-3 text-left font-semibold">Best for</th>
+                <th className="px-4 py-3 text-left font-semibold">Authentication</th>
+                <th className="px-4 py-3 text-left font-semibold">Wait time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-border-light">
+                <td className="px-4 py-3 font-medium">Hosted API</td>
+                <td className="px-4 py-3 text-text-secondary">Managed infrastructure and remote HTTP access</td>
+                <td className="px-4 py-3 text-text-secondary">OAuth client credentials</td>
+                <td className="px-4 py-3 text-text-secondary">Requires requesting access</td>
+              </tr>
+              <tr className="border-t border-border-light bg-gray-50">
+                <td className="px-4 py-3 font-medium">Docker image</td>
+                <td className="px-4 py-3 text-text-secondary">Self-hosting the HTTP API on your own machine or infra</td>
+                <td className="px-4 py-3 text-text-secondary">None by default</td>
+                <td className="px-4 py-3 text-text-secondary">Immediate</td>
+              </tr>
+              <tr className="border-t border-border-light">
+                <td className="px-4 py-3 font-medium">Python package</td>
+                <td className="px-4 py-3 text-text-secondary">Direct model access inside Python workflows</td>
+                <td className="px-4 py-3 text-text-secondary">None</td>
+                <td className="px-4 py-3 text-text-secondary">Immediate</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="text-2xl font-semibold text-text-primary mb-4">Selected access path</h3>
+        <p className="text-text-secondary mb-6">
+          The page is currently showing <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">{selectedMode.label}</code>{' '}
+          examples. Use the sticky selector above to switch the whole page into a different integration path.
         </p>
 
-        <CodeBlock code={curlExample} language="curl" title="curl" />
-        <CodeBlock code={pythonExample} language="python" title="Python" />
+        {accessMode === 'rest' ? (
+          <div className="mb-12">
+            <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
+              <h4 className="text-lg font-semibold text-text-primary mb-3">Hosted REST API</h4>
+              <p className="text-text-secondary mb-3">
+                Use PolicyEngine&apos;s managed HTTP endpoint if you want a hosted integration rather than
+                running the API yourself. This path requires OAuth client credentials issued by PolicyEngine.
+              </p>
+              <p className="text-sm text-text-secondary">
+                Contact{' '}
+                <a
+                  href="mailto:hello@policyengine.org"
+                  className="text-primary-600 hover:text-primary-700 underline"
+                >
+                  hello@policyengine.org
+                </a>{' '}
+                to request API credentials.
+              </p>
+            </div>
 
-        <h4 className="text-lg font-semibold text-text-primary mt-8 mb-3">Response</h4>
-        <CodeBlock code={responseExample} language="json" title="JSON response" />
+            <CodeBlock code={curlExample} language="curl" title="Fetch an access token" />
+            <CodeBlock code={pythonExample} language="python" title="Fetch an access token in Python" />
+            <CodeBlock code={responseExample} language="json" title="Token response" />
+          </div>
+        ) : accessMode === 'docker' ? (
+          <div className="mb-12">
+            <div className="p-5 rounded-lg border border-border-light bg-primary-50 mb-4">
+              <h4 className="text-lg font-semibold text-text-primary mb-3">Public Docker image</h4>
+              <p className="text-text-secondary mb-3">
+                Run the household API locally or on your own infrastructure using the public container
+                image. The image uses the same REST interface as the hosted API, so you can send the
+                same request body to <code className="bg-white px-1.5 py-0.5 rounded text-sm">http://localhost:8080/us/calculate</code>.
+              </p>
+              <p className="text-sm text-text-secondary">
+                <a
+                  href="https://github.com/PolicyEngine/policyengine-household-api/pkgs/container/policyengine-household-api"
+                  className="text-primary-600 hover:text-primary-700 underline"
+                >
+                  GitHub Container Registry
+                </a>{' '}·{' '}
+                <a
+                  href="https://github.com/PolicyEngine/policyengine-household-api/blob/main/config/README.md"
+                  className="text-primary-600 hover:text-primary-700 underline"
+                >
+                  configuration docs
+                </a>
+              </p>
+            </div>
+
+            <CodeBlock code={dockerExample} language="bash" title="Docker (same HTTP API, self-hosted)" />
+            <CodeBlock code={dockerSmokeTestExample} language="bash" title="Quick Docker smoke test (service metadata)" />
+          </div>
+        ) : (
+          <div className="mb-12">
+            <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
+              <h4 className="text-lg font-semibold text-text-primary mb-3">Python package</h4>
+              <p className="text-text-secondary mb-3">
+                Use <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> for
+                direct access to the US model in Python 3.11+. This is the closest Python alternative
+                to the household API for custom household calculations.
+              </p>
+              <p className="text-sm text-text-secondary">
+                <a
+                  href="https://github.com/PolicyEngine/policyengine-us"
+                  className="text-primary-600 hover:text-primary-700 underline"
+                >
+                  policyengine-us
+                </a>
+              </p>
+            </div>
+
+            <CodeBlock code={pythonInstallExample} language="bash" title="Install policyengine-us" />
+            <CodeBlock code={pythonDirectExample} language="python" title="Direct Python household calculation" />
+          </div>
+        )}
       </div>
     </section>
   );
