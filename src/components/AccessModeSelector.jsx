@@ -30,10 +30,10 @@ export default function AccessModeSelector({ accessMode, onChange }) {
   }
 
   return (
-    <section className="sticky top-4 z-30 px-6 -mt-8 md:-mt-10 mb-10">
+    <section className="sticky top-[calc(var(--pe-spacing-header)+1rem)] z-30 px-6 -mt-8 md:-mt-10 mb-10">
       <div className="max-w-4xl mx-auto rounded-2xl border border-border-light bg-white/95 shadow-[0_12px_32px_rgba(15,23,42,0.08)] backdrop-blur">
         <div className="px-5 py-4 md:px-6 md:py-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-w-xl">
               <p
                 id={selectorLabelId}
@@ -48,7 +48,7 @@ export default function AccessModeSelector({ accessMode, onChange }) {
             </div>
 
             <div
-              className="inline-flex flex-wrap rounded-xl border border-border-light bg-gray-50 p-1 gap-1"
+              className="grid w-full grid-cols-1 gap-1 rounded-xl border border-border-light bg-gray-50 p-1 sm:grid-cols-3 xl:w-auto xl:min-w-[420px] xl:flex-none"
               role="radiogroup"
               aria-labelledby={selectorLabelId}
             >
@@ -64,7 +64,7 @@ export default function AccessModeSelector({ accessMode, onChange }) {
                   tabIndex={accessMode === option.id ? 0 : -1}
                   onClick={() => onChange(option.id)}
                   onKeyDown={(event) => handleKeyDown(event, index)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                     accessMode === option.id
                       ? 'bg-primary-600 text-white'
                       : 'text-text-secondary hover:bg-gray-100'
