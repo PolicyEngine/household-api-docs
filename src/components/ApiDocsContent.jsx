@@ -7,16 +7,16 @@ import RequestSection from './RequestSection';
 import HouseholdSection from './HouseholdSection';
 import ModelLink from './ModelLink';
 
-export default function ApiDocsContent() {
+export default function ApiDocsContent({ country }) {
   const [accessMode, setAccessMode] = useState('rest');
 
   return (
     <>
-      <AccessModeSelector accessMode={accessMode} onChange={setAccessMode} />
-      <AuthSection accessMode={accessMode} />
-      <RequestSection accessMode={accessMode} />
-      <HouseholdSection accessMode={accessMode} />
-      <ModelLink />
+      <AccessModeSelector country={country} accessMode={accessMode} onChange={setAccessMode} />
+      <AuthSection country={country} accessMode={accessMode} />
+      <RequestSection country={country} accessMode={accessMode} />
+      <HouseholdSection country={country} accessMode={accessMode} />
+      <ModelLink country={country} />
     </>
   );
 }

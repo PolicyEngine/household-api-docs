@@ -2,7 +2,7 @@
 
 import { colors, typography, spacing } from '@policyengine/design-system/tokens';
 
-export default function ModelLink() {
+export default function ModelLink({ country }) {
   return (
     <section style={{ padding: `${spacing['5xl']} 0` }}>
       <div
@@ -38,7 +38,7 @@ export default function ModelLink() {
           full list in the model explorer.
         </p>
         <a
-          href="https://policyengine.org/us/model#/rules/parameters"
+          href={country.modelParametersUrl}
           style={{
             display: 'inline-flex',
             alignItems: 'center',

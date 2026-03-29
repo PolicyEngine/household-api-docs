@@ -3,14 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconWorld } from '@tabler/icons-react';
 import { colors, typography } from '@policyengine/design-system/tokens';
+import { COUNTRY_SELECTOR_OPTIONS } from '@/utils/countryDocs';
 
-const countries = [
-  { id: 'us', label: 'United States' },
-  { id: 'uk', label: 'United Kingdom' },
-];
-
-export default function CountrySelector() {
-  const countryId = 'us';
+export default function CountrySelector({ country }) {
+  const countryId = country.id;
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -20,7 +16,7 @@ export default function CountrySelector() {
   const handleCountryChange = useCallback(
     (newCountryId) => {
       setOpen(false);
-      window.location.href = `https://policyengine.org/${newCountryId}`;
+      window.location.href = `https://www.policyengine.org/${newCountryId}/api`;
     },
     []
   );
@@ -115,11 +111,11 @@ export default function CountrySelector() {
             }}
           >
             <div ref={contentRef} style={{ padding: '8px' }}>
-              {countries.map((country, i) => (
+              {COUNTRY_SELECTOR_OPTIONS.map((option, i) => (
                 <button
-                  key={country.id}
+                  key={option.id}
                   type="button"
-                  onClick={() => handleCountryChange(country.id)}
+                  onClick={() => handleCountryChange(option.id)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -133,7 +129,7 @@ export default function CountrySelector() {
                     fontSize: '14px',
                     fontFamily: typography.fontFamily.primary,
                     fontWeight:
-                      countryId === country.id
+                      countryId === option.id
                         ? typography.fontWeight.bold
                         : typography.fontWeight.semibold,
                     color: colors.primary[800],
@@ -152,8 +148,8 @@ export default function CountrySelector() {
                     e.currentTarget.style.color = colors.primary[800];
                   }}
                 >
-                  {country.label}
-                  {countryId === country.id && (
+                  {option.label}
+                  {countryId === option.id && (
                     <span style={{ marginLeft: 'auto', fontSize: '12px', opacity: 0.6 }}>✓</span>
                   )}
                 </button>

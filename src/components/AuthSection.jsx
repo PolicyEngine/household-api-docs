@@ -1,76 +1,20 @@
 'use client';
 
+import { IconKey, IconLock, IconShield } from '@tabler/icons-react';
 import CodeBlock from './CodeBlock';
-import { IconLock, IconKey, IconShield } from '@tabler/icons-react';
 import { getAccessModeOption } from './accessModes';
+import {
+  getDockerExample,
+  getDockerSmokeTestExample,
+  getHostedTokenCurlExample,
+  getHostedTokenPythonExample,
+  getPythonInstallExample,
+  getPythonQuickstartExample,
+  getTokenResponseExample,
+} from '@/utils/countryDocs';
 
-const dockerExample = `docker pull ghcr.io/policyengine/policyengine-household-api:latest
-docker run --rm -p 8080:8080 ghcr.io/policyengine/policyengine-household-api:latest`;
-
-const dockerSmokeTestExample = `curl http://localhost:8080/`;
-
-const pythonInstallExample = `pip install policyengine-us`;
-
-const pythonDirectExample = `from policyengine_us import Simulation
-
-household = {
-    "people": {
-        "you": {
-            "age": {"2025": 30},
-            "employment_income": {"2025": 50000},
-        },
-    },
-    "households": {
-        "your household": {
-            "members": ["you"],
-            "state_name": {"2025": "CA"},
-        },
-    },
-    "families": {"your family": {"members": ["you"]}},
-    "tax_units": {"your tax unit": {"members": ["you"]}},
-    "marital_units": {"your marital unit": {"members": ["you"]}},
-    "spm_units": {"your spm unit": {"members": ["you"]}},
-}
-
-sim = Simulation(situation=household)
-
-eitc = sim.calculate("eitc", "2025")[0]
-household_net_income = sim.calculate("household_net_income", "2025")[0]
-
-print(f"EITC: \${eitc:,.2f}")
-print(f"Household net income: \${household_net_income:,.2f}")`;
-
-const curlExample = `curl --request POST \\
-  --url https://policyengine.uk.auth0.com/oauth/token \\
-  --header 'Content-Type: application/json' \\
-  --data '{
-    "client_id": "YOUR_CLIENT_ID",
-    "client_secret": "YOUR_CLIENT_SECRET",
-    "audience": "https://household.api.policyengine.org",
-    "grant_type": "client_credentials"
-  }'`;
-
-const pythonExample = `import requests
-
-response = requests.post(
-    "https://policyengine.uk.auth0.com/oauth/token",
-    json={
-        "client_id": "YOUR_CLIENT_ID",
-        "client_secret": "YOUR_CLIENT_SECRET",
-        "audience": "https://household.api.policyengine.org",
-        "grant_type": "client_credentials",
-    },
-)
-
-token = response.json()["access_token"]`;
-
-const responseExample = `{
-  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6...",
-  "token_type": "Bearer"
-}`;
-
-export default function AuthSection({ accessMode }) {
-  const selectedMode = getAccessModeOption(accessMode);
+export default function AuthSection({ country, accessMode }) {
+  const selectedMode = getAccessModeOption(accessMode, country);
 
   return (
     <section id="getting-started" className="py-16 border-b border-border-light">
@@ -78,9 +22,9 @@ export default function AuthSection({ accessMode }) {
         <h2 className="text-3xl font-bold text-text-primary mb-6">Getting started</h2>
         <p className="text-text-secondary mb-8 text-lg">
           You can use PolicyEngine three ways: our hosted API, the public household API Docker image,
-          or the <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> Python package.
-          If you want to start immediately, use Docker or Python. If you want
-          a managed hosted endpoint, request API credentials.
+          or the <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">{country.pythonPackage}</code>{' '}
+          Python package. If you want to start immediately, use Docker or Python. If you want a managed
+          hosted endpoint, request API credentials.
         </p>
 
         <div className="grid md:grid-cols-3 gap-4 mb-12">
@@ -107,9 +51,7 @@ export default function AuthSection({ accessMode }) {
               <IconShield size={20} className="text-primary-600" />
               <span className="font-semibold text-sm">Python package</span>
             </div>
-            <p className="text-sm text-text-secondary">
-              Call the US model directly from Python if you do not need an HTTP layer.
-            </p>
+            <p className="text-sm text-text-secondary">{country.pythonPackageCardCopy}</p>
           </div>
         </div>
 
@@ -132,7 +74,7 @@ export default function AuthSection({ accessMode }) {
               </tr>
               <tr className="border-t border-border-light bg-gray-50">
                 <td className="px-4 py-3 font-medium">Docker image</td>
-                <td className="px-4 py-3 text-text-secondary">Self-hosting the HTTP API on your own machine or infra</td>
+                <td className="px-4 py-3 text-text-secondary">Self-hosting the HTTP API on your own machine or infrastructure</td>
                 <td className="px-4 py-3 text-text-secondary">None by default</td>
                 <td className="px-4 py-3 text-text-secondary">Immediate</td>
               </tr>
@@ -172,9 +114,9 @@ export default function AuthSection({ accessMode }) {
               </p>
             </div>
 
-            <CodeBlock code={curlExample} language="curl" title="Fetch an access token" />
-            <CodeBlock code={pythonExample} language="python" title="Fetch an access token in Python" />
-            <CodeBlock code={responseExample} language="json" title="Token response" />
+            <CodeBlock code={getHostedTokenCurlExample()} language="curl" title="Fetch an access token" />
+            <CodeBlock code={getHostedTokenPythonExample()} language="python" title="Fetch an access token in Python" />
+            <CodeBlock code={getTokenResponseExample()} language="json" title="Token response" />
           </div>
         ) : accessMode === 'docker' ? (
           <div className="mb-12">
@@ -183,7 +125,7 @@ export default function AuthSection({ accessMode }) {
               <p className="text-text-secondary mb-3">
                 Run the household API locally or on your own infrastructure using the public container
                 image. The image uses the same REST interface as the hosted API, so you can send the
-                same request body to <code className="bg-white px-1.5 py-0.5 rounded text-sm">http://localhost:8080/us/calculate</code>.
+                same request body to <code className="bg-white px-1.5 py-0.5 rounded text-sm">{country.dockerCalculateUrl}</code>.
               </p>
               <p className="text-sm text-text-secondary">
                 <a
@@ -201,30 +143,26 @@ export default function AuthSection({ accessMode }) {
               </p>
             </div>
 
-            <CodeBlock code={dockerExample} language="bash" title="Docker (same HTTP API, self-hosted)" />
-            <CodeBlock code={dockerSmokeTestExample} language="bash" title="Quick Docker smoke test (service metadata)" />
+            <CodeBlock code={getDockerExample()} language="bash" title="Docker (same HTTP API, self-hosted)" />
+            <CodeBlock code={getDockerSmokeTestExample()} language="bash" title="Quick Docker smoke test (service metadata)" />
           </div>
         ) : (
           <div className="mb-12">
             <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
               <h4 className="text-lg font-semibold text-text-primary mb-3">Python package</h4>
-              <p className="text-text-secondary mb-3">
-                Use <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">policyengine-us</code> for
-                direct access to the US model in Python 3.11+. This is the closest Python alternative
-                to the household API for custom household calculations.
-              </p>
+              <p className="text-text-secondary mb-3">{country.pythonPackageSummary}</p>
               <p className="text-sm text-text-secondary">
                 <a
-                  href="https://github.com/PolicyEngine/policyengine-us"
+                  href={country.pythonRepoUrl}
                   className="text-primary-600 hover:text-primary-700 underline"
                 >
-                  policyengine-us
+                  {country.pythonPackage}
                 </a>
               </p>
             </div>
 
-            <CodeBlock code={pythonInstallExample} language="bash" title="Install policyengine-us" />
-            <CodeBlock code={pythonDirectExample} language="python" title="Direct Python household calculation" />
+            <CodeBlock code={getPythonInstallExample(country)} language="bash" title={`Install ${country.pythonPackage}`} />
+            <CodeBlock code={getPythonQuickstartExample(country)} language="python" title="Direct Python household calculation" />
           </div>
         )}
       </div>

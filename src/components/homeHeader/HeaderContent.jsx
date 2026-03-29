@@ -6,6 +6,7 @@ import HeaderLogo from './HeaderLogo';
 import MobileMenu from './MobileMenu';
 
 export default function HeaderContent({
+  country,
   opened,
   onOpen,
   onClose,
@@ -15,15 +16,15 @@ export default function HeaderContent({
     <div className="h-full w-full p-0 m-0">
       <div className="flex justify-between items-center h-full">
         <div className="flex items-center">
-          <HeaderLogo />
+          <HeaderLogo country={country} />
           <DesktopNavigation navItems={navItems} />
         </div>
 
         <div className="hidden lg:flex items-center">
-          <HeaderActionButtons />
+          <HeaderActionButtons country={country} />
         </div>
 
-        <MobileMenu opened={opened} onOpen={onOpen} onClose={onClose} navItems={navItems} />
+        <MobileMenu country={country} opened={opened} onOpen={onOpen} onClose={onClose} navItems={navItems} />
       </div>
     </div>
   );

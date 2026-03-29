@@ -13,39 +13,42 @@ function useDisclosure(initialState = false) {
   return [opened, { open, close, toggle }];
 }
 
-const navItems = [
-  {
-    label: 'Research',
-    href: 'https://policyengine.org/us/research',
-    hasDropdown: false,
-  },
-  {
-    label: 'Model',
-    href: 'https://policyengine.org/us/model',
-    hasDropdown: false,
-  },
-  {
-    label: 'API',
-    href: 'https://policyengine.org/us/api',
-    hasDropdown: false,
-  },
-  {
-    label: 'About',
-    hasDropdown: true,
-    dropdownItems: [
-      { label: 'Team', href: 'https://policyengine.org/us/team' },
-      { label: 'Supporters', href: 'https://policyengine.org/us/supporters' },
-    ],
-  },
-  {
-    label: 'Donate',
-    href: 'https://policyengine.org/us/donate',
-    hasDropdown: false,
-  },
-];
+function buildNavItems(country) {
+  return [
+    {
+      label: 'Research',
+      href: country.researchUrl,
+      hasDropdown: false,
+    },
+    {
+      label: 'Model',
+      href: country.modelUrl,
+      hasDropdown: false,
+    },
+    {
+      label: 'API',
+      href: country.apiUrl,
+      hasDropdown: false,
+    },
+    {
+      label: 'About',
+      hasDropdown: true,
+      dropdownItems: [
+        { label: 'Team', href: country.teamUrl },
+        { label: 'Supporters', href: country.supportersUrl },
+      ],
+    },
+    {
+      label: 'Donate',
+      href: country.donateUrl,
+      hasDropdown: false,
+    },
+  ];
+}
 
-export default function Header() {
+export default function Header({ country }) {
   const [opened, { open, close }] = useDisclosure(false);
+  const navItems = buildNavItems(country);
 
   return (
     <div
@@ -65,6 +68,7 @@ export default function Header() {
       }}
     >
       <HeaderContent
+        country={country}
         opened={opened}
         onOpen={open}
         onClose={close}

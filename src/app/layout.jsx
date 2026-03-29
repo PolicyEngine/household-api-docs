@@ -1,29 +1,11 @@
 import './globals.css';
-import Header from '@/components/Header';
 
 export const metadata = {
   title: 'PolicyEngine household API documentation',
-  description:
-    'Documentation for the PolicyEngine household API — simulate tax and benefit policy outcomes for US households.',
-  openGraph: {
-    title: 'PolicyEngine household API',
-    description:
-      'Simulate tax and benefit policy outcomes for US households using the PolicyEngine REST API.',
-    url: 'https://policyengine.org/us/api',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary',
-    title: 'PolicyEngine household API',
-    description:
-      'Simulate tax and benefit policy outcomes for US households using the PolicyEngine REST API.',
-  },
+  description: 'Documentation for the PolicyEngine household API.',
   icons: {
-    icon: '/us/api/favicon.svg',
-    apple: '/us/api/assets/logos/policyengine/policyengine.png',
-  },
-  alternates: {
-    canonical: 'https://policyengine.org/us/api',
+    icon: 'https://www.policyengine.org/favicon.ico',
+    apple: 'https://www.policyengine.org/assets/logos/policyengine/policyengine.png',
   },
 };
 
@@ -58,7 +40,6 @@ export default function RootLayout({ children }) {
         <script defer src="/_vercel/insights/script.js" />
       </head>
       <body>
-        <Header />
         {children}
       </body>
     </html>
