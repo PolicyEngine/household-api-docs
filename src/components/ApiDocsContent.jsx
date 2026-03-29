@@ -5,7 +5,7 @@ import AccessModeSelector from './AccessModeSelector';
 import AuthSection from './AuthSection';
 import RequestSection from './RequestSection';
 import HouseholdSection from './HouseholdSection';
-import VariableExplorer from './VariableExplorer';
+import ModelLink from './ModelLink';
 
 export default function ApiDocsContent() {
   const [accessMode, setAccessMode] = useState('rest');
@@ -16,7 +16,7 @@ export default function ApiDocsContent() {
       <AuthSection accessMode={accessMode} />
       <RequestSection accessMode={accessMode} />
       <HouseholdSection accessMode={accessMode} />
-      <VariableExplorer />
+      <ModelLink />
     </>
   );
 }
