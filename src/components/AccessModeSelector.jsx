@@ -30,7 +30,7 @@ export default function AccessModeSelector({ accessMode, onChange }) {
   }
 
   return (
-    <section className="sticky top-4 z-30 px-6 -mt-8 md:-mt-10 mb-10">
+    <section className="sticky top-[calc(var(--pe-spacing-header)+1rem)] z-30 px-6 -mt-8 md:-mt-10 mb-10">
       <div className="max-w-4xl mx-auto rounded-2xl border border-border-light bg-white/95 shadow-[0_12px_32px_rgba(15,23,42,0.08)] backdrop-blur">
         <div className="px-5 py-4 md:px-6 md:py-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
