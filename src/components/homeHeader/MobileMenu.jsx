@@ -5,7 +5,7 @@ import { IconMenu2, IconX } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@policyengine/design-system/tokens';
 import CountrySelector from './CountrySelector';
 
-export default function MobileMenu({ opened, onOpen, onClose, navItems }) {
+export default function MobileMenu({ country, opened, onOpen, onClose, navItems }) {
   // Lock body scroll when sheet is open
   useEffect(() => {
     if (opened) {
@@ -22,7 +22,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }) {
     <>
       {/* Mobile Burger Menu with Country Selector */}
       <div className="flex lg:hidden items-center" style={{ gap: spacing.md }}>
-        <CountrySelector />
+        <CountrySelector country={country} />
         <button
           type="button"
           className="p-1 rounded bg-transparent border-none cursor-pointer"

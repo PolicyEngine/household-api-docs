@@ -1,15 +1,16 @@
 'use client';
 
 import { useId, useRef } from 'react';
-import { ACCESS_MODE_OPTIONS, getAccessModeOption } from './accessModes';
+import { getAccessModeOption, getAccessModeOptions } from './accessModes';
 
-export default function AccessModeSelector({ accessMode, onChange }) {
-  const selectedMode = getAccessModeOption(accessMode);
+export default function AccessModeSelector({ country, accessMode, onChange }) {
+  const options = getAccessModeOptions(country);
+  const selectedMode = getAccessModeOption(accessMode, country);
   const selectorLabelId = useId();
   const optionRefs = useRef([]);
 
   function moveFocus(nextIndex) {
-    const option = ACCESS_MODE_OPTIONS[nextIndex];
+    const option = options[nextIndex];
     if (!option) {
       return;
     }
@@ -25,7 +26,7 @@ export default function AccessModeSelector({ accessMode, onChange }) {
 
     event.preventDefault();
     const delta = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
-    const nextIndex = (index + delta + ACCESS_MODE_OPTIONS.length) % ACCESS_MODE_OPTIONS.length;
+    const nextIndex = (index + delta + options.length) % options.length;
     moveFocus(nextIndex);
   }
 
@@ -52,7 +53,7 @@ export default function AccessModeSelector({ accessMode, onChange }) {
               role="radiogroup"
               aria-labelledby={selectorLabelId}
             >
-              {ACCESS_MODE_OPTIONS.map((option, index) => (
+              {options.map((option, index) => (
                 <button
                   key={option.id}
                   type="button"

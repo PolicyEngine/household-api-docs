@@ -1,7 +1,7 @@
 'use client';
 
 import { spacing } from '@policyengine/design-system/tokens';
-const PolicyEngineLogo = '/us/api/assets/logos/policyengine/white.svg';
+const PolicyEngineLogo = 'https://www.policyengine.org/assets/logos/policyengine/white.svg';
 
 const logoContainerStyles = {
   display: 'flex',
@@ -15,11 +15,11 @@ const logoImageStyles = {
   marginRight: 12,
 };
 
-export default function HeaderLogo() {
+export default function HeaderLogo({ country }) {
   const logoImage = <img src={PolicyEngineLogo} alt="PolicyEngine" style={logoImageStyles} />;
 
   return (
-    <a href="https://policyengine.org/us" style={{ ...logoContainerStyles, marginRight: spacing.md }}>
+    <a href={country.siteUrl} style={{ ...logoContainerStyles, marginRight: spacing.md }}>
       {logoImage}
     </a>
   );
