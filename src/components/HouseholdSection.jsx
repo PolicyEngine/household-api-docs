@@ -1,7 +1,7 @@
 'use client';
 
 import CodeBlock from './CodeBlock';
-import { ACCESS_MODE_OPTIONS } from './accessModes';
+import { getAccessModeOption } from './accessModes';
 
 const step1 = `{
   "people": {},
@@ -250,8 +250,7 @@ eitc = sim.calculate("eitc", "2025")[0]
 print(f"EITC: \${eitc:,.2f}")`;
 
 export default function HouseholdSection({ accessMode }) {
-  const selectedMode =
-    ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
+  const selectedMode = getAccessModeOption(accessMode);
   const fullExample =
     accessMode === 'rest'
       ? hostedFullExample

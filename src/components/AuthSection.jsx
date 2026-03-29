@@ -2,33 +2,12 @@
 
 import CodeBlock from './CodeBlock';
 import { IconLock, IconKey, IconShield } from '@tabler/icons-react';
-import { ACCESS_MODE_OPTIONS } from './accessModes';
+import { getAccessModeOption } from './accessModes';
 
 const dockerExample = `docker pull ghcr.io/policyengine/policyengine-household-api:latest
 docker run --rm -p 8080:8080 ghcr.io/policyengine/policyengine-household-api:latest`;
 
-const dockerSmokeTestExample = `curl --request POST \\
-  --url http://localhost:8080/us/calculate \\
-  --header 'Content-Type: application/json' \\
-  --data '{
-    "household": {
-      "people": {
-        "you": {
-          "employment_income": { "2025": 50000 }
-        }
-      },
-      "households": {
-        "your household": {
-          "members": ["you"],
-          "state_name": { "2025": "CA" }
-        }
-      },
-      "families": { "your family": { "members": ["you"] } },
-      "tax_units": { "your tax unit": { "members": ["you"] } },
-      "marital_units": { "your marital unit": { "members": ["you"] } },
-      "spm_units": { "your spm unit": { "members": ["you"] } }
-    }
-  }'`;
+const dockerSmokeTestExample = `curl http://localhost:8080/`;
 
 const pythonInstallExample = `pip install policyengine-us`;
 
@@ -91,8 +70,7 @@ const responseExample = `{
 }`;
 
 export default function AuthSection({ accessMode }) {
-  const selectedMode =
-    ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
+  const selectedMode = getAccessModeOption(accessMode);
 
   return (
     <section id="getting-started" className="py-16 border-b border-border-light">
@@ -213,8 +191,7 @@ export default function AuthSection({ accessMode }) {
                   className="text-primary-600 hover:text-primary-700 underline"
                 >
                   GitHub Container Registry
-                </a>{' '}
-                {' '}·{' '}
+                </a>{' '}·{' '}
                 <a
                   href="https://github.com/PolicyEngine/policyengine-household-api/blob/main/config/README.md"
                   className="text-primary-600 hover:text-primary-700 underline"
@@ -225,7 +202,7 @@ export default function AuthSection({ accessMode }) {
             </div>
 
             <CodeBlock code={dockerExample} language="bash" title="Docker (same HTTP API, self-hosted)" />
-            <CodeBlock code={dockerSmokeTestExample} language="curl" title="Quick Docker smoke test (no auth required)" />
+            <CodeBlock code={dockerSmokeTestExample} language="bash" title="Quick Docker smoke test (service metadata)" />
           </div>
         ) : (
           <div className="mb-12">

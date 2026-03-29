@@ -15,3 +15,7 @@ export const ACCESS_MODE_OPTIONS = [
     description: 'Call the US model directly with policyengine-us when you do not need an HTTP layer.',
   },
 ];
+
+export function getAccessModeOption(accessMode) {
+  return ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
+}

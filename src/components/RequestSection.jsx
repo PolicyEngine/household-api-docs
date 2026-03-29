@@ -1,7 +1,7 @@
 'use client';
 
 import CodeBlock from './CodeBlock';
-import { ACCESS_MODE_OPTIONS } from './accessModes';
+import { getAccessModeOption } from './accessModes';
 
 const hostedCurlRequest = `curl --request POST \\
   --url https://household.api.policyengine.org/us/calculate \\
@@ -11,6 +11,7 @@ const hostedCurlRequest = `curl --request POST \\
     "household": {
       "people": {
         "you": {
+          "age": { "2025": 30 },
           "employment_income": { "2025": 50000 }
         }
       },
@@ -64,6 +65,7 @@ const dockerCurlRequest = `curl --request POST \\
     "household": {
       "people": {
         "you": {
+          "age": { "2025": 30 },
           "employment_income": { "2025": 50000 }
         }
       },
@@ -81,8 +83,7 @@ const dockerCurlRequest = `curl --request POST \\
   }'`;
 
 export default function RequestSection({ accessMode }) {
-  const selectedMode =
-    ACCESS_MODE_OPTIONS.find((option) => option.id === accessMode) ?? ACCESS_MODE_OPTIONS[0];
+  const selectedMode = getAccessModeOption(accessMode);
 
   return (
     <section id="making-requests" className="py-16 border-b border-border-light">
