@@ -2,6 +2,9 @@
   "framework": null,
   "buildCommand": "bun run build",
   "outputDirectory": "out",
+  "redirects": [
+    { "source": "/:countryId/api", "destination": "/:countryId/api/", "statusCode": 308 }
+  ],
   "rewrites": [
     { "source": "/:countryId/api/_next/:path*", "destination": "/_next/:path*" }
   ]
