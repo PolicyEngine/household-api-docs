@@ -35,12 +35,10 @@ const MICROSIM_TOPICS = [
   { id: 'programs', label: 'Program analysis' },
 ];
 
-function TopicSidebar({ items, selected, onChange, title, description }) {
+function TopicSidebar({ items, selected, onChange }) {
   return (
     <aside className="self-start rounded-2xl border border-border-light bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.06)] md:sticky md:top-[calc(var(--pe-spacing-header)+1.5rem)]">
-      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-700">{title}</div>
-      <p className="mt-2 text-sm text-text-secondary">{description}</p>
-      <div className="mt-5 space-y-2">
+      <div className="space-y-2">
         {items.map((item, index) => {
           const isActive = item.id === selected;
 
@@ -86,8 +84,6 @@ function TopicSection({
   selected,
   onChange,
   panels,
-  sidebarTitle,
-  sidebarDescription,
 }) {
   const panel = panels[selected];
   const selectedIndex = items.findIndex((item) => item.id === selected);
@@ -108,8 +104,6 @@ function TopicSection({
         items={items}
         selected={selected}
         onChange={handleChange}
-        title={sidebarTitle}
-        description={sidebarDescription}
       />
 
       <div ref={contentRef} className="scroll-mt-20 rounded-2xl border border-border-light bg-white p-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
@@ -129,13 +123,11 @@ function TopicSection({
           ))}
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-primary-200 bg-primary-50 p-4">
-          <div className="text-sm text-text-secondary">
-            {nextItem
-              ? `Next step: ${nextItem.label}`
-              : 'You reached the end of this sequence.'}
-          </div>
-          {nextItem ? (
+        {nextItem && (
+          <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-primary-200 bg-primary-50 p-4">
+            <div className="text-sm text-text-secondary">
+              Next step: {nextItem.label}
+            </div>
             <button
               type="button"
               onClick={() => handleChange(nextItem.id)}
@@ -143,8 +135,8 @@ function TopicSection({
             >
               Continue to {nextItem.label}
             </button>
-          ) : null}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -268,7 +260,7 @@ Result total: 3038.982`
           code: getPythonDataFrameExample(country),
           output: isUS
             ? `   employment_income  adjusted_gross_income   income_tax  ctc_value  household_net_income
-0            50000.0                50000.0    -5588.98     4400.0           54290.78`
+0            50000.0                50000.0 -5588.981934     4400.0           54290.78125`
             : undefined,
         },
       ],
@@ -345,9 +337,6 @@ Result total: 3038.982`
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
             Core concepts
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-text-primary">
-            Before you start
-          </h2>
           <p className="mt-3 text-lg text-text-secondary">
             PolicyEngine models tax and benefit rules for individual households. Four building blocks
             appear throughout the package:
@@ -393,8 +382,6 @@ Result total: 3038.982`
             selected={householdTopic}
             onChange={setHouseholdTopic}
             panels={householdPanels}
-            sidebarTitle="Household sequence"
-            sidebarDescription="Move through the package in a deliberate order instead of jumping around the page."
           />
         </div>
       </section>
@@ -407,8 +394,6 @@ Result total: 3038.982`
               selected={microsimTopic}
               onChange={setMicrosimTopic}
               panels={microsimPanels}
-              sidebarTitle="Microsimulation sequence"
-              sidebarDescription="Keep the progression explicit: setup, weighting, reform comparison, then richer aggregate analysis."
             />
           ) : (
             <div className="rounded-2xl border border-primary-200 bg-primary-50 p-6">
