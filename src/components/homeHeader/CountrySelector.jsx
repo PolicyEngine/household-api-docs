@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { IconWorld } from '@tabler/icons-react';
 import { colors, typography } from '@policyengine/design-system/tokens';
 import { COUNTRY_SELECTOR_OPTIONS } from '@/utils/countryDocs';
 
 export default function CountrySelector({ country }) {
   const countryId = country.id;
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -16,9 +18,13 @@ export default function CountrySelector({ country }) {
   const handleCountryChange = useCallback(
     (newCountryId) => {
       setOpen(false);
-      window.location.href = `https://www.policyengine.org/${newCountryId}/api`;
+      const pathSuffix = pathname?.startsWith(`/${countryId}/`)
+        ? pathname.slice(countryId.length + 2)
+        : '';
+      const nextPath = pathSuffix ? `/${newCountryId}/${pathSuffix}` : `/${newCountryId}`;
+      window.location.href = nextPath;
     },
-    []
+    [countryId, pathname]
   );
 
   useEffect(() => {

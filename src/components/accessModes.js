@@ -10,11 +10,6 @@ export function getAccessModeOptions(country) {
       label: 'Docker',
       description: 'Run the published household API image on your own machine or infrastructure.',
     },
-    {
-      id: 'python',
-      label: 'Python',
-      description: `Call the ${country.adjective} model directly with ${country.pythonPackage} when you do not need an HTTP layer.`,
-    },
   ];
 }
 

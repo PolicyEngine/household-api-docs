@@ -40,16 +40,16 @@ export default function AccessModeSelector({ country, accessMode, onChange }) {
                 id={selectorLabelId}
                 className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700 mb-2"
               >
-                Access path
+                API path
               </p>
               <h2 className="text-lg font-semibold text-text-primary">
-                Choose one path and the examples below stay in sync.
+                Choose how you want to run the HTTP interface.
               </h2>
               <p className="text-sm text-text-secondary mt-1">{selectedMode.description}</p>
             </div>
 
             <div
-              className="grid w-full grid-cols-1 gap-1 rounded-xl border border-border-light bg-gray-50 p-1 sm:grid-cols-3 xl:w-auto xl:min-w-[420px] xl:flex-none"
+              className="grid w-full grid-cols-1 gap-1 rounded-xl border border-border-light bg-gray-50 p-1 sm:grid-cols-2 xl:w-auto xl:min-w-[320px] xl:flex-none"
               role="radiogroup"
               aria-labelledby={selectorLabelId}
             >

@@ -13,10 +13,9 @@ export default function HeroSection({ country }) {
           PolicyEngine household API
         </h1>
         <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto">
-          Simulate tax and benefit policy outcomes for any {country.adjective} household with our
-          hosted REST API, public Docker image, or the{' '}
-          <code className="bg-white px-1.5 py-0.5 rounded text-base">{country.pythonPackage}</code>{' '}
-          Python package for direct in-process access.
+          Send household calculation requests over HTTP using PolicyEngine&apos;s hosted REST API or
+          the self-hosted Docker image. Use the API guide when you need tokens, endpoints, request
+          bodies, or deployment instructions.
         </p>
       </div>
     </section>

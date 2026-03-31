@@ -27,7 +27,12 @@ function buildNavItems(country) {
     },
     {
       label: 'API',
-      href: country.apiUrl,
+      href: `/${country.id}/api`,
+      hasDropdown: false,
+    },
+    {
+      label: 'Python',
+      href: `/${country.id}/python`,
       hasDropdown: false,
     },
     {

@@ -5,8 +5,6 @@ import { getAccessModeOption } from './accessModes';
 import {
   getDockerCurlRequest,
   getHostedCurlRequest,
-  getPythonInstallExample,
-  getPythonRequestExample,
 } from '@/utils/countryDocs';
 
 export default function RequestSection({ country, accessMode }) {
@@ -16,7 +14,10 @@ export default function RequestSection({ country, accessMode }) {
     <section id="making-requests" className="py-16 border-b border-border-light">
       <div className="max-w-4xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-text-primary mb-6">Running a calculation</h2>
-        <p className="text-text-secondary mb-4 text-lg">{country.requestSummary}</p>
+        <p className="text-text-secondary mb-4 text-lg">
+          Both API paths accept the same household payload and return the same response shape. The
+          difference is whether PolicyEngine hosts the endpoint or you run the container yourself.
+        </p>
         <p className="text-sm text-text-tertiary mb-6">
           Current access path:{' '}
           <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 font-medium text-primary-700">
@@ -59,21 +60,7 @@ export default function RequestSection({ country, accessMode }) {
             </p>
             <CodeBlock code={getDockerCurlRequest(country)} language="curl" title="Docker request" />
           </>
-        ) : (
-          <>
-            <p className="text-text-secondary mb-4">
-              Use <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">{country.pythonPackage}</code> when you want
-              to call the {country.adjective} model directly from Python instead of going through HTTP.
-            </p>
-            <CodeBlock code={getPythonInstallExample(country)} language="bash" title={`Install ${country.pythonPackage}`} />
-            <p className="text-text-secondary mb-4">
-              Build a household object in Python, pass it to{' '}
-              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">Simulation(situation=...)</code>, and
-              calculate the variables you need directly in process.
-            </p>
-            <CodeBlock code={getPythonRequestExample(country)} language="python" title="Python package example" />
-          </>
-        )}
+        ) : null}
       </div>
     </section>
   );

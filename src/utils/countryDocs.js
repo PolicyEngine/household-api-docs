@@ -391,6 +391,266 @@ sim = Simulation(situation=household)
 ${formatPythonCalculations(country.quickstartResults)}`;
 }
 
+export function getPythonScenarioExample(country, household, results) {
+  const resultLines = results
+    .map(
+      ([label, variable]) =>
+        `    "${label}": sim.calculate("${variable}", "2025")[0],`
+    )
+    .join('\n');
+
+  return `from ${country.pythonImport} import Simulation
+
+household = ${formatPythonObject(household)}
+
+sim = Simulation(situation=household)
+
+results = {
+${resultLines}
+}
+
+print(results)`;
+}
+
+export function getPythonArrayExample(country) {
+  const resultsVariable = country.requestResults[0][1];
+
+  return `from ${country.pythonImport} import Simulation
+
+household = ${formatPythonObject(country.fullHousehold)}
+
+sim = Simulation(situation=household)
+
+person_level = sim.calculate("${country.variableExamples[0]}", 2025)
+result_level = sim.calculate("${resultsVariable}", 2025)
+
+print("Person-level array:", person_level)
+print("Person-level shape:", person_level.shape)
+print("Result-level array:", result_level)
+print("Result-level shape:", result_level.shape)
+print("Use .sum() when you want the aggregate across the relevant entity.")`;
+}
+
+export function getPythonTraceExample(country) {
+  const traceVariable = country.id === 'us' ? 'ctc_value' : country.fullExampleVariable;
+
+  return `from ${country.pythonImport} import Simulation
+
+household = ${formatPythonObject(country.fullHousehold)}
+
+sim = Simulation(situation=household)
+sim.trace = True
+
+sim.calculate("${traceVariable}", 2025)
+sim.tracer.print_computation_log(max_depth=4)`;
+}
+
+export function getPythonDataFrameExample(country) {
+  const dataframeVariables =
+    country.id === 'us'
+      ? ['employment_income', 'adjusted_gross_income', 'income_tax', 'ctc_value', 'household_net_income']
+      : ['employment_income', 'income_tax', 'child_benefit', 'household_net_income'];
+
+  const variableList = dataframeVariables.map((variable) => `"${variable}"`).join(',\n    ');
+
+  return `from ${country.pythonImport} import Simulation
+
+household = ${formatPythonObject(country.fullHousehold)}
+
+sim = Simulation(situation=household)
+
+df = sim.calculate_dataframe(
+    [
+    ${variableList}
+    ],
+    period=2025,
+    map_to="household",
+)
+
+print(df)`;
+}
+
+export function getUSPythonParametricReformExample() {
+  return `from policyengine_us import Simulation
+from policyengine_core.reforms import Reform
+
+household = ${formatPythonObject(US_FULL_HOUSEHOLD)}
+
+ctc_reform = Reform.from_dict(
+    {
+        "gov.irs.credits.ctc.amount.base[0].amount": {
+            "2025-01-01.2100-12-31": 3000
+        },
+        "gov.irs.credits.ctc.refundable.fully_refundable": {
+            "2025-01-01.2100-12-31": True
+        },
+    },
+    country_id="us",
+)
+
+baseline = Simulation(situation=household)
+reformed = Simulation(situation=household, reform=ctc_reform)
+
+print("Baseline CTC:", baseline.calculate("ctc_value", 2025).sum())
+print("Reformed CTC:", reformed.calculate("ctc_value", 2025).sum())`;
+}
+
+export function getUSPythonStructuralReformExample() {
+  return `from policyengine_core.reforms import Reform
+from policyengine_us.model_api import TaxUnit, USD, Variable, YEAR, max_
+
+class ctc_value(Variable):
+    value_type = float
+    entity = TaxUnit
+    label = "CTC value"
+    unit = USD
+    definition_period = YEAR
+
+    def formula(tax_unit, period, parameters):
+        ctc = tax_unit("ctc", period)
+        phase_out = tax_unit("ctc_phase_out", period)
+        return max_(0, ctc - phase_out)
+
+class reform(Reform):
+    def apply(self):
+        self.update_variable(ctc_value)
+
+# Apply with:
+# Simulation(situation=household, reform=reform())`;
+}
+
+export function getGenericPythonReformPattern(country) {
+  return `from ${country.pythonImport} import Simulation
+from policyengine_core.reforms import Reform
+
+household = ${formatPythonObject(country.fullHousehold)}
+
+my_reform = Reform.from_dict(
+    {
+        "your.parameter.path": {
+            "2025-01-01.2100-12-31": "NEW_VALUE"
+        }
+    },
+    country_id="${country.id}",
+)
+
+baseline = Simulation(situation=household)
+reformed = Simulation(situation=household, reform=my_reform)
+
+print("Baseline:", baseline.calculate("${country.fullExampleVariable}", 2025).sum())
+print("Reformed:", reformed.calculate("${country.fullExampleVariable}", 2025).sum())`;
+}
+
+export function getUSMicrosimulationOverviewExample() {
+  return `from policyengine_us import Microsimulation
+
+ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
+
+baseline = Microsimulation(dataset=ENHANCED_CPS)
+
+ctc = baseline.calculate("ctc_value", period=2025)
+weights = baseline.calculate("household_weight", period=2025)
+
+print("Records:", len(weights))
+print("Weighted CTC total:", ctc.sum())`;
+}
+
+export function getUSMicrosimulationWeightingExample() {
+  return `from policyengine_us import Microsimulation
+
+ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
+CORE_VARIABLES = [
+    "household_id",
+    "household_weight",
+    "ctc_value",
+    "snap",
+    "household_net_income",
+    "state_code",
+]
+
+baseline = Microsimulation(dataset=ENHANCED_CPS)
+
+auto_total = baseline.calculate("ctc_value", period=2025).sum()
+
+df = baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025)
+unweighted_total = df["ctc_value"].sum()
+manual_total = (df["ctc_value"] * df["household_weight"]).sum()
+
+print("calculate() total:", auto_total)
+print("DataFrame total:", unweighted_total)
+print("Manually weighted DataFrame total:", manual_total)`;
+}
+
+export function getUSMicrosimulationReformExample() {
+  return `from policyengine_us import Microsimulation
+from policyengine_core.reforms import Reform
+
+ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
+
+ctc_expansion = Reform.from_dict(
+    {
+        "gov.irs.credits.ctc.amount.base[0].amount": {
+            "2025-01-01.2100-12-31": 3600
+        }
+    },
+    country_id="us",
+)
+
+baseline = Microsimulation(dataset=ENHANCED_CPS)
+reformed = Microsimulation(dataset=ENHANCED_CPS, reform=ctc_expansion)
+
+baseline_total = baseline.calculate("ctc_value", period=2025).sum()
+reformed_total = reformed.calculate("ctc_value", period=2025).sum()
+
+print("Annual increase:", reformed_total - baseline_total)`;
+}
+
+export function getUSMicrosimulationGeographyExample() {
+  return `from policyengine_us import Microsimulation
+
+ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
+CORE_VARIABLES = ["state_code", "household_weight", "ctc_value"]
+
+baseline = Microsimulation(dataset=ENHANCED_CPS)
+df = baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025)
+
+state_totals = (
+    df.assign(weighted_ctc=df["ctc_value"] * df["household_weight"])
+      .groupby("state_code", as_index=False)["weighted_ctc"]
+      .sum()
+      .sort_values("weighted_ctc", ascending=False)
+)
+
+print(state_totals.head(10))
+
+annual_impacts = []
+for year in range(2025, 2035):
+    annual_impacts.append(
+        {
+            "year": year,
+            "ctc_total": baseline.calculate("ctc_value", period=year).sum(),
+        }
+    )
+
+print(annual_impacts[:3])`;
+}
+
+export function getUSMicrosimulationProgramExample() {
+  return `from policyengine_us import Microsimulation
+
+ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
+PERSON_VARIABLES = ["person_weight", "snap", "is_child"]
+
+baseline = Microsimulation(dataset=ENHANCED_CPS)
+people = baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2025)
+
+snap_enrolled = people[people["snap"] > 0]["person_weight"].sum()
+children = people[people["is_child"]]["person_weight"].sum()
+
+print("People enrolled in SNAP:", snap_enrolled)
+print("Children in dataset:", children)`;
+}
+
 export function getHostedCurlRequest(country) {
   return `curl --request POST \\
   --url ${country.hostedCalculateUrl} \\
@@ -485,4 +745,8 @@ export function getFullExampleTitle(country, accessMode) {
 
 export function formatHouseholdJson(value) {
   return formatJson(value);
+}
+
+export function formatPythonLiteral(value) {
+  return formatPythonObject(value);
 }
