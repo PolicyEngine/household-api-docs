@@ -8,8 +8,9 @@ export function generateStaticParams() {
   return SUPPORTED_COUNTRY_IDS.map((countryId) => ({ countryId }));
 }
 
-export function generateMetadata({ params }) {
-  const country = getCountryDoc(params.countryId);
+export async function generateMetadata({ params }) {
+  const { countryId } = await params;
+  const country = getCountryDoc(countryId);
 
   if (!country) {
     return {};
@@ -35,8 +36,9 @@ export function generateMetadata({ params }) {
   };
 }
 
-export default function CountryApiPage({ params }) {
-  const country = getCountryDoc(params.countryId);
+export default async function CountryApiPage({ params }) {
+  const { countryId } = await params;
+  const country = getCountryDoc(countryId);
 
   if (!country) {
     notFound();
