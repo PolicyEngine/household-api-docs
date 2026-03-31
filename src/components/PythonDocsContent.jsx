@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import CodeBlock from './CodeBlock';
 import {
   formatHouseholdJson,
@@ -37,7 +37,7 @@ const MICROSIM_TOPICS = [
 
 function TopicSidebar({ items, selected, onChange, title, description }) {
   return (
-    <aside className="self-start rounded-2xl border border-border-light bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.06)] lg:sticky lg:top-[calc(var(--pe-spacing-header)+1.5rem)]">
+    <aside className="self-start rounded-2xl border border-border-light bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.06)] md:sticky md:top-[calc(var(--pe-spacing-header)+1.5rem)]">
       <div className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-700">{title}</div>
       <p className="mt-2 text-sm text-text-secondary">{description}</p>
       <div className="mt-5 space-y-2">
@@ -92,36 +92,41 @@ function TopicSection({
   const panel = panels[selected];
   const selectedIndex = items.findIndex((item) => item.id === selected);
   const nextItem = selectedIndex >= 0 ? items[selectedIndex + 1] : null;
+  const contentRef = useRef(null);
+
+  const handleChange = useCallback((id) => {
+    onChange(id);
+    // Small delay so the new content renders before scrolling
+    requestAnimationFrame(() => {
+      contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [onChange]);
 
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[260px,minmax(0,1fr)]">
+    <div className="mt-8 grid gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
       <TopicSidebar
         items={items}
         selected={selected}
-        onChange={onChange}
+        onChange={handleChange}
         title={sidebarTitle}
         description={sidebarDescription}
       />
 
-      <div className="rounded-2xl border border-border-light bg-white p-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
-        <div className="grid gap-6 lg:grid-cols-[0.95fr,1.05fr]">
-          <div className="space-y-5">
-            <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-              <h3 className="text-2xl font-semibold text-text-primary">{panel.title}</h3>
-              <p className="mt-3 text-sm text-text-secondary">{panel.body}</p>
-            </div>
-            {panel.side}
-          </div>
-          <div>
-            {panel.blocks.map((block) => (
-              <CodeBlock
-                key={block.title}
-                code={block.code}
-                language={block.language}
-                title={block.title}
-              />
-            ))}
-          </div>
+      <div ref={contentRef} className="scroll-mt-20 rounded-2xl border border-border-light bg-white p-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
+          <h3 className="text-2xl font-semibold text-text-primary">{panel.title}</h3>
+          <p className="mt-3 text-sm text-text-secondary">{panel.body}</p>
+        </div>
+        <div className="mt-6">
+          {panel.blocks.map((block) => (
+            <CodeBlock
+              key={block.title}
+              code={block.code}
+              language={block.language}
+              title={block.title}
+              output={block.output}
+            />
+          ))}
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-primary-200 bg-primary-50 p-4">
@@ -133,7 +138,7 @@ function TopicSection({
           {nextItem ? (
             <button
               type="button"
-              onClick={() => onChange(nextItem.id)}
+              onClick={() => handleChange(nextItem.id)}
               className="inline-flex rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
             >
               Continue to {nextItem.label}
@@ -154,17 +159,7 @@ export default function PythonDocsContent({ country }) {
     situation: {
       title: 'Start with a situation, then calculate variables',
       body:
-        'This is the core package workflow from the household simulation notebook. Define the entity structure, pass it into Simulation, and calculate the variables you care about for a period.',
-      side: (
-        <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5">
-          <h3 className="text-lg font-semibold text-text-primary">What to teach first</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div className="rounded-lg bg-white px-3 py-2">Install name and import path are different.</div>
-            <div className="rounded-lg bg-white px-3 py-2">The situation object is the real API surface.</div>
-            <div className="rounded-lg bg-white px-3 py-2">Most work starts with `Simulation(...).calculate(...)`.</div>
-          </div>
-        </div>
-      ),
+        'Define the entity structure, pass it into Simulation, and calculate the variables you care about for a period. The situation dictionary is the real API surface — most work starts with Simulation(...).calculate(...).',
       blocks: [
         {
           title: `Install ${country.pythonPackage}`,
@@ -175,78 +170,78 @@ export default function PythonDocsContent({ country }) {
           title: 'Minimal household simulation',
           language: 'python',
           code: getPythonQuickstartExample(country),
-        },
-        {
-          title: 'Situation shape',
-          language: 'json',
-          code: formatHouseholdJson(country.step3Household),
+          output: isUS
+            ? 'EITC: 0.00\nHousehold net income: 41,252.64'
+            : undefined,
         },
       ],
     },
     arrays: {
       title: 'Understand arrays before moving on',
       body:
-        'A major point from the notebook is that calculate() returns arrays, not scalars. The length depends on the entity level of the variable you requested.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">Entity levels</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div>Person variables return one value per person.</div>
-            <div>Tax-unit or benefit-unit variables return one value per unit.</div>
-            <div>Household variables return one value per household.</div>
-            <div>Use `.sum()` when you want the aggregate for the relevant entity.</div>
-          </div>
-        </div>
-      ),
+        'calculate() returns NumPy arrays, not scalars. Person variables return one value per person, tax-unit or benefit-unit variables return one per unit, and household variables return one per household. Use .sum() when you want the aggregate.',
       blocks: [
         {
           title: 'Entity-level return values',
           language: 'python',
           code: getPythonArrayExample(country),
+          output: isUS
+            ? `Person-level array: [30000. 20000.     0.     0.]
+Person-level shape: (4,)
+Length: 4 (one value per person)
+Result-level array: [3038.982]
+Result-level shape: (1,)
+Person total: 50000.0
+Result total: 3038.982`
+            : undefined,
         },
       ],
     },
     trace: {
       title: 'Trace explains why a result happened',
       body:
-        'The household notebook correctly treats trace as essential advanced usage. It exposes the dependency tree behind a variable so users can debug and understand the implementation.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">What trace output teaches</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div>Indentation shows dependency depth.</div>
-            <div>Array shape reveals the entity level of each intermediate variable.</div>
-            <div>It connects the final result back to upstream policy logic.</div>
-          </div>
-        </div>
-      ),
+        'Trace exposes the dependency tree behind a variable so you can debug and understand the implementation. Indentation shows dependency depth, array shape reveals the entity level of each intermediate variable, and it connects the final result back to upstream policy logic.',
       blocks: [
         {
           title: 'Trace a calculation',
           language: 'python',
           code: getPythonTraceExample(country),
+          output: isUS
+            ? `  ctc_value<2025, (default)> = [4400.]
+    ctc<2025, (default)> = [4400.]
+      filer_meets_ctc_identification_requirements<2025, (default)> = [ True]
+        is_tax_unit_head_or_spouse<2025, (default)> = [ True  True False False]
+        meets_ctc_identification_requirements<2025, (default)> = [ True  True  True  True]
+      ctc_maximum_with_arpa_addition<2025, (default)> = [4400.]
+        ctc_maximum<2025, (default)> = [4400.]
+        ctc_arpa_addition<2025, (default)> = [0.]
+      ctc_phase_out<2025, (default)> = [0.]
+        adjusted_gross_income<2025, (default)> = [50000.]
+        ctc_phase_out_threshold<2025, (default)> = [400000.]
+    ctc_phase_in<2025, (default)> = [7125.0005]
+      ctc_phase_in_relevant_earnings<2025, (default)> = [7125.0005]
+        tax_unit_earned_income<2025, (default)> = [50000.]
+      ctc_social_security_tax<2025, (default)> = [3825.]
+        employee_social_security_tax<2025, (default)> = [1860. 1240.    0.    0.]
+        employee_medicare_tax<2025, (default)> = [435. 290.   0.   0.]
+      eitc<2025, (default)> = [3038.982]
+      ctc_qualifying_children<2025, (default)> = [2]
+        ctc_qualifying_child<2025, (default)> = [False False  True  True]`
+            : undefined,
         },
       ],
     },
     reforms: {
-      title: 'Reforms belong in the main docs, not just the notebook',
+      title: 'Parametric and structural reforms',
       body:
-        'The notebook covers both parametric reforms and structural reforms. The page should teach the common path first, then show that deeper customization exists.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">Two reform layers</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div>Parametric reforms change parameter values with `Reform.from_dict(...)`.</div>
-            <div>Structural reforms replace variable logic by updating a variable class.</div>
-          </div>
-        </div>
-      ),
+        'Parametric reforms change parameter values with Reform.from_dict(...). Structural reforms replace variable logic by updating a variable class. The common path is parametric — use structural only when you need to change how a variable is calculated.',
       blocks: isUS
         ? [
             {
               title: 'Parametric reform',
               language: 'python',
               code: getUSPythonParametricReformExample(),
+              output: 'Baseline CTC: 4400.0\nReformed CTC: 6000.0',
             },
             {
               title: 'Structural reform pattern',
@@ -265,21 +260,16 @@ export default function PythonDocsContent({ country }) {
     dataframes: {
       title: 'calculate_dataframe() is the bridge to analysis work',
       body:
-        'The notebook is right to surface calculate_dataframe(). Once users move beyond one-off calculations, they need a tabular output they can inspect, export, and aggregate.',
-      side: (
-        <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5">
-          <h3 className="text-lg font-semibold text-text-primary">Why `map_to` matters</h3>
-          <p className="mt-3 text-sm text-text-secondary">
-            Without `map_to`, PolicyEngine chooses the longest entity needed to represent the variables.
-            Use `map_to="household"` or `map_to="person"` when you want a predictable row structure.
-          </p>
-        </div>
-      ),
+        'Once you move beyond one-off calculations, calculate_dataframe() gives you a tabular output you can inspect, export, and aggregate. Without map_to, PolicyEngine chooses the longest entity needed to represent the variables — use map_to="household" or map_to="person" when you want a predictable row structure.',
       blocks: [
         {
           title: 'DataFrame workflow',
           language: 'python',
           code: getPythonDataFrameExample(country),
+          output: isUS
+            ? `   employment_income  adjusted_gross_income   income_tax  ctc_value  household_net_income
+0            50000.0                50000.0    -5588.98     4400.0           54290.78`
+            : undefined,
         },
       ],
     },
@@ -289,15 +279,7 @@ export default function PythonDocsContent({ country }) {
     overview: {
       title: 'Microsimulation is a dataset-backed analysis mode',
       body:
-        'The microsimulation notebook is not just “bigger Simulation.” It introduces a different scale of analysis: weighted microdata, dataset choice, and economy-wide aggregation.',
-      side: (
-        <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5">
-          <h3 className="text-lg font-semibold text-text-primary">Core distinction</h3>
-          <p className="mt-3 text-sm text-text-secondary">
-            `Simulation` is for one explicit household situation. `Microsimulation` is for a weighted dataset representing many real households.
-          </p>
-        </div>
-      ),
+        'Simulation is for one explicit household situation. Microsimulation is for a weighted dataset representing many real households — it introduces weighted microdata, dataset choice, and economy-wide aggregation.',
       blocks: [
         {
           title: 'Microsimulation setup',
@@ -309,17 +291,7 @@ export default function PythonDocsContent({ country }) {
     weighting: {
       title: 'Weighting is the critical concept',
       body:
-        'This is the most important notebook lesson to carry into the docs. `.calculate()` aggregates are weighted automatically, while DataFrames require explicit manual weighting.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">The rule to remember</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div>`microsim.calculate(...).sum()` is weighted.</div>
-            <div>`calculate_dataframe(...)` is not weighted automatically.</div>
-            <div>Multiply by `household_weight` or `person_weight` in pandas when working from DataFrames.</div>
-          </div>
-        </div>
-      ),
+        'microsim.calculate(...).sum() is weighted automatically. calculate_dataframe(...) is not — multiply by household_weight or person_weight in pandas when working from DataFrames.',
       blocks: [
         {
           title: 'Automatic vs manual weighting',
@@ -331,16 +303,7 @@ export default function PythonDocsContent({ country }) {
     reforms: {
       title: 'Baseline vs reform at aggregate scale',
       body:
-        'The microsimulation notebook uses the same reform pattern as household simulation, but the output is now a weighted national impact rather than a household-by-household comparison.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">What changes</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div>You compare aggregate totals, not just one household result.</div>
-            <div>You can track recipient counts and total net income changes.</div>
-          </div>
-        </div>
-      ),
+        'Same reform pattern as household simulation, but the output is now a weighted national impact. You compare aggregate totals, not just one household result, and can track recipient counts and total net income changes.',
       blocks: [
         {
           title: 'Aggregate reform comparison',
@@ -352,17 +315,7 @@ export default function PythonDocsContent({ country }) {
     geography: {
       title: 'Geography and time are natural extensions',
       body:
-        'The notebook pushes from one-year national totals into state-level analysis and 10-year budget windows. Those are exactly the advanced patterns users need once the weighting model is clear.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">Typical next steps</h3>
-          <div className="mt-4 space-y-2 text-sm text-text-secondary">
-            <div>Group weighted DataFrames by geography.</div>
-            <div>Loop over years and compare baseline vs reform totals.</div>
-            <div>Use pooled datasets when state sample size matters.</div>
-          </div>
-        </div>
-      ),
+        'Group weighted DataFrames by geography for state-level analysis. Loop over years and compare baseline vs reform totals for 10-year budget windows.',
       blocks: [
         {
           title: 'State and multi-year analysis',
@@ -374,15 +327,7 @@ export default function PythonDocsContent({ country }) {
     programs: {
       title: 'Program analysis often needs person-level data',
       body:
-        'The notebook closes the loop by switching to person-level DataFrames for enrollment-style analysis. This belongs in the docs because it shows how the same API supports household and person views.',
-      side: (
-        <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-          <h3 className="text-lg font-semibold text-text-primary">Person-level pattern</h3>
-          <p className="mt-3 text-sm text-text-secondary">
-            Use `map_to="person"` and weight with `person_weight` when the question is about people rather than households.
-          </p>
-        </div>
-      ),
+        'Use map_to="person" and weight with person_weight when the question is about people rather than households. This is the pattern for enrollment-style analysis.',
       blocks: [
         {
           title: 'Program participation analysis',
@@ -396,52 +341,53 @@ export default function PythonDocsContent({ country }) {
   return (
     <>
       <section className="px-6 pb-8">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
-          <div className="grid gap-5 md:grid-cols-3">
-            <SummaryCard
-              eyebrow="Household simulation"
-              title="Single-situation modeling"
-              body="Build a situation object, calculate variables, trace dependencies, compare baseline vs reform, and move into DataFrame workflows."
-            />
-            <SummaryCard
-              eyebrow="Microsimulation"
-              title="Weighted dataset analysis"
-              body="Understand dataset-backed analysis, weighting, baseline vs reform aggregates, state analysis, multi-year windows, and program participation."
-            />
-            <SummaryCard
-              eyebrow="Notebook source"
-              title="Condensed from the educational notebooks"
-              body="This page is meant to carry the relevant substance from household_simulation.ipynb and microsimulation.ipynb into the docs itself."
-            />
-          </div>
+        <div className="mx-auto max-w-6xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
+            Core concepts
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold text-text-primary">
+            Before you start
+          </h2>
+          <p className="mt-3 text-lg text-text-secondary">
+            PolicyEngine models tax and benefit rules for individual households. Four building blocks
+            appear throughout the package:
+          </p>
 
-          <div className="mt-8 flex flex-wrap gap-3 text-sm">
-            <a href="#household-simulation" className="rounded-full bg-primary-50 px-4 py-2 font-medium text-primary-700">
-              Household simulation
-            </a>
-            <a href="#microsimulation" className="rounded-full bg-primary-50 px-4 py-2 font-medium text-primary-700">
-              Microsimulation
-            </a>
-            <a href="#advanced-notes" className="rounded-full bg-primary-50 px-4 py-2 font-medium text-primary-700">
-              Advanced notes
-            </a>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
+              <h3 className="text-lg font-semibold text-text-primary">Entities</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                {isUS
+                  ? 'Person, tax unit, SPM unit, marital unit, family, and household. Every variable belongs to exactly one entity level.'
+                  : 'Person, benefit unit, and household. Every variable belongs to exactly one entity level.'}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
+              <h3 className="text-lg font-semibold text-text-primary">Variables</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                Inputs you provide (e.g. <code className="rounded bg-white px-1 py-0.5 text-xs">employment_income</code>)
+                or values the model calculates (e.g. <code className="rounded bg-white px-1 py-0.5 text-xs">{isUS ? 'eitc' : 'income_tax'}</code>).
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
+              <h3 className="text-lg font-semibold text-text-primary">Parameters</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                Policy constants like tax rates, thresholds, and benefit amounts. Reforms work by changing parameter values.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
+              <h3 className="text-lg font-semibold text-text-primary">Periods</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                Every input and output is keyed to a time period — usually a year
+                like <code className="rounded bg-white px-1 py-0.5 text-xs">2025</code>.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       <section id="household-simulation" className="px-6 pb-10">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
-            Household simulation
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold text-text-primary">
-            The local Python workflow should be fully documented here
-          </h2>
-          <p className="mt-3 text-lg text-text-secondary">
-            This section folds in the household simulation notebook material: core concepts, entity
-            structure, return values, trace, reforms, and DataFrame analysis.
-          </p>
-
+        <div className="mx-auto max-w-6xl">
           <TopicSection
             items={HOUSEHOLD_TOPICS}
             selected={householdTopic}
@@ -454,31 +400,18 @@ export default function PythonDocsContent({ country }) {
       </section>
 
       <section id="microsimulation" className="px-6 pb-10">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
-            Microsimulation
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold text-text-primary">
-            Explain where household simulation stops and dataset analysis begins
-          </h2>
-          <p className="mt-3 text-lg text-text-secondary">
-            The microsimulation notebook is mostly about weighted analysis on a research dataset.
-            That distinction should be explicit in the docs, not hidden in notebooks alone.
-          </p>
-
+        <div className="mx-auto max-w-6xl">
           {isUS ? (
-            <>
-              <TopicSection
-                items={MICROSIM_TOPICS}
-                selected={microsimTopic}
-                onChange={setMicrosimTopic}
-                panels={microsimPanels}
-                sidebarTitle="Microsimulation sequence"
-                sidebarDescription="Keep the progression explicit: setup, weighting, reform comparison, then richer aggregate analysis."
-              />
-            </>
+            <TopicSection
+              items={MICROSIM_TOPICS}
+              selected={microsimTopic}
+              onChange={setMicrosimTopic}
+              panels={microsimPanels}
+              sidebarTitle="Microsimulation sequence"
+              sidebarDescription="Keep the progression explicit: setup, weighting, reform comparison, then richer aggregate analysis."
+            />
           ) : (
-            <div className="mt-8 rounded-2xl border border-primary-200 bg-primary-50 p-6">
+            <div className="rounded-2xl border border-primary-200 bg-primary-50 p-6">
               <h3 className="text-2xl font-semibold text-text-primary">Current notebook material is US-focused</h3>
               <p className="mt-3 text-sm text-text-secondary">
                 The educational microsimulation notebook you pointed me to is built around the US

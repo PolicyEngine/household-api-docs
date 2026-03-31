@@ -5,7 +5,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
 
-export default function CodeBlock({ code, language = 'python', title }) {
+export default function CodeBlock({ code, language = 'python', title, output }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -42,6 +42,25 @@ export default function CodeBlock({ code, language = 'python', title }) {
       >
         {code}
       </SyntaxHighlighter>
+      {output && (
+        <>
+          <div className="flex items-center px-4 py-2 bg-gray-50 border-y border-border-light">
+            <span className="text-sm font-medium text-text-secondary">Output</span>
+          </div>
+          <SyntaxHighlighter
+            language="python"
+            style={oneDark}
+            customStyle={{
+              margin: 0,
+              borderRadius: 0,
+              fontSize: '14px',
+              lineHeight: '1.6',
+            }}
+          >
+            {output}
+          </SyntaxHighlighter>
+        </>
+      )}
     </div>
   );
 }
