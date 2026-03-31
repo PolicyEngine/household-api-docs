@@ -6,6 +6,7 @@
     { "source": "/:countryId/api", "destination": "/:countryId/api/", "statusCode": 308 }
   ],
   "rewrites": [
+    { "source": "/_zones/household-api-docs/_next/:path*", "destination": "/_next/:path*" },
     { "source": "/:countryId/api/_next/:path*", "destination": "/_next/:path*" }
   ]
 }
