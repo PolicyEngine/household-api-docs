@@ -1,6 +1,6 @@
 'use client';
 
-import { IconKey, IconLock, IconShield } from '@tabler/icons-react';
+import { IconKey, IconLock, IconScale, IconShield } from '@tabler/icons-react';
 import CodeBlock from './CodeBlock';
 import { getAccessModeOption } from './accessModes';
 import {
@@ -15,6 +15,9 @@ import {
 
 export default function AuthSection({ country, accessMode }) {
   const selectedMode = getAccessModeOption(accessMode, country);
+  const termsUrl = `${country.apiUrl}/terms`;
+  const householdApiLicenseUrl =
+    'https://github.com/PolicyEngine/policyengine-household-api/blob/main/LICENSE';
 
   return (
     <section id="getting-started" className="py-16 border-b border-border-light">
@@ -26,6 +29,29 @@ export default function AuthSection({ country, accessMode }) {
           Python package. If you want to start immediately, use Docker or Python. If you want a managed
           hosted endpoint, request API credentials.
         </p>
+
+        <div className="mb-8 rounded-2xl border border-primary-200 bg-primary-50/60 p-5">
+          <div className="mb-3 flex items-center gap-3">
+            <IconScale size={20} className="text-primary-700" />
+            <h3 className="text-base font-semibold text-text-primary">Commercial use and licensing</h3>
+          </div>
+          <p className="mb-3 text-sm leading-6 text-text-secondary">
+            Using the hosted REST API is governed by our{' '}
+            <a href={termsUrl} className="text-primary-600 hover:text-primary-700 underline">
+              API Terms
+            </a>
+            . API use does not itself trigger AGPL source-code disclosure.
+          </p>
+          <p className="text-sm leading-6 text-text-secondary">
+            The self-hosted Docker image and Python package are open-source under the AGPL. These options can still
+            work for commercial use, but additional obligations can apply depending on how you run, modify, host, or
+            distribute the software. If licensing matters to your use case, review the{' '}
+            <a href={householdApiLicenseUrl} className="text-primary-600 hover:text-primary-700 underline">
+              household API license
+            </a>{' '}
+            and consult counsel.
+          </p>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-12">
           <div className="p-4 rounded-lg border border-border-light bg-white">
@@ -102,6 +128,14 @@ export default function AuthSection({ country, accessMode }) {
                 Use PolicyEngine&apos;s managed HTTP endpoint if you want a hosted integration rather than
                 running the API yourself. This path requires OAuth client credentials issued by PolicyEngine.
               </p>
+              <p className="text-sm text-text-secondary mb-3">
+                For commercial closed-source integrations, this is the clearest path: hosted API use is governed by
+                our{' '}
+                <a href={termsUrl} className="text-primary-600 hover:text-primary-700 underline">
+                  API Terms
+                </a>
+                .
+              </p>
               <p className="text-sm text-text-secondary">
                 Contact{' '}
                 <a
@@ -127,6 +161,10 @@ export default function AuthSection({ country, accessMode }) {
                 image. The image uses the same REST interface as the hosted API, so you can send the
                 same request body to <code className="bg-white px-1.5 py-0.5 rounded text-sm">{country.dockerCalculateUrl}</code>.
               </p>
+              <p className="text-sm text-text-secondary mb-3">
+                This is self-hosted AGPL-licensed software, not the hosted API service. Commercial use may still
+                work, but licensing obligations can depend on how you run, modify, or distribute the software.
+              </p>
               <p className="text-sm text-text-secondary">
                 <a
                   href="https://github.com/PolicyEngine/policyengine-household-api/pkgs/container/policyengine-household-api"
@@ -151,6 +189,10 @@ export default function AuthSection({ country, accessMode }) {
             <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
               <h4 className="text-lg font-semibold text-text-primary mb-3">Python package</h4>
               <p className="text-text-secondary mb-3">{country.pythonPackageSummary}</p>
+              <p className="text-sm text-text-secondary mb-3">
+                This path uses AGPL-licensed open-source code directly in your Python environment. Commercial use may
+                still work, but obligations can depend on how you use, modify, host, or distribute the software.
+              </p>
               <p className="text-sm text-text-secondary">
                 <a
                   href={country.pythonRepoUrl}
