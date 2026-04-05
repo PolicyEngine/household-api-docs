@@ -600,7 +600,7 @@ print("Reformed CTC:", reformed.calculate("ctc_value", 2025).sum())`;
 
 export function getUSPythonStructuralReformExample() {
   return `from policyengine_core.reforms import Reform
-from policyengine_us.model_api import TaxUnit, USD, Variable, YEAR, max_
+from policyengine_us.model_api import *
 
 # Structural reform: replace how a variable is calculated
 # Define a new Variable class with the same name as the variable you want to override
