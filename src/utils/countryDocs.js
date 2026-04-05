@@ -8,7 +8,7 @@ const US_REQUEST_HOUSEHOLD = {
   households: {
     'your household': {
       members: ['you'],
-      state_name: { '2025': 'CA' },
+      state_code: { '2025': 'CA' },
     },
   },
   families: {
@@ -53,7 +53,7 @@ const US_FULL_HOUSEHOLD = {
   households: {
     'my household': {
       members: ['adult1', 'adult2', 'child1', 'child2'],
-      state_name: { '2025': 'AZ' },
+      state_code: { '2025': 'AZ' },
     },
   },
   families: {
@@ -395,7 +395,7 @@ function formatUSQuickstartHousehold() {
     "households": {
         "your household": {
             "members": ["you"],
-            "state_name": {"2025": "CA"}
+            "state_code": {"2025": "CA"}
         }
     },
 
@@ -669,6 +669,7 @@ print("Weighted CTC total:", ctc.sum())`;
 
 export function getUSMicrosimulationWeightingExample() {
   return `from policyengine_us import Microsimulation
+import pandas as pd
 
 ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 CORE_VARIABLES = [
@@ -687,7 +688,7 @@ auto_total = baseline.calculate("ctc_value", period=2025).sum()
 
 # calculate_dataframe() is NOT automatically weighted
 # You must multiply by household_weight (or person_weight) yourself
-df = baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025)
+df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025))
 unweighted_total = df["ctc_value"].sum()
 manual_total = (df["ctc_value"] * df["household_weight"]).sum()
 
@@ -726,12 +727,13 @@ print("Annual increase:", reformed_total - baseline_total)`;
 
 export function getUSMicrosimulationGeographyExample() {
   return `from policyengine_us import Microsimulation
+import pandas as pd
 
 ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 CORE_VARIABLES = ["state_code", "household_weight", "ctc_value"]
 
 baseline = Microsimulation(dataset=ENHANCED_CPS)
-df = baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025)
+df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025))
 
 # State-level analysis: group weighted DataFrames by geography
 # Remember to weight manually since this is a DataFrame
@@ -760,6 +762,7 @@ print(annual_impacts[:3])`;
 
 export function getUSMicrosimulationProgramExample() {
   return `from policyengine_us import Microsimulation
+import pandas as pd
 
 ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 
@@ -768,7 +771,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 PERSON_VARIABLES = ["person_weight", "snap", "is_child"]
 
 baseline = Microsimulation(dataset=ENHANCED_CPS)
-people = baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2025)
+people = pd.DataFrame(baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2025))
 
 # Weight with person_weight when the question is about people, not households
 snap_enrolled = people[people["snap"] > 0]["person_weight"].sum()
