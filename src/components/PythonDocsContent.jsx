@@ -216,7 +216,16 @@ Result total: 3038.982`
       ctc_social_security_tax<2025, (default)> = [3825.]
         employee_social_security_tax<2025, (default)> = [1860. 1240.    0.    0.]
         employee_medicare_tax<2025, (default)> = [435. 290.   0.   0.]
+        unreported_payroll_tax<2025, (default)> = [0.]
+        self_employment_tax_ald<2025, (default)> = [0.]
+        additional_medicare_tax<2025, (default)> = [0.]
+        excess_payroll_tax_withheld<2025, (default)> = [0.]
       eitc<2025, (default)> = [3038.982]
+        eitc_eligible<2025, (default)> = [ True]
+        takes_up_eitc<2025, (default)> = [ True]
+        eitc_maximum<2025, (default)> = [7152.]
+        eitc_phased_in<2025, (default)> = [7152.]
+        eitc_reduction<2025, (default)> = [4113.018]
       ctc_qualifying_children<2025, (default)> = [2]
         ctc_qualifying_child<2025, (default)> = [False False  True  True]`
             : undefined,
