@@ -1,5 +1,7 @@
 'use client';
 
-export default function HeaderActionButtons() {
-  return null;
+import CountrySelector from './CountrySelector';
+
+export default function HeaderActionButtons({ country }) {
+  return <CountrySelector country={country} />;
 }

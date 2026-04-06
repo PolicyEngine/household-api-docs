@@ -9,25 +9,8 @@ export default function PythonHeroSection({ country }) {
           Learn {country.pythonPackage} through guided examples
         </h1>
         <p className="mx-auto max-w-3xl text-lg text-text-secondary md:text-xl">
-          This track is for local Python workflows. It focuses on the install path, the import path,
-          <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-base">{country.pythonPackage}</code>
-          and <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-base">{country.pythonImport}</code>,
-          household structure, and short interactive examples that teach what the package can do.
+          Interactive examples covering household calculations, reforms, tracing, and microsimulation with <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-base">{country.pythonPackage}</code>.
         </p>
-        <div className="mx-auto mt-8 grid max-w-2xl gap-4 rounded-2xl border border-primary-200 bg-white p-5 text-left shadow-[0_12px_24px_rgba(15,23,42,0.06)] md:grid-cols-2">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-700">Install</div>
-            <div className="mt-2 text-sm text-text-secondary">
-              <code className="rounded bg-bg-secondary px-1.5 py-0.5">{country.pythonPackage}</code>
-            </div>
-          </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-700">Import</div>
-            <div className="mt-2 text-sm text-text-secondary">
-              <code className="rounded bg-bg-secondary px-1.5 py-0.5">{country.pythonImport}</code>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
