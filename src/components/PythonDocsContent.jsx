@@ -235,7 +235,7 @@ Result total: 3038.982`
     reforms: {
       title: 'Parametric and structural reforms',
       body:
-        'Parametric reforms change parameter values with Reform.from_dict(...). Structural reforms replace variable logic by updating a variable class. The common path is parametric — use structural only when you need to change how a variable is calculated.',
+        'Parametric reforms change parameter values by passing a dict to reform=. Structural reforms replace variable logic by updating a variable class. The common path is parametric — use structural only when you need to change how a variable is calculated.',
       blocks: isUS
         ? [
             {

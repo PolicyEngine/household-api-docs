@@ -628,18 +628,16 @@ class reform(Reform):
 
 export function getGenericPythonReformPattern(country) {
   return `from ${country.pythonImport} import Simulation
-from policyengine_core.reforms import Reform
 
 household = ${formatPythonObject(country.fullHousehold)}
 
-my_reform = Reform.from_dict(
-    {
-        "your.parameter.path": {
-            "2025-01-01.2100-12-31": "NEW_VALUE"
-        }
-    },
-    country_id="${country.id}",
-)
+# Parametric reform: pass a dict of parameter path → {date_range: value}
+# Parameter paths match the tree at policyengine.org/${country.id}/model/rules/parameters
+my_reform = {
+    "your.parameter.path": {
+        "2025-01-01.2100-12-31": "NEW_VALUE"
+    }
+}
 
 baseline = Simulation(situation=household)
 reformed = Simulation(situation=household, reform=my_reform)
