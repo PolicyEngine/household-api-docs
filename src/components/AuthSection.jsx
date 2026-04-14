@@ -49,8 +49,10 @@ export default function AuthSection({ country, accessMode }) {
           <h3 className="text-lg font-semibold text-text-primary mb-2">Need direct Python access?</h3>
           <p className="text-text-secondary mb-3">
             The package guide is now separate from the API docs. Use{' '}
-            <code className="bg-white px-1.5 py-0.5 rounded text-sm">{country.pythonPackage}</code>{' '}
-            when you want to work locally with <code className="bg-white px-1.5 py-0.5 rounded text-sm">Simulation</code>{' '}
+            <code className="bg-white px-1.5 py-0.5 rounded text-sm">{country.pythonGuideInstallTarget}</code>{' '}
+            when you want to work locally with{' '}
+            <code className="bg-white px-1.5 py-0.5 rounded text-sm">calculate_household_impact()</code>{' '}
+            or <code className="bg-white px-1.5 py-0.5 rounded text-sm">Simulation</code>{' '}
             instead of sending HTTP requests.
           </p>
           <a

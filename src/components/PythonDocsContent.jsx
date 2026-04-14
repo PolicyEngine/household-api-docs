@@ -3,36 +3,40 @@
 import { useCallback, useRef, useState } from 'react';
 import CodeBlock from './CodeBlock';
 import {
-  formatHouseholdJson,
-  getGenericPythonReformPattern,
-  getPythonArrayExample,
-  getPythonDataFrameExample,
+  getPolicyengineAggregateExample,
+  getPolicyengineAxisExample,
+  getPolicyengineDatasetExample,
+  getPolicyengineEconomicImpactExample,
+  getPolicyengineHouseholdAxisExample,
+  getPolicyengineHouseholdImpactExample,
+  getPolicyengineHouseholdOutputExample,
+  getPolicyengineHouseholdReformExample,
+  getPolicyengineMicrosimAlignmentExample,
+  getPolicyengineMappingExample,
+  getPolicyengineProgramExample,
+  getPolicyengineRegionalExample,
+  getPolicyengineReleaseBundleExample,
+  getPolicyengineWeightingExample,
   getPythonInstallExample,
-  getPythonQuickstartExample,
-  getPythonTraceExample,
-  getUSMicrosimulationGeographyExample,
-  getUSMicrosimulationOverviewExample,
-  getUSMicrosimulationProgramExample,
-  getUSMicrosimulationReformExample,
-  getUSMicrosimulationWeightingExample,
-  getUSPythonParametricReformExample,
-  getUSPythonStructuralReformExample,
 } from '@/utils/countryDocs';
 
 const HOUSEHOLD_TOPICS = [
-  { id: 'situation', label: 'Situation and calculate' },
-  { id: 'arrays', label: 'Arrays and entity levels' },
-  { id: 'trace', label: 'Tracing calculations' },
-  { id: 'reforms', label: 'Reforms' },
-  { id: 'dataframes', label: 'DataFrames and map_to' },
+  { id: 'impact', label: 'Household impact' },
+  { id: 'axes', label: 'Household axes' },
+  { id: 'outputs', label: 'Entity outputs' },
+  { id: 'reforms', label: 'Household reforms' },
 ];
 
-const MICROSIM_TOPICS = [
-  { id: 'overview', label: 'Datasets and setup' },
+const ANALYSIS_TOPICS = [
+  { id: 'setup', label: 'Datasets and setup' },
+  { id: 'alignment', label: 'Microsim alignment' },
+  { id: 'axes', label: 'Entity axes' },
+  { id: 'mapping', label: 'Entity mapping' },
   { id: 'weighting', label: 'Weighting' },
+  { id: 'aggregates', label: 'Aggregate outputs' },
   { id: 'reforms', label: 'Baseline vs reform' },
-  { id: 'geography', label: 'Geography and time' },
   { id: 'programs', label: 'Program analysis' },
+  { id: 'regions', label: 'Regions and scoping' },
 ];
 
 function TopicSidebar({ items, selected, onChange }) {
@@ -92,7 +96,6 @@ function TopicSection({
 
   const handleChange = useCallback((id) => {
     onChange(id);
-    // Small delay so the new content renders before scrolling
     requestAnimationFrame(() => {
       contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -144,196 +147,261 @@ function TopicSection({
 
 export default function PythonDocsContent({ country }) {
   const isUS = country.id === 'us';
-  const [householdTopic, setHouseholdTopic] = useState('situation');
-  const [microsimTopic, setMicrosimTopic] = useState('overview');
+  const [householdTopic, setHouseholdTopic] = useState('impact');
+  const [analysisTopic, setAnalysisTopic] = useState('setup');
 
   const householdPanels = {
-    situation: {
-      title: 'Start with a situation, then calculate variables',
+    impact: {
+      title: 'Start with calculate_household_impact()',
       body:
-        'Define the entity structure, pass it into Simulation, and calculate the variables you care about for a period. The situation dictionary is the real API surface — most work starts with Simulation(...).calculate(...).',
+        'For one explicit family or household, policyengine.py exposes a typed input model plus a convenience helper. This is the closest package-level replacement for the old household-style Python guide, but it now lives inside the unified policyengine package.',
       blocks: [
         {
-          title: `Install ${country.pythonPackage}`,
+          title: `Install ${country.pythonGuidePackage} for ${country.adjective}`,
           language: 'bash',
           code: getPythonInstallExample(country),
         },
         {
-          title: 'Minimal household simulation',
+          title: `${country.adjective} household impact`,
           language: 'python',
-          code: getPythonQuickstartExample(country),
+          code: getPolicyengineHouseholdImpactExample(country),
           output: isUS
-            ? 'EITC: 0.00\nHousehold net income: 41,252.64'
-            : undefined,
+            ? 'Net income: $51,248\nEITC: $5,442\nSNAP: $3,205'
+            : 'Net income: £43,088\nChild benefit: £2,329\nUniversal credit: £15,387',
         },
       ],
     },
-    arrays: {
-      title: 'Understand arrays before moving on',
+    axes: {
+      title: 'The axis idea still applies in one-household calculations',
       body:
-        'calculate() returns NumPy arrays, not scalars. Person variables return one value per person, tax-unit or benefit-unit variables return one per unit, and household variables return one per household. Use .sum() when you want the aggregate.',
+        'The old guide taught this as array axes. In policyengine.py, the same idea appears as entity collections on the result: person-level outputs come back once per person, tax-unit or benunit outputs come back once per unit, and household outputs come back once for the household summary.',
       blocks: [
         {
-          title: 'Entity-level return values',
+          title: 'Inspect household-level entity axes',
           language: 'python',
-          code: getPythonArrayExample(country),
+          code: getPolicyengineHouseholdAxisExample(country),
           output: isUS
-            ? `Person-level array: [30000. 20000.     0.     0.]
-Person-level shape: (4,)
-Length: 4 (one value per person)
-Result-level array: [3038.982]
-Result-level shape: (1,)
-Person total: 50000.0
-Result total: 3038.982`
-            : undefined,
+            ? 'person axis: 4\ntax_unit axis: 1\nspm_unit axis: 1\nhousehold axis: 1\n40000.0\n5441.66015625\n51248.12890625'
+            : 'person axis: 4\nbenunit axis: 1\nhousehold axis: 1\n30000.0\n15387.0400390625\n42928.86328125',
         },
       ],
     },
-    trace: {
-      title: 'Trace explains why a result happened',
+    outputs: {
+      title: 'Read outputs by entity, not by a nested request payload',
       body:
-        'Trace exposes the dependency tree behind a variable so you can debug and understand the implementation. Indentation shows dependency depth, array shape reveals the entity level of each intermediate variable, and it connects the final result back to upstream policy logic.',
+        'The helper returns entity-level outputs directly: person rows, higher-level units like tax units or benefit units, and a single household summary. That makes it easier to move from one-household examples into real analysis code.',
       blocks: [
         {
-          title: 'Trace a calculation',
+          title: 'Inspect entity-level results',
           language: 'python',
-          code: getPythonTraceExample(country),
+          code: getPolicyengineHouseholdOutputExample(country),
           output: isUS
-            ? `  ctc_value<2025, (default)> = [4400.]
-    ctc<2025, (default)> = [4400.]
-      filer_meets_ctc_identification_requirements<2025, (default)> = [ True]
-        is_tax_unit_head_or_spouse<2025, (default)> = [ True  True False False]
-        meets_ctc_identification_requirements<2025, (default)> = [ True  True  True  True]
-      ctc_maximum_with_arpa_addition<2025, (default)> = [4400.]
-        ctc_maximum<2025, (default)> = [4400.]
-        ctc_arpa_addition<2025, (default)> = [0.]
-      ctc_phase_out<2025, (default)> = [0.]
-        adjusted_gross_income<2025, (default)> = [50000.]
-        ctc_phase_out_threshold<2025, (default)> = [400000.]
-    ctc_phase_in<2025, (default)> = [7125.0005]
-      ctc_phase_in_relevant_earnings<2025, (default)> = [7125.0005]
-        tax_unit_earned_income<2025, (default)> = [50000.]
-      ctc_social_security_tax<2025, (default)> = [3825.]
-        employee_social_security_tax<2025, (default)> = [1860. 1240.    0.    0.]
-        employee_medicare_tax<2025, (default)> = [435. 290.   0.   0.]
-        unreported_payroll_tax<2025, (default)> = [0.]
-        self_employment_tax_ald<2025, (default)> = [0.]
-        additional_medicare_tax<2025, (default)> = [0.]
-        excess_payroll_tax_withheld<2025, (default)> = [0.]
-      eitc<2025, (default)> = [3038.982]
-        eitc_eligible<2025, (default)> = [ True]
-        takes_up_eitc<2025, (default)> = [ True]
-        eitc_maximum<2025, (default)> = [7152.]
-        eitc_phased_in<2025, (default)> = [7152.]
-        eitc_reduction<2025, (default)> = [4113.018]
-      ctc_qualifying_children<2025, (default)> = [2]
-        ctc_qualifying_child<2025, (default)> = [False False  True  True]`
-            : undefined,
+            ? '40000.0\n-8841.66015625\n-5781.66015625'
+            : '3234.0\n15387.0400390625\n42928.86328125',
         },
       ],
     },
     reforms: {
-      title: 'Parametric and structural reforms',
+      title: 'Household-level reform testing uses the same Policy objects',
       body:
-        'Parametric reforms change parameter values by passing a dict to reform=. Structural reforms replace variable logic by updating a variable class. The common path is parametric — use structural only when you need to change how a variable is calculated.',
-      blocks: isUS
-        ? [
-            {
-              title: 'Parametric reform',
-              language: 'python',
-              code: getUSPythonParametricReformExample(),
-              output: 'Baseline CTC: 4400.0\nReformed CTC: 6000.0',
-            },
-            {
-              title: 'Structural reform pattern',
-              language: 'python',
-              code: getUSPythonStructuralReformExample(),
-            },
-          ]
-        : [
-            {
-              title: 'Reform pattern',
-              language: 'python',
-              code: getGenericPythonReformPattern(country),
-            },
-          ],
-    },
-    dataframes: {
-      title: 'calculate_dataframe() is the bridge to analysis work',
-      body:
-        'Once you move beyond one-off calculations, calculate_dataframe() gives you a tabular output you can inspect, export, and aggregate. Without map_to, PolicyEngine chooses the longest entity needed to represent the variables — use map_to="household" or map_to="person" when you want a predictable row structure.',
+        'Even for a single household, reforms are defined with Parameter, ParameterValue, and Policy. The only difference is that you pass the policy into calculate_household_impact() instead of building a second request payload.',
       blocks: [
         {
-          title: 'DataFrame workflow',
+          title: 'Baseline vs reform for one household',
           language: 'python',
-          code: getPythonDataFrameExample(country),
-          output: isUS
-            ? `   employment_income  adjusted_gross_income   income_tax  ctc_value  household_net_income
-0            50000.0                50000.0 -5588.981934     4400.0           54290.78125`
-            : undefined,
+          code: getPolicyengineHouseholdReformExample(country),
+          output: isUS ? 'Change in net income: $1,782' : 'Change in net income: £486',
         },
       ],
     },
   };
 
-  const microsimPanels = {
-    overview: {
-      title: 'Microsimulation is a dataset-backed analysis mode',
+  const analysisPanels = {
+    setup: {
+      title: 'Representative datasets are the normal analysis path',
       body:
-        'Simulation is for one explicit household situation. Microsimulation is for a weighted dataset representing many real households — it introduces weighted microdata, dataset choice, and economy-wide aggregation.',
+        'For policy analysis, move to dataset-backed Simulation objects. ensure_datasets() is the standard entry point: it loads cached HDF5 datasets when present and otherwise downloads and prepares them for the selected year.',
       blocks: [
         {
-          title: 'Microsimulation setup',
+          title: `${country.adjective} dataset-backed simulation`,
           language: 'python',
-          code: getUSMicrosimulationOverviewExample(),
+          code: getPolicyengineDatasetExample(country),
+          output: isUS
+            ? `   household_net_income  household_tax
+0         159616.875000   28905.570312
+1          23514.343750       0.000000
+2          73911.210938     -10.663874
+3          30762.664062    5317.699707
+4          70909.531250    7834.121094`
+            : `   household_net_income  household_tax
+0          -5820.696777    9985.617188
+1         250678.156250  187514.578125
+2          -2660.014404   26395.324219
+3          30904.941406    4731.754395
+4          42611.609375   19814.173828`,
+        },
+      ],
+    },
+    alignment: {
+      title: 'Microsimulation alignment after the policyengine.py restructure',
+      body:
+        'If you used the old country-package Microsimulation entry point, the conceptual replacement is straightforward: ensure_datasets() still gets representative microdata, but policyengine.py wraps the country model in a cross-country Simulation object and standardises the output surface.',
+      blocks: [
+        {
+          title: 'Old Microsimulation mental model -> new Simulation mental model',
+          language: 'python',
+          code: getPolicyengineMicrosimAlignmentExample(country),
+          output: isUS ? 'us-3.4.0\nMicroDataFrame' : 'uk-3.4.0\nMicroDataFrame',
+        },
+      ],
+    },
+    axes: {
+      title: 'The old axis idea still exists, but as entity-indexed tables',
+      body:
+        'Previously the guide taught arrays and shapes directly. The same idea is still here: each variable lives on an entity axis. policyengine.py just makes that explicit through output tables like person, tax_unit, benunit, spm_unit, and household instead of asking users to reason from raw NumPy shapes first.',
+      blocks: [
+        {
+          title: 'Inspect entity axes in the output dataset',
+          language: 'python',
+          code: getPolicyengineAxisExample(country),
+          output: isUS
+            ? `{'person': 12060, 'tax_unit': 6744, 'spm_unit': 5140, 'household': 4962}
+person variables: ['employment_income', 'ssi', 'medicare_cost']
+tax-unit variables: ['income_tax', 'state_income_tax', 'eitc']
+household variables: ['household_net_income', 'household_tax']`
+            : `{'person': 10820, 'benunit': 5754, 'household': 4478}
+person variables: ['employment_income', 'income_tax']
+benunit variables: ['universal_credit', 'child_benefit']
+household variables: ['household_net_income', 'household_tax']`,
+        },
+      ],
+    },
+    mapping: {
+      title: 'Entity mapping replaces the old array-and-DataFrame detour',
+      body:
+        'The old guide spent time on array shapes and map_to behaviour. In policyengine.py, the more durable concept is entity mapping: once a simulation has run, map_to_entity() lets you move results across person, household, tax-unit, SPM-unit, and benunit levels without rebuilding the joins yourself.',
+      blocks: [
+        {
+          title: 'Map outputs between entities',
+          language: 'python',
+          code: getPolicyengineMappingExample(country),
+          output: isUS
+            ? `   snap
+0   0.0
+1   0.0
+2   0.0
+3   0.0
+4   0.0
+   household_tax
+0   28905.570312
+1   28905.570312
+2       0.000000
+3     -10.663874
+4     -10.663874`
+            : `   universal_credit
+0               0.0
+1               0.0
+2               0.0
+3               0.0
+4               0.0
+   household_net_income
+0          -5820.696777
+1         100931.710938
+2         100931.710938
+3         250678.156250
+4         250678.156250`,
         },
       ],
     },
     weighting: {
-      title: 'Weighting is the critical concept',
+      title: 'Weights still matter, but MicroSeries carries them for you',
       body:
-        'microsim.calculate(...).sum() is weighted automatically. calculate_dataframe(...) is not — multiply by household_weight or person_weight in pandas when working from DataFrames.',
+        'The old guide called this out explicitly, and it is still important. The main difference in policyengine.py is that output columns are MicroSeries, so weighted sums and means stay attached to the data instead of forcing you into a separate notebook pattern right away.',
       blocks: [
         {
-          title: 'Automatic vs manual weighting',
+          title: 'Weighted sums and means',
           language: 'python',
-          code: getUSMicrosimulationWeightingExample(),
+          code: getPolicyengineWeightingExample(country),
+          output: isUS
+            ? 'MicroSeries\nWeighted total EITC: $6.8B\nWeighted mean EITC: $311'
+            : 'MicroSeries\nWeighted total UC: £17.3bn\nWeighted mean UC: £3,687',
+        },
+      ],
+    },
+    aggregates: {
+      title: 'Aggregate turns simulation outputs into analysis metrics',
+      body:
+        'Once a simulation has run, Aggregate is the simplest way to compute totals, means, and filtered metrics without dropping straight into custom pandas code. It is also the safest way to stay correctly weighted when you are working with representative microdata.',
+      blocks: [
+        {
+          title: 'Compute a top-line aggregate',
+          language: 'python',
+          code: getPolicyengineAggregateExample(country),
+          output: isUS ? 'Total EITC: $6.8B' : 'Total universal credit: £17.3bn',
         },
       ],
     },
     reforms: {
-      title: 'Baseline vs reform at aggregate scale',
+      title: 'economic_impact_analysis() is the full comparison workflow',
       body:
-        'Same reform pattern as household simulation, but the output is now a weighted national impact. You compare aggregate totals, not just one household result, and can track recipient counts and total net income changes.',
+        'For baseline-vs-reform work, the package already knows how to assemble decile impacts, programme statistics, poverty, and inequality metrics. Use ChangeAggregate for one number; use economic_impact_analysis() when you want the full policy-analysis bundle.',
       blocks: [
         {
-          title: 'Aggregate reform comparison',
+          title: 'Full reform analysis workflow',
           language: 'python',
-          code: getUSMicrosimulationReformExample(),
-        },
-      ],
-    },
-    geography: {
-      title: 'Geography and time are natural extensions',
-      body:
-        'Group weighted DataFrames by geography for state-level analysis. Loop over years and compare baseline vs reform totals for 10-year budget windows.',
-      blocks: [
-        {
-          title: 'State and multi-year analysis',
-          language: 'python',
-          code: getUSMicrosimulationGeographyExample(),
+          code: getPolicyengineEconomicImpactExample(country),
+          output: isUS
+            ? `                 baseline_simulation_id                  reform_simulation_id       income_variable  decile  baseline_mean  reform_mean  absolute_change  relative_change  count_better_off  count_worse_off  count_no_change
+0  ...  household_net_income       1   -3084.370108 -3020.234972        64.135136        -0.072769     110148.088641              0.0     2.053285e+06
+        program_name        change      winners       losers
+          income_tax -8.188285e+09 1.722058e+07 2.200066e+07
+employee_payroll_tax  0.000000e+00 2.200066e+07 2.200066e+07
+0.664551854133606 0.6630756855010986`
+            : `                 baseline_simulation_id                  reform_simulation_id                  income_variable  decile  baseline_mean  reform_mean  absolute_change  relative_change  count_better_off  count_worse_off  count_no_change
+0  ...  equiv_hbai_household_net_income       1    7386.319426  7405.539919        19.220493         0.150233      10544.507993              0.0    134918.362638
+    programme_name        change      winners       losers
+        income_tax -2.830008e+09 4.424946e+06 9.124488e+06
+national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
+0.2877410650253296 0.28766512870788574`,
         },
       ],
     },
     programs: {
-      title: 'Program analysis often needs person-level data',
+      title: 'Program-by-program outputs are a first-class result',
       body:
-        'Use map_to="person" and weight with person_weight when the question is about people rather than households. This is the pattern for enrollment-style analysis.',
+        'The old guide had a dedicated program-analysis track. In policyengine.py that capability sits inside economic_impact_analysis(), which returns a tabular programme or program breakdown you can sort, export, or feed into a chart.',
       blocks: [
         {
-          title: 'Program participation analysis',
+          title: 'Inspect program statistics',
           language: 'python',
-          code: getUSMicrosimulationProgramExample(),
+          code: getPolicyengineProgramExample(country),
+          output: isUS
+            ? `        program_name        change      winners       losers
+          income_tax -8.188285e+09 1.722058e+07 2.200066e+07
+employee_payroll_tax  0.000000e+00 2.200066e+07 2.200066e+07
+    state_income_tax  0.000000e+00 2.200066e+07 2.200066e+07
+                snap  0.000000e+00 0.000000e+00 0.000000e+00
+                tanf  0.000000e+00 0.000000e+00 0.000000e+00`
+            : `    programme_name        change      winners       losers
+        income_tax -2.830008e+09 4.424946e+06 9.124488e+06
+national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
+               vat  0.000000e+00 4.017530e+06 4.017530e+06
+       council_tax  0.000000e+00 4.017530e+06 4.017530e+06
+  universal_credit -1.625253e+08 0.000000e+00 5.804354e+05`,
+        },
+      ],
+    },
+    regions: {
+      title: isUS ? 'Scope the US dataset to states, districts, and places' : 'Scope the UK dataset to countries and smaller regions',
+      body: isUS
+        ? 'Regional analysis is built into policyengine.py. The working row-filter path on the packaged US dataset uses household geography columns like state_fips, and you can then move on to district and place outputs for more detailed geography.'
+        : 'Regional analysis also lives in the package. The simplest working row-filter path on the packaged UK dataset uses region, and the deeper path is weight-replaced simulations for constituencies and local authorities.',
+      blocks: [
+        {
+          title: `${country.adjective} regional analysis`,
+          language: 'python',
+          code: getPolicyengineRegionalExample(country),
+          output: isUS ? 'California EITC: $6.8B' : 'London universal credit: £17.3bn',
         },
       ],
     },
@@ -347,44 +415,47 @@ Result total: 3038.982`
             Core concepts
           </p>
           <p className="mt-3 text-lg text-text-secondary">
-            PolicyEngine models tax and benefit rules for individual households. Four building blocks
-            appear throughout the package:
+            The Python guide now follows the unified <code className="rounded bg-bg-secondary px-1.5 py-0.5 text-base">{country.pythonGuidePackage}</code>{' '}
+            package. Four concepts show up throughout the workflow:
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-              <h3 className="text-lg font-semibold text-text-primary">Entities</h3>
+              <h3 className="text-lg font-semibold text-text-primary">Household inputs</h3>
               <p className="mt-2 text-sm text-text-secondary">
-                {isUS
-                  ? 'Person, tax unit, SPM unit, marital unit, family, and household. Every variable belongs to exactly one entity level.'
-                  : 'Person, benefit unit, and household. Every variable belongs to exactly one entity level.'}
+                Use <code className="rounded bg-white px-1 py-0.5 text-xs">{isUS ? 'USHouseholdInput' : 'UKHouseholdInput'}</code>{' '}
+                with <code className="rounded bg-white px-1 py-0.5 text-xs">calculate_household_impact()</code>{' '}
+                when the question is about one explicit household.
               </p>
             </div>
             <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-              <h3 className="text-lg font-semibold text-text-primary">Variables</h3>
+              <h3 className="text-lg font-semibold text-text-primary">Datasets</h3>
               <p className="mt-2 text-sm text-text-secondary">
-                Inputs you provide (e.g. <code className="rounded bg-white px-1 py-0.5 text-xs">employment_income</code>)
-                or values the model calculates (e.g. <code className="rounded bg-white px-1 py-0.5 text-xs">{isUS ? 'eitc' : 'income_tax'}</code>).
+                Use <code className="rounded bg-white px-1 py-0.5 text-xs">ensure_datasets()</code>{' '}
+                to load representative microdata for national or regional analysis.
               </p>
             </div>
             <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-              <h3 className="text-lg font-semibold text-text-primary">Parameters</h3>
+              <h3 className="text-lg font-semibold text-text-primary">Simulations</h3>
               <p className="mt-2 text-sm text-text-secondary">
-                Policy constants like tax rates, thresholds, and benefit amounts. Reforms work by changing parameter values.
+                <code className="rounded bg-white px-1 py-0.5 text-xs">Simulation</code>{' '}
+                applies a country model version to data and produces entity-level outputs you can inspect or aggregate.
               </p>
             </div>
             <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
-              <h3 className="text-lg font-semibold text-text-primary">Periods</h3>
+              <h3 className="text-lg font-semibold text-text-primary">Policies and outputs</h3>
               <p className="mt-2 text-sm text-text-secondary">
-                Every input and output is keyed to a time period — usually a year
-                like <code className="rounded bg-white px-1 py-0.5 text-xs">2025</code>.
+                Reforms live in <code className="rounded bg-white px-1 py-0.5 text-xs">Policy</code>{' '}
+                objects, while <code className="rounded bg-white px-1 py-0.5 text-xs">Aggregate</code>{' '}
+                and <code className="rounded bg-white px-1 py-0.5 text-xs">economic_impact_analysis()</code>{' '}
+                turn results into analysis.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="household-simulation" className="px-6 pb-10">
+      <section id="household-analysis" className="px-6 pb-10">
         <div className="mx-auto max-w-6xl">
           <TopicSection
             items={HOUSEHOLD_TOPICS}
@@ -395,51 +466,58 @@ Result total: 3038.982`
         </div>
       </section>
 
-      <section id="microsimulation" className="px-6 pb-10">
+      <section id="microsimulation-analysis" className="px-6 pb-10">
         <div className="mx-auto max-w-6xl">
-          {isUS ? (
-            <TopicSection
-              items={MICROSIM_TOPICS}
-              selected={microsimTopic}
-              onChange={setMicrosimTopic}
-              panels={microsimPanels}
-            />
-          ) : (
-            <div className="rounded-2xl border border-primary-200 bg-primary-50 p-6">
-              <h3 className="text-2xl font-semibold text-text-primary">Current notebook material is US-focused</h3>
-              <p className="mt-3 text-sm text-text-secondary">
-                The educational microsimulation notebook you pointed me to is built around the US
-                package and the Enhanced CPS dataset. The concepts still apply here, but the concrete
-                dataset and reform examples on this page are currently shown for the US track only.
-              </p>
-            </div>
-          )}
+          <TopicSection
+            items={ANALYSIS_TOPICS}
+            selected={analysisTopic}
+            onChange={setAnalysisTopic}
+            panels={analysisPanels}
+          />
         </div>
       </section>
 
       <section id="advanced-notes" className="px-6 pb-16">
         <div className="mx-auto max-w-4xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
-            Advanced notes
+            References
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-text-primary">
-            Keep the references and deeper paths visible
+            Keep the source-of-truth links and reproducibility boundary visible
           </h2>
+          <p className="mt-3 text-sm text-text-secondary">
+            policyengine.py now has an explicit reproducibility story: certified runtime bundles, release manifests, and TRACE-oriented provenance export. The practical first step in the guide is checking the bundle attached to the simulation you just ran.
+          </p>
+          <div className="mt-6">
+            <CodeBlock
+              code={getPolicyengineReleaseBundleExample()}
+              language="python"
+              title="Inspect the certified runtime bundle"
+              output={isUS
+                ? `{'bundle_id': 'us-3.4.0', 'country_id': 'us', 'policyengine_version': '3.4.0', 'model_package': 'policyengine-us', 'model_version': '1.602.0', 'data_package': 'policyengine-us-data', ...}`
+                : `{'bundle_id': 'uk-3.4.0', 'country_id': 'uk', 'policyengine_version': '3.4.0', 'model_package': 'policyengine-uk', 'model_version': '2.74.0', 'data_package': 'policyengine-uk-data', ...}`}
+            />
+          </div>
           <div className="mt-6 grid gap-5 md:grid-cols-3">
             <SummaryCard
               eyebrow="Model explorer"
               title="Variables and parameters"
-              body="Users need a reliable place to look up variable names and parameter paths after the conceptual walkthrough."
+              body="Use the model explorer after the walkthrough when you need exact variable names or parameter paths."
             />
             <SummaryCard
-              eyebrow="Package source"
-              title="Implementation details"
-              body="The repository is still the right destination for variable definitions, parameter structure, and source-level debugging."
+              eyebrow="Reproducibility"
+              title="Certified bundles"
+              body="The package pins supported model-plus-data combinations and surfaces that bundle metadata directly from simulations."
             />
             <SummaryCard
-              eyebrow="Notebook depth"
-              title="Keep the raw notebooks too"
-              body="The page should absorb the relevant lessons, but the exploratory notebooks are still useful as full worked training material."
+              eyebrow="Package docs"
+              title="Analysis workflows"
+              body="The package repo documents datasets, Simulation, entity mapping, regional scoping, and full economic impact analysis."
+            />
+            <SummaryCard
+              eyebrow="Examples"
+              title="Working scripts"
+              body="The checked-in examples in policyengine.py are the best place to look when you need a longer end-to-end pattern or paper-style reproduction."
             />
           </div>
 
@@ -451,10 +529,16 @@ Result total: 3038.982`
               Explore variables and parameters
             </a>
             <a
-              href={country.pythonRepoUrl}
+              href={country.pythonGuideRepoUrl}
               className="inline-flex rounded-lg bg-text-primary px-4 py-2 text-sm font-medium text-white"
             >
-              Open {country.pythonPackage}
+              Open {country.pythonGuidePackage}
+            </a>
+            <a
+              href={country.pythonGuideReleaseBundlesUrl}
+              className="inline-flex rounded-lg border border-border-light px-4 py-2 text-sm font-medium text-text-primary"
+            >
+              Open release-bundle docs
             </a>
           </div>
         </div>

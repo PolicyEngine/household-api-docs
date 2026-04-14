@@ -140,6 +140,10 @@ const COUNTRY_DOCS = {
     teamUrl: 'https://www.policyengine.org/us/team',
     supportersUrl: 'https://www.policyengine.org/us/supporters',
     donateUrl: 'https://www.policyengine.org/us/donate',
+    pythonGuidePackage: 'policyengine',
+    pythonGuideInstallTarget: 'policyengine[us]',
+    pythonGuideRepoUrl: 'https://github.com/PolicyEngine/policyengine.py',
+    pythonGuideReleaseBundlesUrl: 'https://github.com/PolicyEngine/policyengine.py/blob/main/docs/release-bundles.md',
     pythonPackage: 'policyengine-us',
     pythonImport: 'policyengine_us',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-us',
@@ -238,6 +242,10 @@ const COUNTRY_DOCS = {
     teamUrl: 'https://www.policyengine.org/uk/team',
     supportersUrl: 'https://www.policyengine.org/uk/supporters',
     donateUrl: 'https://www.policyengine.org/uk/donate',
+    pythonGuidePackage: 'policyengine',
+    pythonGuideInstallTarget: 'policyengine[uk]',
+    pythonGuideRepoUrl: 'https://github.com/PolicyEngine/policyengine.py',
+    pythonGuideReleaseBundlesUrl: 'https://github.com/PolicyEngine/policyengine.py/blob/main/docs/release-bundles.md',
     pythonPackage: 'policyengine-uk',
     pythonImport: 'policyengine_uk',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-uk',
@@ -334,7 +342,666 @@ function formatPythonCalculations(results) {
 }
 
 export function getPythonInstallExample(country) {
-  return `pip install ${country.pythonPackage}`;
+  return `pip install "${country.pythonGuideInstallTarget}"`;
+}
+
+export function getPolicyengineHouseholdImpactExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.tax_benefit_models.us import (
+    USHouseholdInput,
+    calculate_household_impact,
+)
+
+household = USHouseholdInput(
+    people=[
+        {"age": 35, "employment_income": 40000, "is_tax_unit_head": True},
+        {"age": 33, "is_tax_unit_spouse": True},
+        {"age": 8, "is_tax_unit_dependent": True},
+        {"age": 5, "is_tax_unit_dependent": True},
+    ],
+    tax_unit={"filing_status": "JOINT"},
+    household={"state_code_str": "TX"},
+    year=2026,
+)
+
+result = calculate_household_impact(household)
+
+print(f"Net income: \${result.household['household_net_income']:,.0f}")
+print(f"EITC: \${result.tax_unit[0]['eitc']:,.0f}")
+print(f"SNAP: \${result.spm_unit[0]['snap']:,.0f}")`;
+  }
+
+  return `from policyengine.tax_benefit_models.uk import (
+    UKHouseholdInput,
+    calculate_household_impact,
+)
+
+household = UKHouseholdInput(
+    people=[
+        {"age": 35, "employment_income": 30000},
+        {"age": 33},
+        {"age": 8},
+        {"age": 5},
+    ],
+    benunit={
+        "would_claim_uc": True,
+        "would_claim_child_benefit": True,
+    },
+    household={
+        "rent": 12000,
+        "region": "NORTH_WEST",
+    },
+    year=2026,
+)
+
+result = calculate_household_impact(household)
+
+print(f"Net income: \u00a3{result.household['hbai_household_net_income']:,.0f}")
+print(f"Child benefit: \u00a3{result.benunit[0]['child_benefit']:,.0f}")
+print(f"Universal credit: \u00a3{result.benunit[0]['universal_credit']:,.0f}")`;
+}
+
+export function getPolicyengineHouseholdOutputExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.tax_benefit_models.us import (
+    USHouseholdInput,
+    calculate_household_impact,
+)
+
+household = USHouseholdInput(
+    people=[
+        {"age": 35, "employment_income": 50000, "is_tax_unit_head": True},
+    ],
+    tax_unit={"filing_status": "SINGLE"},
+    household={"state_code_str": "CA"},
+    year=2026,
+)
+
+result = calculate_household_impact(household)
+
+# Entity collections come back as lists of dicts.
+person = result.person[0]
+tax_unit = result.tax_unit[0]
+household_summary = result.household
+
+print(person["employment_income"])
+print(tax_unit["income_tax"])
+print(household_summary["household_tax"])`;
+  }
+
+  return `from policyengine.tax_benefit_models.uk import (
+    UKHouseholdInput,
+    calculate_household_impact,
+)
+
+household = UKHouseholdInput(
+    people=[{"age": 35, "employment_income": 30000}],
+    benunit={"would_claim_uc": True},
+    household={"region": "LONDON", "rent": 15000},
+    year=2026,
+)
+
+result = calculate_household_impact(household)
+
+# People and benefit units are lists of dicts.
+person = result.person[0]
+benunit = result.benunit[0]
+household_summary = result.household
+
+print(person["income_tax"])
+print(benunit["universal_credit"])
+print(household_summary["household_net_income"])`;
+}
+
+export function getPolicyengineHouseholdReformExample(country) {
+  if (country.id === 'us') {
+    return `import datetime
+
+from policyengine.core import Parameter, ParameterValue, Policy
+from policyengine.tax_benefit_models.us import (
+    USHouseholdInput,
+    calculate_household_impact,
+    us_latest,
+)
+
+household = USHouseholdInput(
+    people=[{"age": 35, "employment_income": 50000, "is_tax_unit_head": True}],
+    tax_unit={"filing_status": "SINGLE"},
+    household={"state_code_str": "CA"},
+    year=2026,
+)
+
+parameter = Parameter(
+    name="gov.irs.deductions.standard.amount.SINGLE",
+    tax_benefit_model_version=us_latest,
+)
+reform = Policy(
+    name="Double standard deduction",
+    parameter_values=[
+        ParameterValue(
+            parameter=parameter,
+            start_date=datetime.date(2026, 1, 1),
+            end_date=datetime.date(2026, 12, 31),
+            value=30950,
+        ),
+    ],
+)
+
+baseline = calculate_household_impact(household)
+reformed = calculate_household_impact(household, policy=reform)
+
+change = (
+    reformed.household["household_net_income"]
+    - baseline.household["household_net_income"]
+)
+print(f"Change in net income: \${change:,.0f}")`;
+  }
+
+  return `import datetime
+
+from policyengine.core import Parameter, ParameterValue, Policy
+from policyengine.tax_benefit_models.uk import (
+    UKHouseholdInput,
+    calculate_household_impact,
+    uk_latest,
+)
+
+household = UKHouseholdInput(
+    people=[{"age": 35, "employment_income": 30000}],
+    household={"region": "LONDON"},
+    year=2026,
+)
+
+parameter = Parameter(
+    name="gov.hmrc.income_tax.allowances.personal_allowance.amount",
+    tax_benefit_model_version=uk_latest,
+)
+reform = Policy(
+    name="Increase personal allowance",
+    parameter_values=[
+        ParameterValue(
+            parameter=parameter,
+            start_date=datetime.date(2026, 1, 1),
+            end_date=datetime.date(2026, 12, 31),
+            value=15000,
+        ),
+    ],
+)
+
+baseline = calculate_household_impact(household)
+reformed = calculate_household_impact(household, policy=reform)
+
+change = (
+    reformed.household["household_net_income"]
+    - baseline.household["household_net_income"]
+)
+print(f"Change in net income: \u00a3{change:,.0f}")`;
+}
+
+export function getPolicyengineDatasetExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.core import Simulation
+from policyengine.tax_benefit_models.us import ensure_datasets, us_latest
+
+year = 2026
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
+    years=[year],
+    data_folder="./data",
+)
+dataset = datasets[f"enhanced_cps_2024_{year}"]
+
+simulation = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=us_latest,
+)
+simulation.run()
+
+output = simulation.output_dataset.data
+print(output.household[["household_net_income", "household_tax"]].head())`;
+  }
+
+  return `from policyengine.core import Simulation
+from policyengine.tax_benefit_models.uk import ensure_datasets, uk_latest
+
+year = 2026
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+    years=[year],
+    data_folder="./data",
+)
+dataset = datasets[f"enhanced_frs_2023_24_{year}"]
+
+simulation = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=uk_latest,
+)
+simulation.run()
+
+output = simulation.output_dataset.data
+print(output.household[["household_net_income", "household_tax"]].head())`;
+}
+
+export function getPolicyengineAggregateExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.outputs.aggregate import Aggregate, AggregateType
+
+# simulation comes from the setup step above
+agg = Aggregate(
+    simulation=simulation,
+    variable="eitc",
+    aggregate_type=AggregateType.SUM,
+    entity="tax_unit",
+)
+agg.run()
+
+print(f"Total EITC: \${agg.result / 1e9:.1f}B")`;
+  }
+
+  return `from policyengine.outputs.aggregate import Aggregate, AggregateType
+
+# simulation comes from the setup step above
+agg = Aggregate(
+    simulation=simulation,
+    variable="universal_credit",
+    aggregate_type=AggregateType.SUM,
+    entity="benunit",
+)
+agg.run()
+
+print(f"Total universal credit: \u00a3{agg.result / 1e9:.1f}bn")`;
+}
+
+export function getPolicyengineMappingExample(country) {
+  if (country.id === 'us') {
+    return `# simulation comes from the setup step above
+data = simulation.output_dataset.data
+
+# Aggregate SPM-unit SNAP to household level
+household_snap = data.map_to_entity(
+    source_entity="spm_unit",
+    target_entity="household",
+    columns=["snap"],
+    how="sum",
+)
+
+# Project a household variable down to each person
+person_household_tax = data.map_to_entity(
+    source_entity="household",
+    target_entity="person",
+    columns=["household_tax"],
+    how="project",
+)
+
+print(household_snap[["snap"]].head())
+print(person_household_tax[["household_tax"]].head())`;
+  }
+
+  return `# simulation comes from the setup step above
+data = simulation.output_dataset.data
+
+# Aggregate benunit UC to household level
+household_uc = data.map_to_entity(
+    source_entity="benunit",
+    target_entity="household",
+    columns=["universal_credit"],
+    how="sum",
+)
+
+# Project a household variable down to each person
+person_household_income = data.map_to_entity(
+    source_entity="household",
+    target_entity="person",
+    columns=["household_net_income"],
+    how="project",
+)
+
+print(household_uc[["universal_credit"]].head())
+print(person_household_income[["household_net_income"]].head())`;
+}
+
+export function getPolicyengineAxisExample(country) {
+  if (country.id === 'us') {
+    return `# simulation comes from the setup step above
+output = simulation.output_dataset.data
+
+print(
+    {
+        "person": len(output.person),
+        "tax_unit": len(output.tax_unit),
+        "spm_unit": len(output.spm_unit),
+        "household": len(output.household),
+    }
+)
+
+print("person variables:", ["employment_income", "ssi", "medicare_cost"])
+print("tax-unit variables:", ["income_tax", "state_income_tax", "eitc"])
+print("household variables:", ["household_net_income", "household_tax"])`;
+  }
+
+  return `# simulation comes from the setup step above
+output = simulation.output_dataset.data
+
+print(
+    {
+        "person": len(output.person),
+        "benunit": len(output.benunit),
+        "household": len(output.household),
+    }
+)
+
+print("person variables:", ["employment_income", "income_tax"])
+print("benunit variables:", ["universal_credit", "child_benefit"])
+print("household variables:", ["household_net_income", "household_tax"])`;
+}
+
+export function getPolicyengineHouseholdAxisExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.tax_benefit_models.us import (
+    USHouseholdInput,
+    calculate_household_impact,
+)
+
+household = USHouseholdInput(
+    people=[
+        {"age": 35, "employment_income": 40000, "is_tax_unit_head": True},
+        {"age": 33, "is_tax_unit_spouse": True},
+        {"age": 8, "is_tax_unit_dependent": True},
+        {"age": 5, "is_tax_unit_dependent": True},
+    ],
+    tax_unit={"filing_status": "JOINT"},
+    household={"state_code_str": "TX"},
+    year=2026,
+)
+
+result = calculate_household_impact(household)
+
+print("person axis:", len(result.person))
+print("tax_unit axis:", len(result.tax_unit))
+print("spm_unit axis:", len(result.spm_unit))
+print("household axis:", 1)
+
+print(result.person[0]["employment_income"])
+print(result.tax_unit[0]["eitc"])
+print(result.household["household_net_income"])`;
+  }
+
+  return `from policyengine.tax_benefit_models.uk import (
+    UKHouseholdInput,
+    calculate_household_impact,
+)
+
+household = UKHouseholdInput(
+    people=[
+        {"age": 35, "employment_income": 30000},
+        {"age": 33},
+        {"age": 8},
+        {"age": 5},
+    ],
+    benunit={
+        "would_claim_uc": True,
+        "would_claim_child_benefit": True,
+    },
+    household={"region": "NORTH_WEST", "rent": 12000},
+    year=2026,
+)
+
+result = calculate_household_impact(household)
+
+print("person axis:", len(result.person))
+print("benunit axis:", len(result.benunit))
+print("household axis:", 1)
+
+print(result.person[0]["employment_income"])
+print(result.benunit[0]["universal_credit"])
+print(result.household["household_net_income"])`;
+}
+
+export function getPolicyengineWeightingExample(country) {
+  if (country.id === 'us') {
+    return `# simulation comes from the setup step above
+eitc = simulation.output_dataset.data.tax_unit["eitc"]
+
+# MicroSeries keeps survey weights attached.
+print(type(eitc).__name__)
+print(f"Weighted total EITC: \${eitc.sum() / 1e9:.1f}B")
+print(f"Weighted mean EITC: \${eitc.mean():,.0f}")`;
+  }
+
+  return `# simulation comes from the setup step above
+uc = simulation.output_dataset.data.benunit["universal_credit"]
+
+# MicroSeries keeps survey weights attached.
+print(type(uc).__name__)
+print(f"Weighted total UC: \u00a3{uc.sum() / 1e9:.1f}bn")
+print(f"Weighted mean UC: \u00a3{uc.mean():,.0f}")`;
+}
+
+export function getPolicyengineMicrosimAlignmentExample(country) {
+  if (country.id === 'us') {
+    return `# Old mental model:
+#   from policyengine_us import Microsimulation
+#   sim = Microsimulation(dataset=...)
+#
+# New policyengine.py mental model:
+#   datasets = ensure_datasets(...)
+#   simulation = Simulation(dataset=dataset, tax_benefit_model_version=us_latest)
+
+dataset = datasets[f"enhanced_cps_2024_{year}"]
+simulation = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=us_latest,
+)
+simulation.run()
+
+print(simulation.release_bundle["bundle_id"])
+print(type(simulation.output_dataset.data.household).__name__)`;
+  }
+
+  return `# Old mental model:
+#   from policyengine_uk import Microsimulation
+#   sim = Microsimulation(dataset=...)
+#
+# New policyengine.py mental model:
+#   datasets = ensure_datasets(...)
+#   simulation = Simulation(dataset=dataset, tax_benefit_model_version=uk_latest)
+
+dataset = datasets[f"enhanced_frs_2023_24_{year}"]
+simulation = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=uk_latest,
+)
+simulation.run()
+
+print(simulation.release_bundle["bundle_id"])
+print(type(simulation.output_dataset.data.household).__name__)`;
+}
+
+export function getPolicyengineEconomicImpactExample(country) {
+  if (country.id === 'us') {
+    return `import datetime
+
+from policyengine.core import Parameter, ParameterValue, Policy, Simulation
+from policyengine.tax_benefit_models.us import (
+    economic_impact_analysis,
+    ensure_datasets,
+    us_latest,
+)
+
+year = 2026
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
+    years=[year],
+    data_folder="./data",
+)
+dataset = datasets[f"enhanced_cps_2024_{year}"]
+
+parameter = Parameter(
+    name="gov.irs.deductions.standard.amount.SINGLE",
+    tax_benefit_model_version=us_latest,
+)
+reform = Policy(
+    name="Double standard deduction (single)",
+    parameter_values=[
+        ParameterValue(
+            parameter=parameter,
+            start_date=datetime.date(year, 1, 1),
+            end_date=datetime.date(year, 12, 31),
+            value=30950,
+        ),
+    ],
+)
+
+baseline_sim = Simulation(dataset=dataset, tax_benefit_model_version=us_latest)
+reform_sim = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=us_latest,
+    policy=reform,
+)
+
+analysis = economic_impact_analysis(baseline_sim, reform_sim)
+
+print(analysis.decile_impacts.dataframe.head())
+print(analysis.program_statistics.dataframe.head())
+print(analysis.baseline_inequality.gini, analysis.reform_inequality.gini)`;
+  }
+
+  return `import datetime
+
+from policyengine.core import Parameter, ParameterValue, Policy, Simulation
+from policyengine.tax_benefit_models.uk import (
+    economic_impact_analysis,
+    ensure_datasets,
+    uk_latest,
+)
+
+year = 2026
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+    years=[year],
+    data_folder="./data",
+)
+dataset = datasets[f"enhanced_frs_2023_24_{year}"]
+
+parameter = Parameter(
+    name="gov.hmrc.income_tax.allowances.personal_allowance.amount",
+    tax_benefit_model_version=uk_latest,
+)
+reform = Policy(
+    name="Increase personal allowance",
+    parameter_values=[
+        ParameterValue(
+            parameter=parameter,
+            start_date=datetime.date(year, 1, 1),
+            end_date=datetime.date(year, 12, 31),
+            value=15000,
+        ),
+    ],
+)
+
+baseline_sim = Simulation(dataset=dataset, tax_benefit_model_version=uk_latest)
+reform_sim = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=uk_latest,
+    policy=reform,
+)
+
+analysis = economic_impact_analysis(baseline_sim, reform_sim)
+
+print(analysis.decile_impacts.dataframe.head())
+print(analysis.programme_statistics.dataframe.head())
+print(analysis.baseline_inequality.gini, analysis.reform_inequality.gini)`;
+}
+
+export function getPolicyengineProgramExample(country) {
+  if (country.id === 'us') {
+    return `# analysis comes from the full reform analysis step above
+programs = analysis.program_statistics.dataframe[
+    ["program_name", "change", "winners", "losers"]
+]
+
+print(programs.head())`;
+  }
+
+  return `# analysis comes from the full reform analysis step above
+programmes = analysis.programme_statistics.dataframe[
+    ["programme_name", "change", "winners", "losers"]
+]
+
+print(programmes.head())`;
+}
+
+export function getPolicyengineRegionalExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.core import Simulation
+from policyengine.core.scoping_strategy import RowFilterStrategy
+from policyengine.outputs.aggregate import Aggregate, AggregateType
+from policyengine.tax_benefit_models.us import ensure_datasets, us_latest
+
+year = 2026
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
+    years=[year],
+    data_folder="./data",
+)
+dataset = datasets[f"enhanced_cps_2024_{year}"]
+
+california_sim = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=us_latest,
+    scoping_strategy=RowFilterStrategy(
+        variable_name="state_fips",
+        variable_value=6,
+    ),
+)
+california_sim.run()
+
+eitc_total = Aggregate(
+    simulation=california_sim,
+    variable="eitc",
+    aggregate_type=AggregateType.SUM,
+    entity="tax_unit",
+)
+eitc_total.run()
+print(f"California EITC: \${eitc_total.result / 1e9:.1f}B")`;
+  }
+
+  return `from policyengine.core import Simulation
+from policyengine.core.scoping_strategy import RowFilterStrategy
+from policyengine.outputs.aggregate import Aggregate, AggregateType
+from policyengine.tax_benefit_models.uk import ensure_datasets, uk_latest
+
+year = 2026
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+    years=[year],
+    data_folder="./data",
+)
+dataset = datasets[f"enhanced_frs_2023_24_{year}"]
+
+london_sim = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=uk_latest,
+    scoping_strategy=RowFilterStrategy(
+        variable_name="region",
+        variable_value="LONDON",
+    ),
+)
+london_sim.run()
+
+uc_total = Aggregate(
+    simulation=london_sim,
+    variable="universal_credit",
+    aggregate_type=AggregateType.SUM,
+    entity="benunit",
+)
+uc_total.run()
+print(f"London universal credit: \u00a3{uc_total.result / 1e9:.1f}bn")`;
+}
+
+export function getPolicyengineReleaseBundleExample() {
+  return `# After running a simulation, inspect the certified runtime bundle
+print(simulation.release_bundle)`;
 }
 
 export function getDockerExample() {

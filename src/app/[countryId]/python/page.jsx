@@ -17,8 +17,8 @@ export async function generateMetadata({ params }) {
   }
 
   return {
-    title: `${country.pythonPackage} documentation`,
-    description: `Interactive Python package documentation for ${country.label} household simulations.`,
+    title: `${country.pythonGuidePackage} documentation`,
+    description: `Interactive ${country.label} policy analysis examples with ${country.pythonGuidePackage}.`,
     alternates: {
       canonical: `/${country.id}/python`,
     },
