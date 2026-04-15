@@ -660,6 +660,52 @@ print(household_uc[["universal_credit"]].head())
 print(person_household_income[["household_net_income"]].head())`;
 }
 
+export function getPolicyenginePandasExample(country) {
+  if (country.id === 'us') {
+    return `import pandas as pd
+
+# simulation comes from the setup step above
+households = simulation.output_dataset.data.household[
+    ["household_net_income", "household_weight"]
+]
+
+print(households.head())
+
+# Once you convert to plain pandas, weighting is your responsibility.
+plain = pd.DataFrame(households)
+weighted_mean = simulation.output_dataset.data.household["household_net_income"].mean()
+plain_mean = plain["household_net_income"].mean()
+manual_mean = (
+    plain["household_net_income"] * plain["household_weight"]
+).sum() / plain["household_weight"].sum()
+
+print(f"MicroSeries mean: \${weighted_mean:,.0f}")
+print(f"Plain pandas mean (unweighted): \${plain_mean:,.0f}")
+print(f"Manual pandas mean: \${manual_mean:,.0f}")`;
+  }
+
+  return `import pandas as pd
+
+# simulation comes from the setup step above
+households = simulation.output_dataset.data.household[
+    ["household_net_income", "household_weight"]
+]
+
+print(households.head())
+
+# Once you convert to plain pandas, weighting is your responsibility.
+plain = pd.DataFrame(households)
+weighted_mean = simulation.output_dataset.data.household["household_net_income"].mean()
+plain_mean = plain["household_net_income"].mean()
+manual_mean = (
+    plain["household_net_income"] * plain["household_weight"]
+).sum() / plain["household_weight"].sum()
+
+print(f"MicroSeries mean: \u00a3{weighted_mean:,.0f}")
+print(f"Plain pandas mean (unweighted): \u00a3{plain_mean:,.0f}")
+print(f"Manual pandas mean: \u00a3{manual_mean:,.0f}")`;
+}
+
 export function getPolicyengineAxisExample(country) {
   if (country.id === 'us') {
     return `# simulation comes from the setup step above
@@ -757,6 +803,166 @@ print(result.benunit[0]["universal_credit"])
 print(result.household["household_net_income"])`;
 }
 
+export function getPolicyengineHouseholdVariationExample(country) {
+  if (country.id === 'us') {
+    return `import tempfile
+from pathlib import Path
+
+import pandas as pd
+from microdf import MicroDataFrame
+
+from policyengine.core import Simulation
+from policyengine.tax_benefit_models.us import (
+    PolicyEngineUSDataset,
+    USYearData,
+    us_latest,
+)
+
+employment_incomes = [0, 20_000, 40_000, 60_000, 80_000]
+n = len(employment_incomes)
+
+person_data = {
+    "person_id": list(range(n * 3)),
+    "household_id": [i for i in range(n) for _ in range(3)],
+    "marital_unit_id": [i for i in range(n) for _ in range(3)],
+    "family_id": [i for i in range(n) for _ in range(3)],
+    "spm_unit_id": [i for i in range(n) for _ in range(3)],
+    "tax_unit_id": [i for i in range(n) for _ in range(3)],
+    "age": [35, 8, 5] * n,
+    "employment_income": [
+        value
+        for income in employment_incomes
+        for value in [income, 0, 0]
+    ],
+    "person_weight": [1.0] * (n * 3),
+    "is_tax_unit_head": [True, False, False] * n,
+    "is_tax_unit_dependent": [False, True, True] * n,
+}
+household_data = {
+    "household_id": list(range(n)),
+    "state_code_str": ["CA"] * n,
+    "household_weight": [1.0] * n,
+}
+marital_unit_data = {
+    "marital_unit_id": list(range(n)),
+    "marital_unit_weight": [1.0] * n,
+}
+family_data = {
+    "family_id": list(range(n)),
+    "family_weight": [1.0] * n,
+}
+spm_unit_data = {
+    "spm_unit_id": list(range(n)),
+    "spm_unit_weight": [1.0] * n,
+}
+tax_unit_data = {
+    "tax_unit_id": list(range(n)),
+    "tax_unit_weight": [1.0] * n,
+    "filing_status": ["SINGLE"] * n,
+}
+
+dataset = PolicyEngineUSDataset(
+    name="variation-us",
+    description="variation-us",
+    filepath=str(Path(tempfile.mkdtemp()) / "variation_us.h5"),
+    year=2026,
+    data=USYearData(
+        person=MicroDataFrame(pd.DataFrame(person_data), weights="person_weight"),
+        household=MicroDataFrame(pd.DataFrame(household_data), weights="household_weight"),
+        marital_unit=MicroDataFrame(pd.DataFrame(marital_unit_data), weights="marital_unit_weight"),
+        family=MicroDataFrame(pd.DataFrame(family_data), weights="family_weight"),
+        spm_unit=MicroDataFrame(pd.DataFrame(spm_unit_data), weights="spm_unit_weight"),
+        tax_unit=MicroDataFrame(pd.DataFrame(tax_unit_data), weights="tax_unit_weight"),
+    ),
+)
+
+simulation = Simulation(dataset=dataset, tax_benefit_model_version=us_latest)
+simulation.run()
+output = simulation.output_dataset.data
+
+results = pd.DataFrame(
+    {
+        "employment_income": employment_incomes,
+        "household_net_income": output.household["household_net_income"].tolist(),
+        "eitc": output.tax_unit["eitc"].tolist(),
+        "snap": output.spm_unit["snap"].tolist(),
+    }
+)
+print(results.to_string(index=False))`;
+  }
+
+  return `import tempfile
+from pathlib import Path
+
+import pandas as pd
+from microdf import MicroDataFrame
+
+from policyengine.core import Simulation
+from policyengine.tax_benefit_models.uk import (
+    PolicyEngineUKDataset,
+    UKYearData,
+    uk_latest,
+)
+
+employment_incomes = [0, 10_000, 20_000, 30_000, 40_000]
+n = len(employment_incomes)
+
+person_data = {
+    "person_id": list(range(n * 3)),
+    "person_benunit_id": [i for i in range(n) for _ in range(3)],
+    "person_household_id": [i for i in range(n) for _ in range(3)],
+    "age": [35, 8, 5] * n,
+    "employment_income": [
+        value
+        for income in employment_incomes
+        for value in [income, 0, 0]
+    ],
+    "person_weight": [1.0] * (n * 3),
+    "is_disabled_for_benefits": [False] * (n * 3),
+    "uc_limited_capability_for_WRA": [False] * (n * 3),
+}
+benunit_data = {
+    "benunit_id": list(range(n)),
+    "benunit_weight": [1.0] * n,
+    "would_claim_uc": [True] * n,
+    "would_claim_child_benefit": [True] * n,
+}
+household_data = {
+    "household_id": list(range(n)),
+    "household_weight": [1.0] * n,
+    "region": ["LONDON"] * n,
+    "council_tax": [0.0] * n,
+    "rent": [12_000.0] * n,
+    "tenure_type": ["RENT_PRIVATELY"] * n,
+}
+
+dataset = PolicyEngineUKDataset(
+    name="variation-uk",
+    description="variation-uk",
+    filepath=str(Path(tempfile.mkdtemp()) / "variation_uk.h5"),
+    year=2026,
+    data=UKYearData(
+        person=MicroDataFrame(pd.DataFrame(person_data), weights="person_weight"),
+        benunit=MicroDataFrame(pd.DataFrame(benunit_data), weights="benunit_weight"),
+        household=MicroDataFrame(pd.DataFrame(household_data), weights="household_weight"),
+    ),
+)
+
+simulation = Simulation(dataset=dataset, tax_benefit_model_version=uk_latest)
+simulation.run()
+output = simulation.output_dataset.data
+
+results = pd.DataFrame(
+    {
+        "employment_income": employment_incomes,
+        "hbai_household_net_income": output.household["hbai_household_net_income"].tolist(),
+        "universal_credit": output.benunit["universal_credit"].tolist(),
+        "child_benefit": output.benunit["child_benefit"].tolist(),
+    }
+)
+print(results.to_string(index=False))`;
+}
+
 export function getPolicyengineWeightingExample(country) {
   if (country.id === 'us') {
     return `# simulation comes from the setup step above
@@ -775,6 +981,338 @@ uc = simulation.output_dataset.data.benunit["universal_credit"]
 print(type(uc).__name__)
 print(f"Weighted total UC: \u00a3{uc.sum() / 1e9:.1f}bn")
 print(f"Weighted mean UC: \u00a3{uc.mean():,.0f}")`;
+}
+
+export function getPolicyengineEnrollmentExample(country) {
+  if (country.id === 'us') {
+    return `import pandas as pd
+
+# simulation comes from the setup step above
+people = simulation.output_dataset.data.map_to_entity(
+    source_entity="spm_unit",
+    target_entity="person",
+    columns=["snap"],
+    how="project",
+)
+
+plain = pd.DataFrame(people[["snap"]])
+plain["is_child"] = simulation.output_dataset.data.person["is_child"].to_numpy()
+plain["person_weight"] = simulation.output_dataset.data.person["person_weight"].to_numpy()
+
+snap_people = plain.loc[plain["snap"] > 0, "person_weight"].sum()
+snap_children = plain.loc[
+    (plain["snap"] > 0) & (plain["is_child"]),
+    "person_weight",
+].sum()
+
+print(f"SNAP recipients: {snap_people:,.0f}")
+print(f"Children in SNAP units: {snap_children:,.0f}")
+print(plain.head())`;
+  }
+
+  return `import pandas as pd
+
+# simulation comes from the setup step above
+plain = pd.DataFrame(
+    simulation.output_dataset.data.person[
+        ["universal_credit", "is_child", "person_weight"]
+    ]
+)
+
+uc_people = plain.loc[
+    plain["universal_credit"] > 0,
+    "person_weight",
+].sum()
+uc_children = plain.loc[
+    (plain["universal_credit"] > 0) & (plain["is_child"]),
+    "person_weight",
+].sum()
+
+print(f"People with UC entitlement: {uc_people:,.0f}")
+print(f"Children with UC entitlement: {uc_children:,.0f}")
+print(plain.head())`;
+}
+
+export function getPolicyengineTimeSeriesExample(country) {
+  if (country.id === 'us') {
+    return `import datetime
+
+from policyengine.core import Parameter, ParameterValue, Policy, Simulation
+from policyengine.outputs.aggregate import Aggregate, AggregateType
+from policyengine.tax_benefit_models.us import ensure_datasets, us_latest
+
+years = [2026, 2027]
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
+    years=years,
+    data_folder="./data",
+)
+
+parameter = Parameter(
+    name="gov.irs.deductions.standard.amount.SINGLE",
+    tax_benefit_model_version=us_latest,
+)
+reform = Policy(
+    name="Double standard deduction (single)",
+    parameter_values=[
+        ParameterValue(
+            parameter=parameter,
+            start_date=datetime.date(year, 1, 1),
+            end_date=datetime.date(year, 12, 31),
+            value=30950,
+        )
+        for year in years
+    ],
+)
+
+for year in years:
+    dataset = datasets[f"enhanced_cps_2024_{year}"]
+    baseline = Simulation(dataset=dataset, tax_benefit_model_version=us_latest)
+    reformed = Simulation(
+        dataset=dataset,
+        tax_benefit_model_version=us_latest,
+        policy=reform,
+    )
+    baseline.run()
+    reformed.run()
+
+    baseline_total = Aggregate(
+        simulation=baseline,
+        variable="household_net_income",
+        aggregate_type=AggregateType.SUM,
+        entity="household",
+    )
+    reform_total = Aggregate(
+        simulation=reformed,
+        variable="household_net_income",
+        aggregate_type=AggregateType.SUM,
+        entity="household",
+    )
+    baseline_total.run()
+    reform_total.run()
+
+    change = (reform_total.result - baseline_total.result) / 1e9
+    print(f"{year}: \${change:,.1f}B")`;
+  }
+
+  return `import datetime
+
+from policyengine.core import Parameter, ParameterValue, Policy, Simulation
+from policyengine.outputs.aggregate import Aggregate, AggregateType
+from policyengine.tax_benefit_models.uk import ensure_datasets, uk_latest
+
+years = [2026, 2027]
+datasets = ensure_datasets(
+    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+    years=years,
+    data_folder="./data",
+)
+
+parameter = Parameter(
+    name="gov.hmrc.income_tax.allowances.personal_allowance.amount",
+    tax_benefit_model_version=uk_latest,
+)
+reform = Policy(
+    name="Increase personal allowance",
+    parameter_values=[
+        ParameterValue(
+            parameter=parameter,
+            start_date=datetime.date(year, 1, 1),
+            end_date=datetime.date(year, 12, 31),
+            value=15000,
+        )
+        for year in years
+    ],
+)
+
+for year in years:
+    dataset = datasets[f"enhanced_frs_2023_24_{year}"]
+    baseline = Simulation(dataset=dataset, tax_benefit_model_version=uk_latest)
+    reformed = Simulation(
+        dataset=dataset,
+        tax_benefit_model_version=uk_latest,
+        policy=reform,
+    )
+    baseline.run()
+    reformed.run()
+
+    baseline_total = Aggregate(
+        simulation=baseline,
+        variable="household_net_income",
+        aggregate_type=AggregateType.SUM,
+        entity="household",
+    )
+    reform_total = Aggregate(
+        simulation=reformed,
+        variable="household_net_income",
+        aggregate_type=AggregateType.SUM,
+        entity="household",
+    )
+    baseline_total.run()
+    reform_total.run()
+
+    change = (reform_total.result - baseline_total.result) / 1e9
+    print(f"{year}: \u00a3{change:,.1f}bn")`;
+}
+
+export function getPolicyengineHouseholdReleaseBundleExample(country) {
+  if (country.id === 'us') {
+    return `import tempfile
+from pathlib import Path
+
+import pandas as pd
+from microdf import MicroDataFrame
+
+from policyengine.core import Simulation
+from policyengine.tax_benefit_models.us import (
+    PolicyEngineUSDataset,
+    USYearData,
+    us_latest,
+)
+
+person = MicroDataFrame(
+    pd.DataFrame(
+        {
+            "person_id": [0],
+            "household_id": [0],
+            "marital_unit_id": [0],
+            "family_id": [0],
+            "spm_unit_id": [0],
+            "tax_unit_id": [0],
+            "age": [35],
+            "employment_income": [50_000.0],
+            "person_weight": [1.0],
+            "is_tax_unit_head": [True],
+        }
+    ),
+    weights="person_weight",
+)
+household = MicroDataFrame(
+    pd.DataFrame(
+        {
+            "household_id": [0],
+            "state_code_str": ["CA"],
+            "household_weight": [1.0],
+        }
+    ),
+    weights="household_weight",
+)
+marital_unit = MicroDataFrame(
+    pd.DataFrame({"marital_unit_id": [0], "marital_unit_weight": [1.0]}),
+    weights="marital_unit_weight",
+)
+family = MicroDataFrame(
+    pd.DataFrame({"family_id": [0], "family_weight": [1.0]}),
+    weights="family_weight",
+)
+spm_unit = MicroDataFrame(
+    pd.DataFrame({"spm_unit_id": [0], "spm_unit_weight": [1.0]}),
+    weights="spm_unit_weight",
+)
+tax_unit = MicroDataFrame(
+    pd.DataFrame(
+        {
+            "tax_unit_id": [0],
+            "tax_unit_weight": [1.0],
+            "filing_status": ["SINGLE"],
+        }
+    ),
+    weights="tax_unit_weight",
+)
+
+dataset = PolicyEngineUSDataset(
+    name="household-repro",
+    description="household-repro",
+    filepath=str(Path(tempfile.mkdtemp()) / "household_repro.h5"),
+    year=2026,
+    data=USYearData(
+        person=person,
+        household=household,
+        marital_unit=marital_unit,
+        family=family,
+        spm_unit=spm_unit,
+        tax_unit=tax_unit,
+    ),
+)
+
+simulation = Simulation(dataset=dataset, tax_benefit_model_version=us_latest)
+simulation.run()
+
+print(simulation.release_bundle["bundle_id"])
+print(simulation.release_bundle["model_version"])
+print(round(float(simulation.output_dataset.data.household["household_net_income"].iloc[0]), 2))`;
+  }
+
+  return `import tempfile
+from pathlib import Path
+
+import pandas as pd
+from microdf import MicroDataFrame
+
+from policyengine.core import Simulation
+from policyengine.tax_benefit_models.uk import (
+    PolicyEngineUKDataset,
+    UKYearData,
+    uk_latest,
+)
+
+person = MicroDataFrame(
+    pd.DataFrame(
+        {
+            "person_id": [0],
+            "person_benunit_id": [0],
+            "person_household_id": [0],
+            "age": [35],
+            "employment_income": [30_000.0],
+            "person_weight": [1.0],
+            "is_disabled_for_benefits": [False],
+            "uc_limited_capability_for_WRA": [False],
+        }
+    ),
+    weights="person_weight",
+)
+benunit = MicroDataFrame(
+    pd.DataFrame(
+        {
+            "benunit_id": [0],
+            "benunit_weight": [1.0],
+            "would_claim_uc": [True],
+        }
+    ),
+    weights="benunit_weight",
+)
+household = MicroDataFrame(
+    pd.DataFrame(
+        {
+            "household_id": [0],
+            "household_weight": [1.0],
+            "region": ["LONDON"],
+            "council_tax": [0.0],
+            "rent": [12_000.0],
+            "tenure_type": ["RENT_PRIVATELY"],
+        }
+    ),
+    weights="household_weight",
+)
+
+dataset = PolicyEngineUKDataset(
+    name="household-repro",
+    description="household-repro",
+    filepath=str(Path(tempfile.mkdtemp()) / "household_repro.h5"),
+    year=2026,
+    data=UKYearData(
+        person=person,
+        benunit=benunit,
+        household=household,
+    ),
+)
+
+simulation = Simulation(dataset=dataset, tax_benefit_model_version=uk_latest)
+simulation.run()
+
+print(simulation.release_bundle["bundle_id"])
+print(simulation.release_bundle["model_version"])
+print(round(float(simulation.output_dataset.data.household["hbai_household_net_income"].iloc[0]), 2))`;
 }
 
 export function getPolicyengineMicrosimAlignmentExample(country) {

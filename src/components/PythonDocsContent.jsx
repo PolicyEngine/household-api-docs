@@ -10,12 +10,17 @@ import {
   getPolicyengineHouseholdAxisExample,
   getPolicyengineHouseholdImpactExample,
   getPolicyengineHouseholdOutputExample,
+  getPolicyengineHouseholdReleaseBundleExample,
   getPolicyengineHouseholdReformExample,
+  getPolicyengineHouseholdVariationExample,
+  getPolicyengineEnrollmentExample,
   getPolicyengineMicrosimAlignmentExample,
   getPolicyengineMappingExample,
+  getPolicyenginePandasExample,
   getPolicyengineProgramExample,
   getPolicyengineRegionalExample,
   getPolicyengineReleaseBundleExample,
+  getPolicyengineTimeSeriesExample,
   getPolicyengineWeightingExample,
   getPythonInstallExample,
 } from '@/utils/countryDocs';
@@ -24,19 +29,17 @@ const HOUSEHOLD_TOPICS = [
   { id: 'impact', label: 'Household impact' },
   { id: 'axes', label: 'Household axes' },
   { id: 'outputs', label: 'Entity outputs' },
+  { id: 'variation', label: 'Variation grids' },
   { id: 'reforms', label: 'Household reforms' },
+  { id: 'reproducibility', label: 'Certified bundles' },
 ];
 
 const ANALYSIS_TOPICS = [
   { id: 'setup', label: 'Datasets and setup' },
-  { id: 'alignment', label: 'Microsim alignment' },
-  { id: 'axes', label: 'Entity axes' },
-  { id: 'mapping', label: 'Entity mapping' },
-  { id: 'weighting', label: 'Weighting' },
-  { id: 'aggregates', label: 'Aggregate outputs' },
+  { id: 'outputs', label: 'Entity outputs' },
+  { id: 'metrics', label: 'Weights and totals' },
   { id: 'reforms', label: 'Baseline vs reform' },
-  { id: 'programs', label: 'Program analysis' },
-  { id: 'regions', label: 'Regions and scoping' },
+  { id: 'regions', label: 'Regions and budgets' },
 ];
 
 function TopicSidebar({ items, selected, onChange }) {
@@ -201,10 +204,35 @@ export default function PythonDocsContent({ country }) {
         },
       ],
     },
+    variation: {
+      title: 'The old household axes idea becomes a small custom dataset in policyengine.py',
+      body:
+        'The notebook taught varying household inputs with axes. In policyengine.py, the equivalent supported path is to build a tiny custom dataset with one row per scenario and run a single Simulation across that grid. That gives you the same earnings-variation teaching pattern without relying on the old country-package axes API.',
+      blocks: [
+        {
+          title: 'Vary one household template across employment-income levels',
+          language: 'python',
+          code: getPolicyengineHouseholdVariationExample(country),
+          output: isUS
+            ? ` employment_income  household_net_income        eitc        snap
+                 0          23577.558594    0.000000 5999.688965
+             20000          43291.523438 7316.000000 3122.389160
+             40000          44639.250000 3912.703857    0.000000
+             60000          54158.671875    0.000000    0.000000
+             80000          67369.710938    0.000000    0.000000`
+            : ` employment_income  hbai_household_net_income  universal_credit  child_benefit
+                 0               25323.000000      22993.726562     2329.27417
+             10000               35323.000000      22993.726562     2329.27417
+             20000               39734.507812      19485.638672     2329.27417
+             30000               42974.511719      15525.639648     2329.27417
+             40000               46214.511719      11565.639648     2329.27417`,
+        },
+      ],
+    },
     reforms: {
       title: 'Household-level reform testing uses the same Policy objects',
       body:
-        'Even for a single household, reforms are defined with Parameter, ParameterValue, and Policy. The only difference is that you pass the policy into calculate_household_impact() instead of building a second request payload.',
+        'Even for a single household, reforms are defined with Parameter, ParameterValue, and Policy. The only difference is that you pass the policy into calculate_household_impact() instead of building a second request payload. The older structural variable-override pattern still exists in the underlying country model packages, but the wrapper-level guide stays on the supported Policy path.',
       blocks: [
         {
           title: 'Baseline vs reform for one household',
@@ -214,13 +242,26 @@ export default function PythonDocsContent({ country }) {
         },
       ],
     },
+    reproducibility: {
+      title: 'Certified runtime metadata lives on Simulation, even for one-household work',
+      body:
+        'The convenience household helper does not expose release metadata directly. When you need a certified bundle for a one-household analysis, run the same case through a one-row Simulation and inspect its release_bundle. That gives household work the same reproducibility boundary as microsimulation.',
+      blocks: [
+        {
+          title: 'Get a certified bundle for a single-household simulation',
+          language: 'python',
+          code: getPolicyengineHouseholdReleaseBundleExample(country),
+          output: isUS ? 'us-3.4.0\n1.602.0\n41352.14' : 'uk-3.4.0\n2.74.0\n25414.73',
+        },
+      ],
+    },
   };
 
   const analysisPanels = {
     setup: {
-      title: 'Representative datasets are the normal analysis path',
+      title: 'Representative datasets replace the old Microsimulation entry point',
       body:
-        'For policy analysis, move to dataset-backed Simulation objects. ensure_datasets() is the standard entry point: it loads cached HDF5 datasets when present and otherwise downloads and prepares them for the selected year.',
+        'For policy analysis, move to dataset-backed Simulation objects. ensure_datasets() is the standard entry point: it loads cached HDF5 datasets when present and otherwise downloads and prepares them for the selected year. If you used the old country-package Microsimulation entry point, the conceptual replacement is straightforward: the data step is still there, but policyengine.py wraps it in a cross-country Simulation object and standardises the output surface.',
       blocks: [
         {
           title: `${country.adjective} dataset-backed simulation`,
@@ -240,13 +281,6 @@ export default function PythonDocsContent({ country }) {
 3          30904.941406    4731.754395
 4          42611.609375   19814.173828`,
         },
-      ],
-    },
-    alignment: {
-      title: 'Microsimulation alignment after the policyengine.py restructure',
-      body:
-        'If you used the old country-package Microsimulation entry point, the conceptual replacement is straightforward: ensure_datasets() still gets representative microdata, but policyengine.py wraps the country model in a cross-country Simulation object and standardises the output surface.',
-      blocks: [
         {
           title: 'Old Microsimulation mental model -> new Simulation mental model',
           language: 'python',
@@ -255,10 +289,10 @@ export default function PythonDocsContent({ country }) {
         },
       ],
     },
-    axes: {
-      title: 'The old axis idea still exists, but as entity-indexed tables',
+    outputs: {
+      title: 'Entity outputs combine the old axis, map_to, and DataFrame ideas',
       body:
-        'Previously the guide taught arrays and shapes directly. The same idea is still here: each variable lives on an entity axis. policyengine.py just makes that explicit through output tables like person, tax_unit, benunit, spm_unit, and household instead of asking users to reason from raw NumPy shapes first.',
+        'Previously the guide split this across array shapes, map_to behaviour, and calculate_dataframe(). In policyengine.py, those ideas collapse into one entity-output surface: variables live on entity-indexed tables, you can map between entities directly, and the tabular data is already attached as MicroDataFrame objects.',
       blocks: [
         {
           title: 'Inspect entity axes in the output dataset',
@@ -274,13 +308,6 @@ person variables: ['employment_income', 'income_tax']
 benunit variables: ['universal_credit', 'child_benefit']
 household variables: ['household_net_income', 'household_tax']`,
         },
-      ],
-    },
-    mapping: {
-      title: 'Entity mapping replaces the old array-and-DataFrame detour',
-      body:
-        'The old guide spent time on array shapes and map_to behaviour. In policyengine.py, the more durable concept is entity mapping: once a simulation has run, map_to_entity() lets you move results across person, household, tax-unit, SPM-unit, and benunit levels without rebuilding the joins yourself.',
-      blocks: [
         {
           title: 'Map outputs between entities',
           language: 'python',
@@ -311,12 +338,36 @@ household variables: ['household_net_income', 'household_tax']`,
 3         250678.156250
 4         250678.156250`,
         },
+        {
+          title: 'Work with tabular outputs and plain pandas',
+          language: 'python',
+          code: getPolicyenginePandasExample(country),
+          output: isUS
+            ? `         weight  household_net_income  household_weight
+0      0.000000         167260.375000          0.000000
+1  35545.347656          31364.105469      35545.347656
+2      0.000000          22297.158203          0.000000
+3      0.000000         144667.875000          0.000000
+4      0.000000         159616.875000          0.000000
+MicroSeries mean: $112,921
+Plain pandas mean (unweighted): $20,929,322
+Manual pandas mean: $112,921`
+            : `       weight  household_net_income  household_weight
+0  733.899475          22410.880859        733.899475
+1  190.415878          31034.648438        190.415878
+2  256.588104         104790.132812        256.588104
+3   28.005545          37484.750000         28.005545
+4  369.855591          47159.039062        369.855591
+MicroSeries mean: £53,837
+Plain pandas mean (unweighted): £64,855
+Manual pandas mean: £53,837`,
+        },
       ],
     },
-    weighting: {
-      title: 'Weights still matter, but MicroSeries carries them for you',
+    metrics: {
+      title: 'MicroSeries, Aggregate, and person-level counts handle the weighted analysis layer',
       body:
-        'The old guide called this out explicitly, and it is still important. The main difference in policyengine.py is that output columns are MicroSeries, so weighted sums and means stay attached to the data instead of forcing you into a separate notebook pattern right away.',
+        'The old guide called weighting out explicitly, and it is still the critical concept. In policyengine.py, output columns are MicroSeries, so weighted sums and means stay attached to the data. When you want one top-line result instead of direct series work, Aggregate is the cleanest path, and person-level enrollment questions are just weighted counts on the person table.',
       blocks: [
         {
           title: 'Weighted sums and means',
@@ -326,25 +377,40 @@ household variables: ['household_net_income', 'household_tax']`,
             ? 'MicroSeries\nWeighted total EITC: $6.8B\nWeighted mean EITC: $311'
             : 'MicroSeries\nWeighted total UC: £17.3bn\nWeighted mean UC: £3,687',
         },
-      ],
-    },
-    aggregates: {
-      title: 'Aggregate turns simulation outputs into analysis metrics',
-      body:
-        'Once a simulation has run, Aggregate is the simplest way to compute totals, means, and filtered metrics without dropping straight into custom pandas code. It is also the safest way to stay correctly weighted when you are working with representative microdata.',
-      blocks: [
         {
           title: 'Compute a top-line aggregate',
           language: 'python',
           code: getPolicyengineAggregateExample(country),
           output: isUS ? 'Total EITC: $6.8B' : 'Total universal credit: £17.3bn',
         },
+        {
+          title: 'Person-level program enrollment',
+          language: 'python',
+          code: getPolicyengineEnrollmentExample(country),
+          output: isUS
+            ? `SNAP recipients: 54,240,120
+Children in SNAP units: 15,311,027
+         snap  is_child  person_weight
+0    0.000000     False       0.000000
+1    0.000000     False       0.000000
+2    0.000000      True       0.000000
+3    0.000000      True       0.000000
+4  287.683167     False   35545.347656`
+            : `People with UC entitlement: 13,521,395
+Children with UC entitlement: 5,835,700
+   universal_credit  is_child  person_weight
+0          0.000000     False     733.899475
+1        217.089844      True     190.415878
+2        217.089844      True     190.415878
+3        217.089844     False     190.415878
+4        217.089844     False     190.415878`,
+        },
       ],
     },
     reforms: {
-      title: 'economic_impact_analysis() is the full comparison workflow',
+      title: 'economic_impact_analysis() is the full reform-analysis workflow',
       body:
-        'For baseline-vs-reform work, the package already knows how to assemble decile impacts, programme statistics, poverty, and inequality metrics. Use ChangeAggregate for one number; use economic_impact_analysis() when you want the full policy-analysis bundle.',
+        'For baseline-vs-reform work, the package already knows how to assemble decile impacts, programme statistics, poverty, and inequality metrics. Use Aggregate for one number; use economic_impact_analysis() when you want the full policy-analysis bundle, including program-by-program breakdowns.',
       blocks: [
         {
           title: 'Full reform analysis workflow',
@@ -364,13 +430,6 @@ employee_payroll_tax  0.000000e+00 2.200066e+07 2.200066e+07
 national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
 0.2877410650253296 0.28766512870788574`,
         },
-      ],
-    },
-    programs: {
-      title: 'Program-by-program outputs are a first-class result',
-      body:
-        'The old guide had a dedicated program-analysis track. In policyengine.py that capability sits inside economic_impact_analysis(), which returns a tabular programme or program breakdown you can sort, export, or feed into a chart.',
-      blocks: [
         {
           title: 'Inspect program statistics',
           language: 'python',
@@ -392,16 +451,22 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
       ],
     },
     regions: {
-      title: isUS ? 'Scope the US dataset to states, districts, and places' : 'Scope the UK dataset to countries and smaller regions',
+      title: isUS ? 'Regional analysis and budget windows live in the same workflow' : 'Regional analysis and budget windows live in the same workflow',
       body: isUS
-        ? 'Regional analysis is built into policyengine.py. The working row-filter path on the packaged US dataset uses household geography columns like state_fips, and you can then move on to district and place outputs for more detailed geography.'
-        : 'Regional analysis also lives in the package. The simplest working row-filter path on the packaged UK dataset uses region, and the deeper path is weight-replaced simulations for constituencies and local authorities.',
+        ? 'Regional analysis is built into policyengine.py. The working row-filter path on the packaged US dataset uses household geography columns like state_fips, and the time side is still just multiple dataset years plus a loop over those years.'
+        : 'Regional analysis also lives in the package. The simplest working row-filter path on the packaged UK dataset uses region, and the time side is still just multiple dataset years plus a loop over those years.',
       blocks: [
         {
           title: `${country.adjective} regional analysis`,
           language: 'python',
           code: getPolicyengineRegionalExample(country),
           output: isUS ? 'California EITC: $6.8B' : 'London universal credit: £17.3bn',
+        },
+        {
+          title: 'Multi-year reform analysis',
+          language: 'python',
+          code: getPolicyengineTimeSeriesExample(country),
+          output: isUS ? '2026: $106.8B\n2027: $106.4B' : '2026: £20.8bn\n2027: £21.2bn',
         },
       ],
     },
@@ -486,7 +551,7 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
             Keep the source-of-truth links and reproducibility boundary visible
           </h2>
           <p className="mt-3 text-sm text-text-secondary">
-            policyengine.py now has an explicit reproducibility story: certified runtime bundles, release manifests, and TRACE-oriented provenance export. The practical first step in the guide is checking the bundle attached to the simulation you just ran.
+            policyengine.py now has an explicit reproducibility story: certified runtime bundles, release manifests, and TRACE-oriented provenance export. The practical first step in the guide is checking the bundle attached to the simulation you just ran. The older country-package computation-log tracer is not exposed on this wrapper, so the guide keeps traceability at the certified-bundle boundary instead of showing a non-working trace cell.
           </p>
           <div className="mt-6">
             <CodeBlock
