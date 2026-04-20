@@ -1041,7 +1041,8 @@ from policyengine.core import Parameter, ParameterValue, Policy, Simulation
 from policyengine.outputs.aggregate import Aggregate, AggregateType
 from policyengine.tax_benefit_models.us import ensure_datasets, us_latest
 
-years = [2026, 2027]
+# Ten-year budget window (the scoring convention used by CBO and JCT).
+years = list(range(2026, 2036))
 datasets = ensure_datasets(
     datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
     years=years,
@@ -1065,6 +1066,7 @@ reform = Policy(
     ],
 )
 
+annual_changes = []
 for year in years:
     dataset = datasets[f"enhanced_cps_2024_{year}"]
     baseline = Simulation(dataset=dataset, tax_benefit_model_version=us_latest)
@@ -1092,7 +1094,15 @@ for year in years:
     reform_total.run()
 
     change = (reform_total.result - baseline_total.result) / 1e9
-    print(f"{year}: \${change:,.1f}B")`;
+    annual_changes.append((year, change))
+    print(f"{year}: \${change:,.1f}B")
+
+budget_total = sum(change for _, change in annual_changes)
+first_year_change = annual_changes[0][1]
+last_year_change = annual_changes[-1][1]
+cagr = (last_year_change / first_year_change) ** (1 / (len(years) - 1)) - 1
+print(f"{len(years)}-year total: \${budget_total:,.1f}B")
+print(f"CAGR: {cagr:.2%}")`;
   }
 
   return `import datetime
@@ -1101,7 +1111,9 @@ from policyengine.core import Parameter, ParameterValue, Policy, Simulation
 from policyengine.outputs.aggregate import Aggregate, AggregateType
 from policyengine.tax_benefit_models.uk import ensure_datasets, uk_latest
 
-years = [2026, 2027]
+# OBR forecasts run on a five-year rolling horizon, and the packaged UK dataset
+# is uprated through 2030, so the budget window matches that.
+years = list(range(2026, 2031))
 datasets = ensure_datasets(
     datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
     years=years,
@@ -1125,6 +1137,7 @@ reform = Policy(
     ],
 )
 
+annual_changes = []
 for year in years:
     dataset = datasets[f"enhanced_frs_2023_24_{year}"]
     baseline = Simulation(dataset=dataset, tax_benefit_model_version=uk_latest)
@@ -1152,7 +1165,15 @@ for year in years:
     reform_total.run()
 
     change = (reform_total.result - baseline_total.result) / 1e9
-    print(f"{year}: \u00a3{change:,.1f}bn")`;
+    annual_changes.append((year, change))
+    print(f"{year}: \u00a3{change:,.1f}bn")
+
+budget_total = sum(change for _, change in annual_changes)
+first_year_change = annual_changes[0][1]
+last_year_change = annual_changes[-1][1]
+cagr = (last_year_change / first_year_change) ** (1 / (len(years) - 1)) - 1
+print(f"{len(years)}-year total: \u00a3{budget_total:,.1f}bn")
+print(f"CAGR: {cagr:.2%}")`;
 }
 
 export function getPolicyengineHouseholdReleaseBundleExample(country) {
@@ -1399,9 +1420,18 @@ reform_sim = Simulation(
 
 analysis = economic_impact_analysis(baseline_sim, reform_sim)
 
-print(analysis.decile_impacts.dataframe.head())
-print(analysis.program_statistics.dataframe.head())
-print(analysis.baseline_inequality.gini, analysis.reform_inequality.gini)`;
+deciles = analysis.decile_impacts.dataframe[
+    ["decile", "baseline_mean", "reform_mean", "absolute_change"]
+]
+programs = analysis.program_statistics.dataframe[
+    ["program_name", "change", "winners", "losers"]
+]
+print(deciles.head().to_string(index=False))
+print(programs.head().to_string(index=False))
+print(
+    f"baseline Gini: {analysis.baseline_inequality.gini:.4f}, "
+    f"reform Gini: {analysis.reform_inequality.gini:.4f}"
+)`;
   }
 
   return `import datetime
@@ -1446,9 +1476,18 @@ reform_sim = Simulation(
 
 analysis = economic_impact_analysis(baseline_sim, reform_sim)
 
-print(analysis.decile_impacts.dataframe.head())
-print(analysis.programme_statistics.dataframe.head())
-print(analysis.baseline_inequality.gini, analysis.reform_inequality.gini)`;
+deciles = analysis.decile_impacts.dataframe[
+    ["decile", "baseline_mean", "reform_mean", "absolute_change"]
+]
+programmes = analysis.programme_statistics.dataframe[
+    ["programme_name", "change", "winners", "losers"]
+]
+print(deciles.head().to_string(index=False))
+print(programmes.head().to_string(index=False))
+print(
+    f"baseline Gini: {analysis.baseline_inequality.gini:.4f}, "
+    f"reform Gini: {analysis.reform_inequality.gini:.4f}"
+)`;
 }
 
 export function getPolicyengineProgramExample(country) {
@@ -1540,6 +1579,451 @@ print(f"London universal credit: \u00a3{uc_total.result / 1e9:.1f}bn")`;
 export function getPolicyengineReleaseBundleExample() {
   return `# After running a simulation, inspect the certified runtime bundle
 print(simulation.release_bundle)`;
+}
+
+export function getPolicyengineTraceExample(country) {
+  if (country.id === 'us') {
+    return `# The policyengine.py wrapper does not expose the computation-log tracer.
+# When you need step-by-step variable provenance (for debugging or teaching),
+# drop to the country model package directly. The household inputs are the
+# same shape you already pass into calculate_household_impact().
+from policyengine_us import Simulation
+
+situation = {
+    "people": {
+        "parent_1": {"age": {"2026": 35}, "employment_income": {"2026": 50000}},
+    },
+    "families": {"family": {"members": ["parent_1"]}},
+    "marital_units": {"mu": {"members": ["parent_1"]}},
+    "tax_units": {"tu": {"members": ["parent_1"]}},
+    "spm_units": {"spm": {"members": ["parent_1"]}},
+    "households": {
+        "home": {"members": ["parent_1"], "state_code": {"2026": "CA"}},
+    },
+}
+
+sim = Simulation(situation=situation)
+sim.trace = True
+sim.calculate("eitc", 2026)
+sim.tracer.print_computation_log(max_depth=3)`;
+  }
+
+  return `# The policyengine.py wrapper does not expose the computation-log tracer.
+# For debugging or teaching a dependency tree, drop to the country package.
+from policyengine_uk import Simulation
+
+situation = {
+    "people": {
+        "adult": {"age": {"2026": 35}, "employment_income": {"2026": 30000}},
+    },
+    "benunits": {"bu": {"members": ["adult"]}},
+    "households": {
+        "home": {"members": ["adult"], "region": {"2026": "LONDON"}},
+    },
+}
+
+sim = Simulation(situation=situation)
+sim.trace = True
+sim.calculate("universal_credit", 2026)
+sim.tracer.print_computation_log(max_depth=3)`;
+}
+
+export function getPolicyengineProgrammaticSituationExample(country) {
+  if (country.id === 'us') {
+    return `from policyengine.tax_benefit_models.us import (
+    USHouseholdInput,
+    calculate_household_impact,
+)
+
+def family_with_children(num_children: int, state: str = "CA", year: int = 2026):
+    people = [
+        {"age": 35, "employment_income": 50000, "is_tax_unit_head": True},
+        {"age": 33, "employment_income": 25000, "is_tax_unit_spouse": True},
+    ]
+    for i in range(num_children):
+        people.append({"age": max(1, 10 - i)})
+    return USHouseholdInput(
+        people=people,
+        tax_unit={"filing_status": "JOINT"},
+        household={"state_code_str": state},
+        year=year,
+    )
+
+for n in (0, 2, 4):
+    result = calculate_household_impact(family_with_children(n))
+    ctc = result.tax_unit[0]["ctc"]
+    print(f"{n} children: CTC = \${ctc:,.0f}")`;
+  }
+
+  return `from policyengine.tax_benefit_models.uk import (
+    UKHouseholdInput,
+    calculate_household_impact,
+)
+
+def family_with_children(num_children: int, region: str = "LONDON", year: int = 2026):
+    people = [
+        {"age": 35, "employment_income": 30000},
+        {"age": 33, "employment_income": 18000},
+    ]
+    for i in range(num_children):
+        people.append({"age": max(1, 10 - i)})
+    return UKHouseholdInput(
+        people=people,
+        household={"region": region},
+        year=year,
+    )
+
+for n in (0, 2, 4):
+    result = calculate_household_impact(family_with_children(n))
+    cb = result.benunit[0]["child_benefit"]
+    print(f"{n} children: child benefit = \u00a3{cb:,.0f}")`;
+}
+
+export function getPolicyengineMapToAggregationExample(country) {
+  if (country.id === 'us') {
+    return `# map_to_entity has two directions:
+#   1. Source entity is BELOW the target -> rows are summed up into the target.
+#   2. Source entity is ABOVE the target -> values are projected (broadcast) down.
+# (Same-level mapping is not supported today; read the column directly instead.)
+data = simulation.output_dataset.data
+
+# Rule 1 (sum up): SPM-unit SNAP -> household totals
+household_snap = data.map_to_entity(
+    source_entity="spm_unit",
+    target_entity="household",
+    columns=["snap"],
+    how="sum",
+)
+
+# Rule 2 (project down): a household column repeats for each person in the household
+person_decile = data.map_to_entity(
+    source_entity="household",
+    target_entity="person",
+    columns=["household_income_decile"],
+    how="project",
+)
+
+# Same-level: just read the column off the entity table directly.
+household_net_income = data.household["household_net_income"]
+
+print(household_snap[["snap"]].head())
+print(person_decile[["household_income_decile"]].head())
+print(household_net_income.head())`;
+  }
+
+  return `# map_to_entity has two directions:
+#   1. Source entity is BELOW the target -> rows are summed up into the target.
+#   2. Source entity is ABOVE the target -> values are projected (broadcast) down.
+# (Same-level mapping is not supported today; read the column directly instead.)
+data = simulation.output_dataset.data
+
+# Rule 1 (sum up): benunit UC -> household totals
+household_uc = data.map_to_entity(
+    source_entity="benunit",
+    target_entity="household",
+    columns=["universal_credit"],
+    how="sum",
+)
+
+# Rule 2 (project down): a household column repeats for each person in the household
+person_decile = data.map_to_entity(
+    source_entity="household",
+    target_entity="person",
+    columns=["household_income_decile"],
+    how="project",
+)
+
+# Same-level: just read the column off the entity table directly.
+household_net_income = data.household["household_net_income"]
+
+print(household_uc[["universal_credit"]].head())
+print(person_decile[["household_income_decile"]].head())
+print(household_net_income.head())`;
+}
+
+export function getPolicyengineStructuralReformExample(country) {
+  if (country.id === 'us') {
+    return `# policyengine.py's Policy handles parameter-level reforms. When a reform needs
+# to change how a variable is CALCULATED (not just its inputs), drop to the
+# country package's structural reform API, then pass the resulting Reform class
+# into a country-package Simulation. This path lives outside the policyengine.py
+# reproducibility boundary, so pin policyengine-us explicitly and record it.
+from policyengine_core.reforms import Reform
+from policyengine_us import Simulation
+from policyengine_us.model_api import *
+
+situation = {
+    "people": {
+        "parent_1": {"age": {"2026": 35}, "employment_income": {"2026": 75000}, "is_tax_unit_head": {"2026": True}},
+        "parent_2": {"age": {"2026": 33}, "employment_income": {"2026": 45000}, "is_tax_unit_spouse": {"2026": True}},
+        "child_1": {"age": {"2026": 10}, "is_tax_unit_dependent": {"2026": True}},
+        "child_2": {"age": {"2026": 7}, "is_tax_unit_dependent": {"2026": True}},
+    },
+    "families": {"family": {"members": ["parent_1", "parent_2", "child_1", "child_2"]}},
+    "marital_units": {
+        "mu_parents": {"members": ["parent_1", "parent_2"]},
+        "mu_c1": {"members": ["child_1"], "marital_unit_id": {"2026": 1}},
+        "mu_c2": {"members": ["child_2"], "marital_unit_id": {"2026": 2}},
+    },
+    "tax_units": {"tu": {"members": ["parent_1", "parent_2", "child_1", "child_2"]}},
+    "spm_units": {"spm": {"members": ["parent_1", "parent_2", "child_1", "child_2"]}},
+    "households": {
+        "home": {"members": ["parent_1", "parent_2", "child_1", "child_2"], "state_code": {"2026": "CA"}}
+    },
+}
+
+class ctc_value(Variable):
+    value_type = float
+    entity = TaxUnit
+    label = "CTC value (+$1,000 bonus)"
+    unit = USD
+    definition_period = YEAR
+
+    def formula(tax_unit, period, parameters):
+        base = tax_unit("ctc", period)
+        return base + 1_000
+
+class bonus_ctc(Reform):
+    def apply(self):
+        self.update_variable(ctc_value)
+
+sim = Simulation(situation=situation, reform=bonus_ctc)
+print(sim.calculate("ctc_value", 2026))`;
+  }
+
+  return `# Policy handles parameter-level reforms. For structural reforms that override
+# how a variable is calculated, drop to the country package directly. The current
+# policyengine-uk Simulation wraps reforms in a way that requires Reform subclasses
+# to override __init__ and apply; the override pattern below is the supported path.
+# Record the policyengine-uk version you used - structural reforms live outside
+# the policyengine.py reproducibility boundary.
+from policyengine_core.reforms import Reform
+from policyengine_uk import Simulation
+from policyengine_uk.model_api import *
+
+situation = {
+    "people": {
+        "adult": {"age": {"2026": 35}, "employment_income": {"2026": 30000}},
+        "partner": {"age": {"2026": 33}},
+        "child_1": {"age": {"2026": 8}},
+        "child_2": {"age": {"2026": 5}},
+    },
+    "benunits": {"bu": {"members": ["adult", "partner", "child_1", "child_2"]}},
+    "households": {
+        "home": {"members": ["adult", "partner", "child_1", "child_2"], "region": {"2026": "LONDON"}}
+    },
+}
+
+class child_benefit(Variable):
+    value_type = float
+    entity = BenUnit
+    label = "Child benefit (+10% bonus)"
+    unit = GBP
+    definition_period = YEAR
+
+    def formula(benunit, period, parameters):
+        base = parameters(period).gov.hmrc.child_benefit.amount
+        children = benunit("num_children", period)
+        return base.eldest * children * 52 * 1.10
+
+class bonus_cb(Reform):
+    def __init__(self):
+        # Override: UK simulation calls Reform() with no args.
+        pass
+
+    def apply(self, tax_benefit_system=None):
+        target = tax_benefit_system if tax_benefit_system is not None else self
+        target.update_variable(child_benefit)
+
+sim = Simulation(situation=situation, reform=bonus_cb)
+print(sim.calculate("child_benefit", 2026))`;
+}
+
+export function getPolicyengineVisualizationExample(country) {
+  if (country.id === 'us') {
+    return `import plotly.graph_objects as go
+
+# earnings_grid comes from the variation step above: it is a plain pandas
+# DataFrame with one row per employment-income scenario.
+fig = go.Figure()
+fig.add_trace(
+    go.Scatter(
+        x=earnings_grid["employment_income"],
+        y=earnings_grid["household_net_income"],
+        mode="lines",
+        name="Household net income",
+        line=dict(color="#2C6496", width=3),
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=earnings_grid["employment_income"],
+        y=earnings_grid["eitc"],
+        mode="lines",
+        name="EITC",
+        line=dict(color="#39C6C0", width=3),
+    )
+)
+fig.update_layout(
+    title="Net income and EITC by employment income",
+    xaxis_title="Employment income",
+    yaxis_title="Amount",
+    xaxis=dict(tickformat="$,.0f"),
+    yaxis=dict(tickformat="$,.0f"),
+    template="plotly_white",
+    hovermode="x unified",
+)
+fig.show()`;
+  }
+
+  return `import plotly.graph_objects as go
+
+# earnings_grid comes from the variation step above.
+fig = go.Figure()
+fig.add_trace(
+    go.Scatter(
+        x=earnings_grid["employment_income"],
+        y=earnings_grid["hbai_household_net_income"],
+        mode="lines",
+        name="Household net income",
+        line=dict(color="#2C6496", width=3),
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=earnings_grid["employment_income"],
+        y=earnings_grid["universal_credit"],
+        mode="lines",
+        name="Universal credit",
+        line=dict(color="#39C6C0", width=3),
+    )
+)
+fig.update_layout(
+    title="Net income and UC by employment income",
+    xaxis_title="Employment income",
+    yaxis_title="Amount",
+    xaxis=dict(tickformat="\u00a3,.0f"),
+    yaxis=dict(tickformat="\u00a3,.0f"),
+    template="plotly_white",
+    hovermode="x unified",
+)
+fig.show()`;
+}
+
+export function getPolicyenginePinBundleExample(country) {
+  const pkg = country.id === 'us' ? 'policyengine[us]' : 'policyengine[uk]';
+  const country_id = country.id;
+  return `# Step 1: pin the exact policyengine.py release in your environment.
+# pip install "${pkg}==3.4.4"
+
+# Step 2: capture the certified runtime bundle next to every output you save.
+import json
+from pathlib import Path
+
+# simulation is any policyengine.py Simulation that has already been run.
+bundle = simulation.release_bundle
+
+Path("outputs").mkdir(exist_ok=True)
+Path("outputs/release_bundle.json").write_text(json.dumps(bundle, indent=2))
+
+print("bundle_id:", bundle["bundle_id"])
+print("country:", "${country_id}")
+print("model:", bundle["model_package"], bundle["model_version"])
+print("data:", bundle["data_package"], bundle["data_version"])
+print("dataset:", bundle["dataset_filepath"])`;
+}
+
+export function getPolicyengineManifestExample(country) {
+  const dataPkg =
+    country.id === 'us' ? 'policyengine-us-data' : 'policyengine-uk-data';
+  const countryId = country.id;
+  return `# policyengine.py exposes two manifest layers.
+#
+# 1. Data build manifest (owned by ${dataPkg}):
+#      records which raw inputs, calibration targets, and country-model version
+#      produced the artifact bytes. This is the provenance record for the data.
+#
+# 2. Certified runtime bundle (owned by policyengine.py):
+#      records which model version and which staged data artifact are supported
+#      together at runtime. This is the user-facing reproducibility boundary.
+#
+# policyengine.py ships a bundled country manifest for each supported release.
+# get_release_manifest() returns the certified runtime bundle; the data build
+# manifest is fetched separately (from HuggingFace) via get_data_release_manifest.
+from policyengine.core.release_manifest import (
+    get_release_manifest,
+    get_data_release_manifest,
+    DataReleaseManifestUnavailable,
+)
+
+country_manifest = get_release_manifest("${countryId}")
+print("runtime bundle:", country_manifest.bundle_id)
+print("certified dataset:", country_manifest.certified_data_artifact.dataset)
+print("certified model version:", country_manifest.certification.certified_for_model_version)
+print("data build_id:", country_manifest.certified_data_artifact.build_id)
+print("compatibility basis:", country_manifest.certification.compatibility_basis)
+
+# The data build manifest lives in the country *-data repo. The fetch can fail
+# offline or when the manifest has not yet been published for a build.
+try:
+    data_manifest = get_data_release_manifest("${countryId}")
+    print("data manifest build_id:", data_manifest.build.build_id)
+    print("built with model:", data_manifest.build.built_with_model_package.version)
+except DataReleaseManifestUnavailable as error:
+    print("data manifest unavailable:", error)`;
+}
+
+export function getPolicyengineTraceExportExample(country) {
+  const cid = country.id;
+  return `# TRACE is a standards-based JSON-LD export layer on top of the internal
+# manifests. Use it when you need to cite a run in a paper, submit to an audit,
+# or share provenance across tools that do not read PolicyEngine manifests
+# directly. A full TRO requires BOTH the country runtime bundle and the data
+# build manifest; when the data manifest has not been published for a release,
+# fall back to emitting the runtime bundle alone so at least the runtime side
+# is provenance-tracked.
+from pathlib import Path
+import json
+
+from policyengine.core.release_manifest import (
+    DataReleaseManifestUnavailable,
+    get_data_release_manifest,
+    get_release_manifest,
+)
+from policyengine.core.trace_tro import (
+    build_trace_tro_from_release_bundle,
+    compute_trace_composition_fingerprint,
+)
+
+country_manifest = get_release_manifest("${cid}")
+
+Path("outputs").mkdir(exist_ok=True)
+
+try:
+    data_manifest = get_data_release_manifest("${cid}")
+except DataReleaseManifestUnavailable as error:
+    print("data manifest unavailable:", error)
+    Path("outputs/release_bundle.json").write_text(
+        json.dumps(country_manifest.model_dump(mode="json"), indent=2)
+    )
+    print("wrote runtime-only bundle to outputs/release_bundle.json")
+else:
+    tro = build_trace_tro_from_release_bundle(
+        country_manifest=country_manifest,
+        data_release_manifest=data_manifest,
+    )
+    fingerprint = compute_trace_composition_fingerprint(
+        artifact_hashes=[
+            artifact.sha256
+            for artifact in data_manifest.artifacts.values()
+            if artifact.sha256
+        ],
+    )
+    Path("outputs/trace.tro.jsonld").write_text(json.dumps(tro, indent=2))
+    print("TROV version:", tro["@context"][0]["trov"])
+    print("composition fingerprint:", fingerprint[:16], "...")
+
+print("country:", "${cid}")`;
 }
 
 export function getDockerExample() {

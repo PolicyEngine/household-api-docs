@@ -47,18 +47,23 @@ export default function CodeBlock({ code, language = 'python', title, output }) 
           <div className="flex items-center px-4 py-2 bg-gray-50 border-y border-border-light">
             <span className="text-sm font-medium text-text-secondary">Output</span>
           </div>
-          <SyntaxHighlighter
-            language="python"
-            style={oneDark}
-            customStyle={{
-              margin: 0,
-              borderRadius: 0,
+          <pre
+            className="m-0 overflow-x-auto px-4 py-3 font-mono"
+            style={{
+              backgroundColor: '#282c34',
+              color: '#abb2bf',
               fontSize: '14px',
               lineHeight: '1.6',
             }}
           >
-            {output}
-          </SyntaxHighlighter>
+            {output.split(/(-?\d[\d,_]*(?:\.\d+)?)/g).map((part, i) =>
+              /^-?\d[\d,_]*(?:\.\d+)?$/.test(part) ? (
+                <span key={i} style={{ color: '#b08968' }}>{part}</span>
+              ) : (
+                part
+              )
+            )}
+          </pre>
         </>
       )}
     </div>

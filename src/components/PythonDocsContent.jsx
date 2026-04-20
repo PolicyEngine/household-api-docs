@@ -10,17 +10,24 @@ import {
   getPolicyengineHouseholdAxisExample,
   getPolicyengineHouseholdImpactExample,
   getPolicyengineHouseholdOutputExample,
-  getPolicyengineHouseholdReleaseBundleExample,
   getPolicyengineHouseholdReformExample,
   getPolicyengineHouseholdVariationExample,
   getPolicyengineEnrollmentExample,
+  getPolicyengineManifestExample,
+  getPolicyengineMapToAggregationExample,
   getPolicyengineMicrosimAlignmentExample,
   getPolicyengineMappingExample,
   getPolicyenginePandasExample,
+  getPolicyenginePinBundleExample,
   getPolicyengineProgramExample,
+  getPolicyengineProgrammaticSituationExample,
   getPolicyengineRegionalExample,
   getPolicyengineReleaseBundleExample,
+  getPolicyengineStructuralReformExample,
   getPolicyengineTimeSeriesExample,
+  getPolicyengineTraceExample,
+  getPolicyengineTraceExportExample,
+  getPolicyengineVisualizationExample,
   getPolicyengineWeightingExample,
   getPythonInstallExample,
 } from '@/utils/countryDocs';
@@ -30,8 +37,9 @@ const HOUSEHOLD_TOPICS = [
   { id: 'axes', label: 'Household axes' },
   { id: 'outputs', label: 'Entity outputs' },
   { id: 'variation', label: 'Variation grids' },
+  { id: 'programmatic', label: 'Building situations' },
   { id: 'reforms', label: 'Household reforms' },
-  { id: 'reproducibility', label: 'Certified bundles' },
+  { id: 'trace', label: 'Tracing calculations' },
 ];
 
 const ANALYSIS_TOPICS = [
@@ -40,6 +48,51 @@ const ANALYSIS_TOPICS = [
   { id: 'metrics', label: 'Weights and totals' },
   { id: 'reforms', label: 'Baseline vs reform' },
   { id: 'regions', label: 'Regions and budgets' },
+  { id: 'visualization', label: 'Visualization' },
+];
+
+const REPRODUCIBILITY_TOPICS = [
+  { id: 'bundle', label: 'Pin the bundle' },
+  { id: 'manifests', label: 'Two-manifest architecture' },
+  { id: 'trace', label: 'TRACE export' },
+];
+
+const US_ENTITY_ROWS = [
+  { entity: 'person', scope: 'Individual', examples: 'employment_income, age, is_disabled' },
+  { entity: 'marital_unit', scope: 'Married couple or single adult', examples: 'joint return grouping' },
+  { entity: 'tax_unit', scope: 'Tax filing unit', examples: 'income_tax, ctc_value, eitc' },
+  { entity: 'spm_unit', scope: 'SPM poverty unit', examples: 'snap, housing_assistance' },
+  { entity: 'family', scope: 'Related-by-blood grouping', examples: 'family-level programmes' },
+  { entity: 'household', scope: 'All people at one address', examples: 'household_net_income, state_fips, rent' },
+];
+
+const UK_ENTITY_ROWS = [
+  { entity: 'person', scope: 'Individual', examples: 'employment_income, age, is_disabled_for_benefits' },
+  { entity: 'benunit', scope: 'Benefit unit (adult(s) + dependent children)', examples: 'universal_credit, child_benefit' },
+  { entity: 'household', scope: 'All people at one address', examples: 'household_net_income, region, council_tax' },
+];
+
+const PARAMETER_ROWS = [
+  {
+    kind: 'Single value',
+    example: 'gov.irs.credits.ctc.amount.base[0].amount',
+    description: 'A scalar amount, rate, or threshold. Set a new value for a date range.',
+  },
+  {
+    kind: 'List',
+    example: 'gov.irs.credits.refundable',
+    description: 'A list of values, often names of variables that qualify for a rule.',
+  },
+  {
+    kind: 'Scale',
+    example: 'gov.hmrc.income_tax.rates',
+    description: 'Graduated thresholds and rates. Access via .thresholds, .rates, .amounts.',
+  },
+  {
+    kind: 'Breakdown',
+    example: 'gov.irs.credits.ctc.phase_out.threshold.JOINT',
+    description: 'Parameter broken down by an enum (filing status, age band, region).',
+  },
 ];
 
 function TopicSidebar({ items, selected, onChange }) {
@@ -148,10 +201,52 @@ function TopicSection({
   );
 }
 
+function ReferenceTable({ columns, rows }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-separate border-spacing-0 text-left text-sm">
+        <thead>
+          <tr>
+            {columns.map((column) => (
+              <th
+                key={column}
+                className="sticky top-0 border-b border-border-light bg-bg-secondary px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary"
+              >
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex} className="align-top">
+              {row.map((cell, cellIndex) => (
+                <td
+                  key={cellIndex}
+                  className="border-b border-border-light px-4 py-3 text-text-primary"
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function PythonDocsContent({ country }) {
   const isUS = country.id === 'us';
   const [householdTopic, setHouseholdTopic] = useState('impact');
   const [analysisTopic, setAnalysisTopic] = useState('setup');
+  const [reproTopic, setReproTopic] = useState('bundle');
+
+  const entityRows = (isUS ? US_ENTITY_ROWS : UK_ENTITY_ROWS).map((row) => [
+    <code key="entity" className="rounded bg-bg-secondary px-1.5 py-0.5 text-xs">{row.entity}</code>,
+    row.scope,
+    <code key="examples" className="text-xs text-text-secondary">{row.examples}</code>,
+  ]);
 
   const householdPanels = {
     impact: {
@@ -192,15 +287,57 @@ export default function PythonDocsContent({ country }) {
     outputs: {
       title: 'Read outputs by entity, not by a nested request payload',
       body:
-        'The helper returns entity-level outputs directly: person rows, higher-level units like tax units or benefit units, and a single household summary. That makes it easier to move from one-household examples into real analysis code.',
+        'The helper returns entity-level outputs directly: person rows, higher-level units like tax units or benefit units, and a single household summary. The map_to_entity method follows three rules so you can move values between levels without hand-written joins.',
       blocks: [
         {
           title: 'Inspect entity-level results',
           language: 'python',
           code: getPolicyengineHouseholdOutputExample(country),
           output: isUS
-            ? '40000.0\n-8841.66015625\n-5781.66015625'
-            : '3234.0\n15387.0400390625\n42928.86328125',
+            ? '50000.0\n3820.0\n8647.859375'
+            : '3486.0\n295.138671796875\n25255.69140625',
+        },
+        {
+          title: 'map_to_entity aggregation rules',
+          language: 'python',
+          code: getPolicyengineMapToAggregationExample(country),
+          output: isUS
+            ? `         weight        snap
+0      0.000000    0.000000
+1  94409.679688  287.683167
+2      0.000000  287.683167
+3      0.000000    0.000000
+4      0.000000    0.000000
+         weight  household_income_decile
+0      0.000000                        8
+1      0.000000                        8
+2      0.000000                        8
+3      0.000000                        8
+4  94409.679688                        2
+0    167260.375000
+1     31364.105469
+2     22297.158203
+3    144380.109375
+4    159616.875000
+Name: household_net_income, dtype: float32`
+            : `       weight  universal_credit
+0  808.091309          0.000000
+1  166.748154        942.416016
+2  467.949768          0.000000
+3  181.570221          0.000000
+4  515.411926          0.000000
+       weight  household_income_decile
+0  808.091309                        2
+1  166.748154                        1
+2  166.748154                        1
+3  166.748154                        1
+4  166.748154                        1
+0     22410.880859
+1     30880.449219
+2    102359.851562
+3     37223.136719
+4     35031.476562
+Name: household_net_income, dtype: float32`,
         },
       ],
     },
@@ -229,29 +366,74 @@ export default function PythonDocsContent({ country }) {
         },
       ],
     },
+    programmatic: {
+      title: 'Build household inputs programmatically',
+      body:
+        'USHouseholdInput and UKHouseholdInput are plain pydantic models, so you can generate them from a function or a loop instead of hand-writing each case. This is the package-level replacement for the notebook pattern that dynamically added children to a situation dictionary.',
+      blocks: [
+        {
+          title: `Sweep ${isUS ? 'CTC' : 'child benefit'} over family size`,
+          language: 'python',
+          code: getPolicyengineProgrammaticSituationExample(country),
+          output: isUS
+            ? '0 children: CTC = $0\n2 children: CTC = $4,400\n4 children: CTC = $8,800'
+            : '0 children: child benefit = £0\n2 children: child benefit = £2,329\n4 children: child benefit = £4,185',
+        },
+      ],
+    },
     reforms: {
       title: 'Household-level reform testing uses the same Policy objects',
       body:
-        'Even for a single household, reforms are defined with Parameter, ParameterValue, and Policy. The only difference is that you pass the policy into calculate_household_impact() instead of building a second request payload. The older structural variable-override pattern still exists in the underlying country model packages, but the wrapper-level guide stays on the supported Policy path.',
+        'Even for a single household, reforms are defined with Parameter, ParameterValue, and Policy. For parameter-level changes this is the supported path and gives you the same certified bundle you get from baseline runs. For reforms that change how a variable is calculated, drop to the country package - that path works, but it lives outside the policyengine.py reproducibility boundary, so you have to pin the country package version yourself.',
       blocks: [
         {
-          title: 'Baseline vs reform for one household',
+          title: 'Baseline vs reform for one household (parameter-level)',
           language: 'python',
           code: getPolicyengineHouseholdReformExample(country),
           output: isUS ? 'Change in net income: $1,782' : 'Change in net income: £486',
         },
+        {
+          title: 'Structural reform escape hatch (country package)',
+          language: 'python',
+          code: getPolicyengineStructuralReformExample(country),
+          output: isUS ? '[5400.]' : '[3082.9263]',
+        },
       ],
     },
-    reproducibility: {
-      title: 'Certified runtime metadata lives on Simulation, even for one-household work',
+    trace: {
+      title: 'Tracing calculations: drop to the country package',
       body:
-        'The convenience household helper does not expose release metadata directly. When you need a certified bundle for a one-household analysis, run the same case through a one-row Simulation and inspect its release_bundle. That gives household work the same reproducibility boundary as microsimulation.',
+        'The policyengine.py wrapper does not expose print_computation_log. When you need a step-by-step dependency tree - for debugging unexpected values, teaching, or writing up how a variable is built - run the same situation through the country package directly. The tracer prints one line per variable: name, period, branch, and the computed array.',
       blocks: [
         {
-          title: 'Get a certified bundle for a single-household simulation',
+          title: `Trace a ${isUS ? 'EITC' : 'Universal Credit'} calculation`,
           language: 'python',
-          code: getPolicyengineHouseholdReleaseBundleExample(country),
-          output: isUS ? 'us-3.4.0\n1.602.0\n41352.14' : 'uk-3.4.0\n2.74.0\n25414.73',
+          code: getPolicyengineTraceExample(country),
+          output: isUS
+            ? `  eitc<2026, (default)> = [0.]
+    eitc_eligible<2026, (default)> = [ True]
+      eitc_investment_income_eligible<2026, (default)> = [ True]
+      eitc_demographic_eligible<2026, (default)> = [ True]
+      filer_meets_eitc_identification_requirements<2026, (default)> = [ True]
+    takes_up_eitc<2026, (default)> = [ True]
+    eitc_maximum<2026, (default)> = [664.]
+      eitc_child_count<2026, (default)> = [0]
+    eitc_phased_in<2026, (default)> = [664.]
+      eitc_maximum<2026, (default)> = [664.]
+      eitc_phase_in_rate<2026, (default)> = [0.0765]
+      filer_adjusted_earnings<2026, (default)> = [50000.]
+    eitc_reduction<2026, (default)> = [2995.74]
+      filer_adjusted_earnings<2026, (default)> = [50000.]
+      adjusted_gross_income<2026, (default)> = [50000.]
+      eitc_phase_out_start<2026, (default)> = [10840.]
+      eitc_phase_out_rate<2026, (default)> = [0.0765]`
+            : `  universal_credit<2026, (default)> = [0.]
+    would_claim_uc<2026, (default)> = [ True]
+    universal_credit_pre_benefit_cap<2026, (default)> = [0.]
+      would_claim_uc<2026, (default)> = [ True]
+      uc_maximum_amount<2026, (default)> = [4912.1187]
+      uc_income_reduction<2026, (default)> = [4912.1187]
+    benefit_cap_reduction<2026, (default)> = [0.]`,
         },
       ],
     },
@@ -268,18 +450,18 @@ export default function PythonDocsContent({ country }) {
           language: 'python',
           code: getPolicyengineDatasetExample(country),
           output: isUS
-            ? `   household_net_income  household_tax
-0         159616.875000   28905.570312
-1          23514.343750       0.000000
-2          73911.210938     -10.663874
-3          30762.664062    5317.699707
-4          70909.531250    7834.121094`
-            : `   household_net_income  household_tax
-0          -5820.696777    9985.617188
-1         250678.156250  187514.578125
-2          -2660.014404   26395.324219
-3          30904.941406    4731.754395
-4          42611.609375   19814.173828`,
+            ? `         weight  household_net_income  household_tax
+0      0.000000         167260.375000   44651.078125
+1  94409.679688          31364.105469    -732.710266
+2      0.000000          22297.158203       0.000000
+3      0.000000         144380.109375   33226.578125
+4      0.000000         159616.875000   28905.570312`
+            : `       weight  household_net_income  household_tax
+0  808.091309          22410.880859    3274.553223
+1  166.748154          30880.449219    4701.234863
+2  467.949768         102359.851562   74587.593750
+3  181.570221          37223.136719    5545.671875
+4  515.411926          35031.476562    5471.306641`,
         },
         {
           title: 'Old Microsimulation mental model -> new Simulation mental model',
@@ -299,11 +481,11 @@ export default function PythonDocsContent({ country }) {
           language: 'python',
           code: getPolicyengineAxisExample(country),
           output: isUS
-            ? `{'person': 12060, 'tax_unit': 6744, 'spm_unit': 5140, 'household': 4962}
+            ? `{'person': 101384, 'tax_unit': 56658, 'spm_unit': 43134, 'household': 41314}
 person variables: ['employment_income', 'ssi', 'medicare_cost']
 tax-unit variables: ['income_tax', 'state_income_tax', 'eitc']
 household variables: ['household_net_income', 'household_tax']`
-            : `{'person': 10820, 'benunit': 5754, 'household': 4478}
+            : `{'person': 115710, 'benunit': 61898, 'household': 53508}
 person variables: ['employment_income', 'income_tax']
 benunit variables: ['universal_credit', 'child_benefit']
 household variables: ['household_net_income', 'household_tax']`,
@@ -313,30 +495,30 @@ household variables: ['household_net_income', 'household_tax']`,
           language: 'python',
           code: getPolicyengineMappingExample(country),
           output: isUS
-            ? `   snap
-0   0.0
-1   0.0
-2   0.0
-3   0.0
-4   0.0
-   household_tax
-0   28905.570312
-1   28905.570312
-2       0.000000
-3     -10.663874
-4     -10.663874`
-            : `   universal_credit
-0               0.0
-1               0.0
-2               0.0
-3               0.0
-4               0.0
-   household_net_income
-0          -5820.696777
-1         100931.710938
-2         100931.710938
-3         250678.156250
-4         250678.156250`,
+            ? `         weight        snap
+0      0.000000    0.000000
+1  94409.679688  287.683167
+2      0.000000  287.683167
+3      0.000000    0.000000
+4      0.000000    0.000000
+         weight  household_tax
+0      0.000000   44651.078125
+1      0.000000   44651.078125
+2      0.000000   44651.078125
+3      0.000000   44651.078125
+4  94409.679688    -732.710266`
+            : `       weight  universal_credit
+0  808.091309          0.000000
+1  166.748154        942.416016
+2  467.949768          0.000000
+3  181.570221          0.000000
+4  515.411926          0.000000
+       weight  household_net_income
+0  808.091309          22410.880859
+1  166.748154          30880.449219
+2  166.748154          30880.449219
+3  166.748154          30880.449219
+4  166.748154          30880.449219`,
         },
         {
           title: 'Work with tabular outputs and plain pandas',
@@ -345,22 +527,22 @@ household variables: ['household_net_income', 'household_tax']`,
           output: isUS
             ? `         weight  household_net_income  household_weight
 0      0.000000         167260.375000          0.000000
-1  35545.347656          31364.105469      35545.347656
+1  94409.679688          31364.105469      94409.679688
 2      0.000000          22297.158203          0.000000
-3      0.000000         144667.875000          0.000000
+3      0.000000         144380.109375          0.000000
 4      0.000000         159616.875000          0.000000
-MicroSeries mean: $112,921
-Plain pandas mean (unweighted): $20,929,322
-Manual pandas mean: $112,921`
+MicroSeries mean: $197,263
+Plain pandas mean (unweighted): $21,769,616
+Manual pandas mean: $197,263`
             : `       weight  household_net_income  household_weight
-0  733.899475          22410.880859        733.899475
-1  190.415878          31034.648438        190.415878
-2  256.588104         104790.132812        256.588104
-3   28.005545          37484.750000         28.005545
-4  369.855591          47159.039062        369.855591
-MicroSeries mean: £53,837
-Plain pandas mean (unweighted): £64,855
-Manual pandas mean: £53,837`,
+0  808.091309          22410.880859        808.091309
+1  166.748154          30880.449219        166.748154
+2  467.949768         102359.851562        467.949768
+3  181.570221          37223.136719        181.570221
+4  515.411926          35031.476562        515.411926
+MicroSeries mean: £54,192
+Plain pandas mean (unweighted): £68,602
+Manual pandas mean: £54,192`,
         },
       ],
     },
@@ -374,36 +556,36 @@ Manual pandas mean: £53,837`,
           language: 'python',
           code: getPolicyengineWeightingExample(country),
           output: isUS
-            ? 'MicroSeries\nWeighted total EITC: $6.8B\nWeighted mean EITC: $311'
-            : 'MicroSeries\nWeighted total UC: £17.3bn\nWeighted mean UC: £3,687',
+            ? 'MicroSeries\nWeighted total EITC: $62.1B\nWeighted mean EITC: $318'
+            : 'MicroSeries\nWeighted total UC: £96.4bn\nWeighted mean UC: £2,705',
         },
         {
           title: 'Compute a top-line aggregate',
           language: 'python',
           code: getPolicyengineAggregateExample(country),
-          output: isUS ? 'Total EITC: $6.8B' : 'Total universal credit: £17.3bn',
+          output: isUS ? 'Total EITC: $62.1B' : 'Total universal credit: £96.4bn',
         },
         {
           title: 'Person-level program enrollment',
           language: 'python',
           code: getPolicyengineEnrollmentExample(country),
           output: isUS
-            ? `SNAP recipients: 54,240,120
-Children in SNAP units: 15,311,027
+            ? `SNAP recipients: 51,220,852
+Children in SNAP units: 15,733,092
          snap  is_child  person_weight
 0    0.000000     False       0.000000
 1    0.000000     False       0.000000
 2    0.000000      True       0.000000
 3    0.000000      True       0.000000
-4  287.683167     False   35545.347656`
-            : `People with UC entitlement: 13,521,395
-Children with UC entitlement: 5,835,700
+4  287.683167     False   94409.679688`
+            : `People with UC entitlement: 15,928,831
+Children with UC entitlement: 6,780,346
    universal_credit  is_child  person_weight
-0          0.000000     False     733.899475
-1        217.089844      True     190.415878
-2        217.089844      True     190.415878
-3        217.089844     False     190.415878
-4        217.089844     False     190.415878`,
+0          0.000000     False     808.091309
+1        942.416016      True     166.748154
+2        942.416016      True     166.748154
+3        942.416016     False     166.748154
+4        942.416016     False     166.748154`,
         },
       ],
     },
@@ -417,18 +599,32 @@ Children with UC entitlement: 5,835,700
           language: 'python',
           code: getPolicyengineEconomicImpactExample(country),
           output: isUS
-            ? `                 baseline_simulation_id                  reform_simulation_id       income_variable  decile  baseline_mean  reform_mean  absolute_change  relative_change  count_better_off  count_worse_off  count_no_change
-0  ...  household_net_income       1   -3084.370108 -3020.234972        64.135136        -0.072769     110148.088641              0.0     2.053285e+06
+            ? ` decile  baseline_mean  reform_mean  absolute_change
+      1   -1545.980994 -1392.893084       153.087910
+      2   25980.639399 26141.205521       160.566122
+      3   40797.105949 41380.591286       583.485337
+      4   56389.368009 57032.937899       643.569890
+      5   74434.627376 75518.311739      1083.684363
         program_name        change      winners       losers
-          income_tax -8.188285e+09 1.722058e+07 2.200066e+07
-employee_payroll_tax  0.000000e+00 2.200066e+07 2.200066e+07
-0.664551854133606 0.6630756855010986`
-            : `                 baseline_simulation_id                  reform_simulation_id                  income_variable  decile  baseline_mean  reform_mean  absolute_change  relative_change  count_better_off  count_worse_off  count_no_change
-0  ...  equiv_hbai_household_net_income       1    7386.319426  7405.539919        19.220493         0.150233      10544.507993              0.0    134918.362638
+          income_tax -1.080405e+11 1.391090e+08 1.947908e+08
+employee_payroll_tax  0.000000e+00 1.950783e+08 1.950783e+08
+    state_income_tax -2.546925e+09 1.897764e+08 1.934048e+08
+                snap  0.000000e+00 0.000000e+00 0.000000e+00
+                tanf  0.000000e+00 0.000000e+00 0.000000e+00
+baseline Gini: 0.7624, reform Gini: 0.7606`
+            : ` decile  baseline_mean  reform_mean  absolute_change
+      1   11507.088124 11541.186333        34.098209
+      2   19578.513452 19789.152719       210.639267
+      3   25359.336285 25634.716091       275.379806
+      4   30034.256800 30436.598293       402.341493
+      5   34874.719465 35306.487355       431.767890
     programme_name        change      winners       losers
-        income_tax -2.830008e+09 4.424946e+06 9.124488e+06
-national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
-0.2877410650253296 0.28766512870788574`,
+        income_tax -2.148292e+10 3.175206e+07 7.120972e+07
+national_insurance  0.000000e+00 7.120972e+07 7.120972e+07
+               vat  0.000000e+00 3.197526e+07 3.197526e+07
+       council_tax  0.000000e+00 3.197526e+07 3.197526e+07
+  universal_credit -7.943472e+08 0.000000e+00 2.890717e+06
+baseline Gini: 0.3089, reform Gini: 0.3088`,
         },
         {
           title: 'Inspect program statistics',
@@ -436,37 +632,140 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
           code: getPolicyengineProgramExample(country),
           output: isUS
             ? `        program_name        change      winners       losers
-          income_tax -8.188285e+09 1.722058e+07 2.200066e+07
-employee_payroll_tax  0.000000e+00 2.200066e+07 2.200066e+07
-    state_income_tax  0.000000e+00 2.200066e+07 2.200066e+07
+          income_tax -1.080405e+11 1.391090e+08 1.947908e+08
+employee_payroll_tax  0.000000e+00 1.950783e+08 1.950783e+08
+    state_income_tax -2.546925e+09 1.897764e+08 1.934048e+08
                 snap  0.000000e+00 0.000000e+00 0.000000e+00
                 tanf  0.000000e+00 0.000000e+00 0.000000e+00`
             : `    programme_name        change      winners       losers
-        income_tax -2.830008e+09 4.424946e+06 9.124488e+06
-national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
-               vat  0.000000e+00 4.017530e+06 4.017530e+06
-       council_tax  0.000000e+00 4.017530e+06 4.017530e+06
-  universal_credit -1.625253e+08 0.000000e+00 5.804354e+05`,
+        income_tax -2.148292e+10 3.175206e+07 7.120972e+07
+national_insurance  0.000000e+00 7.120972e+07 7.120972e+07
+               vat  0.000000e+00 3.197526e+07 3.197526e+07
+       council_tax  0.000000e+00 3.197526e+07 3.197526e+07
+  universal_credit -7.943472e+08 0.000000e+00 2.890717e+06`,
         },
       ],
     },
     regions: {
-      title: isUS ? 'Regional analysis and budget windows live in the same workflow' : 'Regional analysis and budget windows live in the same workflow',
+      title: 'Regional analysis and budget windows live in the same workflow',
       body: isUS
-        ? 'Regional analysis is built into policyengine.py. The working row-filter path on the packaged US dataset uses household geography columns like state_fips, and the time side is still just multiple dataset years plus a loop over those years.'
-        : 'Regional analysis also lives in the package. The simplest working row-filter path on the packaged UK dataset uses region, and the time side is still just multiple dataset years plus a loop over those years.',
+        ? 'Regional analysis is built into policyengine.py. The working row-filter path on the packaged US dataset uses household geography columns like state_fips, and the time side is just multiple dataset years plus a loop. Budget scoring typically runs over a 10-year window to match CBO and JCT conventions.'
+        : 'Regional analysis also lives in the package. The simplest working row-filter path on the packaged UK dataset uses region, and the time side is just multiple dataset years plus a loop. The packaged enhanced FRS is uprated through 2030, which matches the OBR five-year forecast horizon.',
       blocks: [
         {
           title: `${country.adjective} regional analysis`,
           language: 'python',
           code: getPolicyengineRegionalExample(country),
-          output: isUS ? 'California EITC: $6.8B' : 'London universal credit: £17.3bn',
+          output: isUS ? 'California EITC: $10.6B' : 'London universal credit: £15.8bn',
         },
         {
-          title: 'Multi-year reform analysis',
+          title: isUS ? '10-year budget window with CAGR' : 'Five-year OBR-style window with CAGR',
           language: 'python',
           code: getPolicyengineTimeSeriesExample(country),
-          output: isUS ? '2026: $106.8B\n2027: $106.4B' : '2026: £20.8bn\n2027: £21.2bn',
+          output: isUS
+            ? `2026: $110.6B
+2027: $110.2B
+2028: $110.0B
+2029: $113.5B
+2030: $117.8B
+2031: $117.0B
+2032: $116.1B
+2033: $114.9B
+2034: $113.5B
+2035: $112.7B
+10-year total: $1,136.4B
+CAGR: 0.21%`
+            : `2026: £20.5bn
+2027: £21.0bn
+2028: £21.5bn
+2029: £21.8bn
+2030: £22.2bn
+5-year total: £107.1bn
+CAGR: 2.06%`,
+        },
+      ],
+    },
+    visualization: {
+      title: 'Publication-ready charts with Plotly',
+      body:
+        'Plotly is bundled with policyengine.py and is the same charting layer policyengine.org uses. For one-off analysis, you can drop a variation grid or aggregate table straight into go.Figure and get an interactive chart. For PolicyEngine-branded output, the country model packages expose format_fig, which applies the same typography and colour palette you see on the main site.',
+      blocks: [
+        {
+          title: 'Chart a household variation grid',
+          language: 'python',
+          code: getPolicyengineVisualizationExample(country),
+          output:
+            'Plotly figure opens in the browser (interactive). Replace fig.show() with fig.write_image("chart.png") to save a static version, or fig.write_html("chart.html") to embed it in a dashboard.',
+        },
+      ],
+    },
+  };
+
+  const reproPanels = {
+    bundle: {
+      title: 'Pin the bundle and save it next to every output',
+      body:
+        'The user-facing reproducibility boundary in policyengine.py is the certified runtime bundle. It pins a policyengine.py version to an exact country model version AND an exact certified data artifact. Anything an analysis depends on that is not in the bundle is out of scope. The practical workflow is two lines: pin policyengine.py in requirements, and write simulation.release_bundle to disk alongside the results you publish.',
+      blocks: [
+        {
+          title: 'Pin the release and capture the bundle',
+          language: 'python',
+          code: getPolicyenginePinBundleExample(country),
+          output: isUS
+            ? `bundle_id: us-3.4.0
+country: us
+model: policyengine-us 1.602.0
+data: policyengine-us-data 1.73.0
+dataset: ./data/enhanced_cps_2024_year_2026.h5`
+            : `bundle_id: uk-3.4.0
+country: uk
+model: policyengine-uk 2.74.0
+data: policyengine-uk-data 1.40.4
+dataset: ./data/enhanced_frs_2023_24_year_2026.h5`,
+        },
+      ],
+    },
+    manifests: {
+      title: 'Two manifest layers: data build and certified runtime',
+      body:
+        'policyengine.py separates two responsibilities. The data build manifest is owned by the country *-data repo and records how the artifact bytes were produced (raw inputs, calibration targets, model version used in the build). The certified runtime bundle is owned by policyengine.py and records which model + data pair are supported together at runtime. The certification check is explicit: a model version may reuse an existing data artifact only if its data_build_fingerprint matches the one the data was built against. Mismatches are a hard failure, not a warning.',
+      blocks: [
+        {
+          title: 'Load and verify both manifests',
+          language: 'python',
+          code: getPolicyengineManifestExample(country),
+          output: isUS
+            ? `runtime bundle: us-3.4.0
+certified dataset: enhanced_cps_2024
+certified model version: 1.602.0
+data build_id: policyengine-us-data-1.73.0
+compatibility basis: exact_build_model_version
+data manifest unavailable: Could not find the data release manifest on Hugging Face for policyengine/policyengine-us-data@1.73.0.`
+            : `runtime bundle: uk-3.4.0
+certified dataset: enhanced_frs_2023_24
+certified model version: 2.74.0
+data build_id: policyengine-uk-data-1.40.4
+compatibility basis: exact_build_model_version
+data manifest unavailable: Could not fetch the data release manifest from Hugging Face. If this country uses a private data repo, set HUGGING_FACE_TOKEN.`,
+        },
+      ],
+    },
+    trace: {
+      title: 'TRACE export for papers, audits, and cross-tool provenance',
+      body:
+        'TRACE (Transparent Reporting And Citation Exchange) is a JSON-LD standard for describing analytical artifacts. policyengine.py ships a TRO builder that wraps the runtime bundle and the data build manifest into a single TRACE-compatible document plus a composition fingerprint over the artifacts in scope. Use this when you need to cite a run in a paper or submit provenance to an audit - the internal manifests remain authoritative, TRACE is the export surface.',
+      blocks: [
+        {
+          title: 'Emit a TRACE TRO alongside your results',
+          language: 'python',
+          code: getPolicyengineTraceExportExample(country),
+          output: isUS
+            ? `data manifest unavailable: Could not find the data release manifest on Hugging Face for policyengine/policyengine-us-data@1.73.0.
+wrote runtime-only bundle to outputs/release_bundle.json
+country: us`
+            : `data manifest unavailable: Could not fetch the data release manifest from Hugging Face. If this country uses a private data repo, set HUGGING_FACE_TOKEN.
+wrote runtime-only bundle to outputs/release_bundle.json
+country: uk`,
         },
       ],
     },
@@ -517,6 +816,43 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
               </p>
             </div>
           </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary">{country.adjective} entity hierarchy</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                Outputs come back at the entity level where a variable is defined. Everything else is a mapping operation.
+              </p>
+              <div className="mt-3 overflow-hidden rounded-2xl border border-border-light">
+                <ReferenceTable
+                  columns={['Entity', 'Scope', 'Example variables']}
+                  rows={entityRows}
+                />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary">Parameter types</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                Every reform target is a parameter. Knowing which shape a parameter has tells you how to reference it in a <code className="rounded bg-bg-secondary px-1 py-0.5 text-xs">Policy</code>.
+              </p>
+              <div className="mt-3 space-y-3">
+                {PARAMETER_ROWS.map((row) => (
+                  <div
+                    key={row.kind}
+                    className="rounded-2xl border border-border-light bg-bg-secondary p-4"
+                  >
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-sm font-semibold text-text-primary">{row.kind}</span>
+                      <code className="break-all rounded bg-white px-1.5 py-0.5 text-xs text-text-secondary">
+                        {row.example}
+                      </code>
+                    </div>
+                    <p className="mt-2 text-sm text-text-secondary">{row.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -542,16 +878,39 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
         </div>
       </section>
 
+      <section id="reproducibility" className="px-6 pb-10">
+        <div className="mx-auto max-w-6xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
+            Reproducibility
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold text-text-primary">
+            Certified bundles, explicit compatibility, and TRACE export
+          </h2>
+          <p className="mt-3 text-sm text-text-secondary">
+            Reproducibility in policyengine.py is a contract, not a convention. A published release pins a country model version to an exact certified data artifact, and the package refuses to mix a model with data it was not certified against. The three steps below are how you put that contract to work in an analysis.
+          </p>
+
+          <div className="mt-6">
+            <TopicSection
+              items={REPRODUCIBILITY_TOPICS}
+              selected={reproTopic}
+              onChange={setReproTopic}
+              panels={reproPanels}
+            />
+          </div>
+        </div>
+      </section>
+
       <section id="advanced-notes" className="px-6 pb-16">
         <div className="mx-auto max-w-4xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
             References
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-text-primary">
-            Keep the source-of-truth links and reproducibility boundary visible
+            Where to go after the walkthrough
           </h2>
           <p className="mt-3 text-sm text-text-secondary">
-            policyengine.py now has an explicit reproducibility story: certified runtime bundles, release manifests, and TRACE-oriented provenance export. The practical first step in the guide is checking the bundle attached to the simulation you just ran. The older country-package computation-log tracer is not exposed on this wrapper, so the guide keeps traceability at the certified-bundle boundary instead of showing a non-working trace cell.
+            The model explorer, the policyengine.py repo, and the release-bundle docs are the three sources of truth. Use the quick-reference block below to check the bundle attached to any simulation you have already run.
           </p>
           <div className="mt-6">
             <CodeBlock
@@ -559,8 +918,8 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
               language="python"
               title="Inspect the certified runtime bundle"
               output={isUS
-                ? `{'bundle_id': 'us-3.4.0', 'country_id': 'us', 'policyengine_version': '3.4.0', 'model_package': 'policyengine-us', 'model_version': '1.602.0', 'data_package': 'policyengine-us-data', ...}`
-                : `{'bundle_id': 'uk-3.4.0', 'country_id': 'uk', 'policyengine_version': '3.4.0', 'model_package': 'policyengine-uk', 'model_version': '2.74.0', 'data_package': 'policyengine-uk-data', ...}`}
+                ? `{'bundle_id': 'us-3.4.0', 'country_id': 'us', 'policyengine_version': '3.4.0', 'model_package': 'policyengine-us', 'model_version': '1.602.0', 'data_package': 'policyengine-us-data', 'data_version': '1.73.0', 'default_dataset': 'enhanced_cps_2024', 'certified_data_build_id': 'policyengine-us-data-1.73.0', 'compatibility_basis': 'exact_build_model_version', ...}`
+                : `{'bundle_id': 'uk-3.4.0', 'country_id': 'uk', 'policyengine_version': '3.4.0', 'model_package': 'policyengine-uk', 'model_version': '2.74.0', 'data_package': 'policyengine-uk-data', 'data_version': '1.40.4', 'default_dataset': 'enhanced_frs_2023_24', 'certified_data_build_id': 'policyengine-uk-data-1.40.4', 'compatibility_basis': 'exact_build_model_version', ...}`}
             />
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-3">
@@ -571,13 +930,8 @@ national_insurance  0.000000e+00 9.124488e+06 9.124488e+06
             />
             <SummaryCard
               eyebrow="Reproducibility"
-              title="Certified bundles"
-              body="The package pins supported model-plus-data combinations and surfaces that bundle metadata directly from simulations."
-            />
-            <SummaryCard
-              eyebrow="Package docs"
-              title="Analysis workflows"
-              body="The package repo documents datasets, Simulation, entity mapping, regional scoping, and full economic impact analysis."
+              title="Release bundles"
+              body="The release-bundles doc describes the two-manifest layer, the fingerprint compatibility rule, and artifact states."
             />
             <SummaryCard
               eyebrow="Examples"
