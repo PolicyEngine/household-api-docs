@@ -846,7 +846,7 @@ data manifest unavailable: No data release manifest was published for this data 
         {
           term: 'TROv vocabulary',
           definition:
-            'The standards-based core (https://w3id.org/trace/2023/05/trov#) - TransparentResearchObject, ArtifactComposition, CompositionFingerprint, ArtifactArrangement, TransparentResearchPerformance. PolicyEngine-specific fields live under the pe: namespace so SHACL validation against the TROv shapes is unaffected.',
+            'The standards-based core (https://w3id.org/trace/trov/0.1#) - TransparentResearchObject, ArtifactComposition, CompositionFingerprint, ArtifactArrangement, TransparentResearchPerformance. PolicyEngine-specific fields live under the pe: namespace so SHACL validation against the TROv shapes is unaffected.',
         },
       ],
       blocks: [
