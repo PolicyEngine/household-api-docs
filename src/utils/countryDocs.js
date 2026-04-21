@@ -1431,6 +1431,81 @@ print(f"Reform UC: \u00a3{reform_uc / 1e9:.1f}bn")`;
 }
 
 export function getPolicyengineVisualizationExample(country) {
+  const isUS = country.id === 'us';
+  const netIncomeCol = isUS ? 'household_net_income' : 'hbai_household_net_income';
+  const secondCol = isUS ? 'eitc' : 'universal_credit';
+  const secondLabel = isUS ? 'EITC' : 'Universal credit';
+  const symbol = isUS ? '$' : '£';
+  const title = isUS
+    ? 'Household net income and EITC by employment income'
+    : 'Household net income and UC by employment income';
+
+  return `import plotly.graph_objects as go
+
+# App-v2 design tokens (policyengine-design-system).
+PRIMARY = "#319795"   # colors.primary[500]
+GRAY = "#4B5563"      # colors.gray[600]
+INK = "#101828"
+INTER = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+
+# earnings_grid comes from the variation step above.
+fig = go.Figure()
+fig.add_trace(
+    go.Scatter(
+        x=earnings_grid["employment_income"],
+        y=earnings_grid["${netIncomeCol}"],
+        mode="lines",
+        name="Household net income",
+        line=dict(color=PRIMARY, width=3),
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=earnings_grid["employment_income"],
+        y=earnings_grid["${secondCol}"],
+        mode="lines",
+        name="${secondLabel}",
+        line=dict(color=GRAY, width=3),
+    )
+)
+fig.update_layout(
+    title=dict(
+        text="${title}",
+        x=0.5, xanchor="center",
+        font=dict(family=INTER, size=16, color=INK),
+    ),
+    xaxis=dict(
+        title=dict(text="Employment income", font=dict(family=INTER, size=13, color=INK)),
+        tickformat="${symbol},.0f",
+        tickfont=dict(family=INTER, size=12, color=INK),
+        showgrid=False,
+        zeroline=False,
+    ),
+    yaxis=dict(
+        title=dict(text="Amount", font=dict(family=INTER, size=13, color=INK)),
+        tickformat="${symbol},.0f",
+        tickfont=dict(family=INTER, size=12, color=INK),
+        gridcolor="rgba(0,0,0,0.12)",
+        griddash="dash",
+        zeroline=False,
+    ),
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    font=dict(family=INTER, color=INK, size=12),
+    hovermode="x unified",
+    hoverlabel=dict(font=dict(family=INTER, size=12)),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom", y=-0.24,
+        xanchor="center", x=0.5,
+        font=dict(family=INTER, size=12, color=INK),
+    ),
+    margin=dict(t=70, r=40, b=90, l=90),
+)
+fig.show()`;
+}
+
+function _unusedPolicyengineVisualizationExampleLegacy(country) {
   if (country.id === 'us') {
     return `import plotly.graph_objects as go
 
@@ -1502,50 +1577,18 @@ fig.show()`;
 }
 
 export function getPolicyengineMicrosimVisualizationExample(country) {
-  if (country.id === 'us') {
-    return `import plotly.graph_objects as go
-import policyengine as pe
-from policyengine.core import Simulation
-from policyengine.outputs import calculate_decile_impacts
-
-# Baseline + reform over the calibrated microdata.
-datasets = pe.us.ensure_datasets(
-    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
-    years=[2026],
-    data_folder="./data",
-)
-dataset = datasets["enhanced_cps_2024_2026"]
-
-baseline = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
-reformed = Simulation(
-    dataset=dataset,
-    tax_benefit_model_version=pe.us.model,
-    policy={"gov.irs.deductions.standard.amount.SINGLE": 30950},
-)
-
-# Decile-level mean change in household net income.
-impacts = calculate_decile_impacts(
-    baseline_simulation=baseline,
-    reform_simulation=reformed,
-    income_variable="household_net_income",
-)
-df = impacts.dataframe
-
-fig = go.Figure(
-    go.Bar(
-        x=df["decile"],
-        y=df["absolute_change"],
-        marker=dict(color="#2C6496"),
-    )
-)
-fig.update_layout(
-    title="Mean change in household net income by income decile (reform vs baseline)",
-    xaxis=dict(title="Income decile", tickmode="linear"),
-    yaxis=dict(title="Absolute change", tickformat="$,.0f"),
-    template="plotly_white",
-)
-fig.show()`;
-  }
+  const isUS = country.id === 'us';
+  const symbol = isUS ? '$' : '£';
+  const datasetUri = isUS
+    ? 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5'
+    : 'hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5';
+  const datasetKey = isUS ? 'enhanced_cps_2024_2026' : 'enhanced_frs_2023_24_2026';
+  const model = isUS ? 'pe.us.model' : 'pe.uk.model';
+  const ensureCall = isUS ? 'pe.us.ensure_datasets' : 'pe.uk.ensure_datasets';
+  const reform = isUS
+    ? '{"gov.irs.deductions.standard.amount.SINGLE": 30950}'
+    : '{"gov.hmrc.income_tax.allowances.personal_allowance.amount": 15000}';
+  const equivalised = isUS ? 'equivalized' : 'equivalised';
 
   return `import plotly.graph_objects as go
 import policyengine as pe
@@ -1553,18 +1596,18 @@ from policyengine.core import Simulation
 from policyengine.outputs import calculate_decile_impacts
 
 # Baseline + reform over the calibrated microdata.
-datasets = pe.uk.ensure_datasets(
-    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+datasets = ${ensureCall}(
+    datasets=["${datasetUri}"],
     years=[2026],
     data_folder="./data",
 )
-dataset = datasets["enhanced_frs_2023_24_2026"]
+dataset = datasets["${datasetKey}"]
 
-baseline = Simulation(dataset=dataset, tax_benefit_model_version=pe.uk.model)
+baseline = Simulation(dataset=dataset, tax_benefit_model_version=${model})
 reformed = Simulation(
     dataset=dataset,
-    tax_benefit_model_version=pe.uk.model,
-    policy={"gov.hmrc.income_tax.allowances.personal_allowance.amount": 15000},
+    tax_benefit_model_version=${model},
+    policy=${reform},
 )
 
 # Decile-level mean change in household net income.
@@ -1573,20 +1616,57 @@ impacts = calculate_decile_impacts(
     reform_simulation=reformed,
     income_variable="household_net_income",
 )
-df = impacts.dataframe
+df = impacts.dataframe.sort_values("decile")
+
+# App-v2 design tokens:
+#   primary[500] = #319795 (teal) for positive, gray[600] = #4B5563 for negative.
+PRIMARY = "#319795"
+GRAY = "#4B5563"
+INTER = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+
+SYMBOL = "${symbol}"
+bar_colors = [PRIMARY if v >= 0 else GRAY for v in df["absolute_change"]]
+bar_labels = [f"{SYMBOL}{v:,.0f}" for v in df["absolute_change"]]
+
+# Title mirrors the app-v2 phrasing.
+mean_change = df["absolute_change"].mean()
+if mean_change == 0:
+    title = "This reform would have no effect on the net income of households on average"
+else:
+    direction = "increase" if mean_change > 0 else "decrease"
+    title = (
+        f"This reform would {direction} the net income of households by "
+        f"{SYMBOL}{abs(mean_change):,.0f} on average"
+    )
 
 fig = go.Figure(
     go.Bar(
-        x=df["decile"],
+        x=df["decile"].astype(str),
         y=df["absolute_change"],
-        marker=dict(color="#2C6496"),
+        marker=dict(color=bar_colors),
+        text=bar_labels,
+        textposition="outside",
+        cliponaxis=False,
+        hovertemplate="Decile %{x}<br>Change: %{text}<extra></extra>",
     )
 )
+fig.add_hline(y=0, line=dict(color=GRAY, width=1))
 fig.update_layout(
-    title="Mean change in household net income by income decile (reform vs baseline)",
-    xaxis=dict(title="Income decile", tickmode="linear"),
-    yaxis=dict(title="Absolute change", tickformat="£,.0f"),
-    template="plotly_white",
+    title=dict(text=title, x=0.5, xanchor="center"),
+    xaxis=dict(title="Income decile", showgrid=False),
+    yaxis=dict(
+        title="Absolute change in household income",
+        tickformat=f"{SYMBOL},.0f",
+        gridcolor="rgba(0,0,0,0.12)",
+        griddash="dash",
+        zeroline=False,
+    ),
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    font=dict(family=INTER, color="#101828"),
+    bargap=0.25,
+    margin=dict(t=80, r=40, b=80, l=80),
+    showlegend=False,
 )
 fig.show()`;
 }
