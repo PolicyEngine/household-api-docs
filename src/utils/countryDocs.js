@@ -1499,6 +1499,8 @@ fig.update_layout(
         yanchor="bottom", y=-0.24,
         xanchor="center", x=0.5,
         font=dict(family=INTER, size=12, color=INK),
+        entrywidth=180,
+        entrywidthmode="pixels",
     ),
     margin=dict(t=70, r=40, b=90, l=90),
 )
