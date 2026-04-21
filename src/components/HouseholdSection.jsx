@@ -6,26 +6,21 @@ import {
   formatHouseholdJson,
   getFullDockerExample,
   getFullExampleTitle,
-  getFullPythonExample,
   getFullRestExample,
 } from '@/utils/countryDocs';
 
 export default function HouseholdSection({ country, accessMode }) {
   const selectedMode = getAccessModeOption(accessMode, country);
-  const fullExample =
-    accessMode === 'rest'
-      ? getFullRestExample(country)
-      : accessMode === 'docker'
-        ? getFullDockerExample(country)
-        : getFullPythonExample(country);
+  const fullExample = accessMode === 'rest' ? getFullRestExample(country) : getFullDockerExample(country);
 
   return (
     <section id="household-objects" className="py-16 border-b border-border-light bg-bg-secondary">
       <div className="max-w-4xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-text-primary mb-6">Household objects</h2>
+        <h2 className="text-3xl font-bold text-text-primary mb-6">Household payloads</h2>
         <p className="text-text-secondary mb-8 text-lg">
-          The household object describes the people and their groupings for tax and benefit calculations.
-          It has a five-level hierarchy:
+          The request body carries a household object that describes the people and their groupings
+          for tax and benefit calculations. This structure is the same whether you call the hosted
+          endpoint or the Docker container.
         </p>
 
         <div className="overflow-x-auto mb-8">

@@ -1,6 +1,6 @@
 'use client';
 
-import { IconKey, IconLock, IconShield } from '@tabler/icons-react';
+import { IconKey, IconLock } from '@tabler/icons-react';
 import CodeBlock from './CodeBlock';
 import { getAccessModeOption } from './accessModes';
 import {
@@ -8,8 +8,6 @@ import {
   getDockerSmokeTestExample,
   getHostedTokenCurlExample,
   getHostedTokenPythonExample,
-  getPythonInstallExample,
-  getPythonQuickstartExample,
   getTokenResponseExample,
 } from '@/utils/countryDocs';
 
@@ -21,13 +19,12 @@ export default function AuthSection({ country, accessMode }) {
       <div className="max-w-4xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-text-primary mb-6">Getting started</h2>
         <p className="text-text-secondary mb-8 text-lg">
-          You can use PolicyEngine three ways: our hosted API, the public household API Docker image,
-          or the <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">{country.pythonPackage}</code>{' '}
-          Python package. If you want to start immediately, use Docker or Python. If you want a managed
-          hosted endpoint, request API credentials.
+          The HTTP interface has two paths: the hosted API and the self-hosted Docker image. Start
+          with Docker if you want to make requests immediately on your own machine. Use the hosted
+          API when you want PolicyEngine-managed infrastructure and issued credentials.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-4 mb-12">
+        <div className="grid gap-4 md:grid-cols-2 mb-12">
           <div className="p-4 rounded-lg border border-border-light bg-white">
             <div className="flex items-center gap-3 mb-2">
               <IconKey size={20} className="text-primary-600" />
@@ -46,13 +43,24 @@ export default function AuthSection({ country, accessMode }) {
               Run the same household API yourself via GitHub Container Registry, without waiting for credentials.
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-border-light bg-white">
-            <div className="flex items-center gap-3 mb-2">
-              <IconShield size={20} className="text-primary-600" />
-              <span className="font-semibold text-sm">Python package</span>
-            </div>
-            <p className="text-sm text-text-secondary">{country.pythonPackageCardCopy}</p>
-          </div>
+        </div>
+
+        <div className="mb-12 rounded-2xl border border-primary-200 bg-primary-50 p-5">
+          <h3 className="text-lg font-semibold text-text-primary mb-2">Need direct Python access?</h3>
+          <p className="text-text-secondary mb-3">
+            The package guide is now separate from the API docs. Use{' '}
+            <code className="bg-white px-1.5 py-0.5 rounded text-sm">{country.pythonGuideInstallTarget}</code>{' '}
+            when you want to work locally with{' '}
+            <code className="bg-white px-1.5 py-0.5 rounded text-sm">calculate_household_impact()</code>{' '}
+            or <code className="bg-white px-1.5 py-0.5 rounded text-sm">Simulation</code>{' '}
+            instead of sending HTTP requests.
+          </p>
+          <a
+            href={`/${country.id}/python`}
+            className="inline-flex items-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+          >
+            Open Python package guide
+          </a>
         </div>
 
         <div className="overflow-x-auto mb-12">
@@ -76,12 +84,6 @@ export default function AuthSection({ country, accessMode }) {
                 <td className="px-4 py-3 font-medium">Docker image</td>
                 <td className="px-4 py-3 text-text-secondary">Self-hosting the HTTP API on your own machine or infrastructure</td>
                 <td className="px-4 py-3 text-text-secondary">None by default</td>
-                <td className="px-4 py-3 text-text-secondary">Immediate</td>
-              </tr>
-              <tr className="border-t border-border-light">
-                <td className="px-4 py-3 font-medium">Python package</td>
-                <td className="px-4 py-3 text-text-secondary">Direct model access inside Python workflows</td>
-                <td className="px-4 py-3 text-text-secondary">None</td>
                 <td className="px-4 py-3 text-text-secondary">Immediate</td>
               </tr>
             </tbody>
@@ -146,25 +148,7 @@ export default function AuthSection({ country, accessMode }) {
             <CodeBlock code={getDockerExample()} language="bash" title="Docker (same HTTP API, self-hosted)" />
             <CodeBlock code={getDockerSmokeTestExample()} language="bash" title="Quick Docker smoke test (service metadata)" />
           </div>
-        ) : (
-          <div className="mb-12">
-            <div className="p-5 rounded-lg border border-border-light bg-white mb-4">
-              <h4 className="text-lg font-semibold text-text-primary mb-3">Python package</h4>
-              <p className="text-text-secondary mb-3">{country.pythonPackageSummary}</p>
-              <p className="text-sm text-text-secondary">
-                <a
-                  href={country.pythonRepoUrl}
-                  className="text-primary-600 hover:text-primary-700 underline"
-                >
-                  {country.pythonPackage}
-                </a>
-              </p>
-            </div>
-
-            <CodeBlock code={getPythonInstallExample(country)} language="bash" title={`Install ${country.pythonPackage}`} />
-            <CodeBlock code={getPythonQuickstartExample(country)} language="python" title="Direct Python household calculation" />
-          </div>
-        )}
+        ) : null}
       </div>
     </section>
   );

@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'PolicyEngine household API documentation',
-  description: 'Documentation for the PolicyEngine household API.',
+  title: 'PolicyEngine household documentation',
+  description: 'Documentation for the PolicyEngine household API and Python packages.',
   icons: {
     icon: 'https://www.policyengine.org/favicon.ico',
     apple: 'https://www.policyengine.org/assets/logos/policyengine/policyengine.png',
