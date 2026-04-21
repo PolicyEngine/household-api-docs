@@ -350,17 +350,24 @@ export function getPolicyengineHouseholdImpactExample(country) {
     return `import policyengine as pe
 
 result = pe.us.calculate_household(
+    # One dict per person - keys are any person-level variable on the US model.
+    # Adults default to the same tax unit and household.
     people=[
-        {"age": 35, "employment_income": 40000},
-        {"age": 33},
-        {"age": 8},
-        {"age": 5},
+        {"age": 35, "employment_income": 40000},  # primary earner
+        {"age": 33},                              # spouse
+        {"age": 8},                               # dependent
+        {"age": 5},                               # dependent
     ],
+    # Tax-unit inputs (filing status, etc.)
     tax_unit={"filing_status": "JOINT"},
+    # Household inputs. state_code is essentially always needed.
     household={"state_code": "TX"},
+    # Year determines which parameter values apply.
     year=2026,
 )
 
+# Attribute access on the typed result. Group entities (tax_unit, spm_unit,
+# household) are single objects; person sections are lists (result.person[0]).
 print(f"Net income: \${result.household.household_net_income:,.0f}")
 print(f"EITC: \${result.tax_unit.eitc:,.0f}")
 print(f"SNAP: \${result.spm_unit.snap:,.0f}")`;
@@ -369,16 +376,23 @@ print(f"SNAP: \${result.spm_unit.snap:,.0f}")`;
   return `import policyengine as pe
 
 result = pe.uk.calculate_household(
+    # One dict per person - keys are any person-level variable on the UK model.
     people=[
-        {"age": 35, "employment_income": 30000},
-        {"age": 33},
-        {"age": 8},
-        {"age": 5},
+        {"age": 35, "employment_income": 30000},  # primary earner
+        {"age": 33},                              # partner
+        {"age": 8},                               # dependent
+        {"age": 5},                               # dependent
     ],
+    # Benefit unit (adult(s) + dependent children). Empty dict uses defaults.
     benunit={},
+    # Household inputs.
     household={"rent": 12000, "region": "NORTH_WEST"},
+    # Year determines which parameter values apply.
     year=2026,
 )
+
+# Attribute access on the typed result. Group entities (benunit, household)
+# are single objects; person sections are lists (result.person[0]).
 
 print(f"Net income: \u00a3{result.household.hbai_household_net_income:,.0f}")
 print(f"Child benefit: \u00a3{result.benunit.child_benefit:,.0f}")
@@ -468,6 +482,8 @@ export function getPolicyengineDatasetExample(country) {
 from policyengine.core import Simulation
 
 year = 2026
+# ensure_datasets downloads from HuggingFace on first run, caches locally,
+# and returns a {"<stem>_<year>": Dataset} dict.
 datasets = pe.us.ensure_datasets(
     datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
     years=[year],
@@ -475,6 +491,7 @@ datasets = pe.us.ensure_datasets(
 )
 dataset = datasets[f"enhanced_cps_2024_{year}"]
 
+# pe.us.model is the country model version pinned by this policyengine.py release.
 simulation = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
 # ensure() loads a cached run if available, otherwise runs and caches.
 simulation.ensure()
@@ -487,6 +504,8 @@ print(output.household[["household_net_income", "household_tax"]].head())`;
 from policyengine.core import Simulation
 
 year = 2026
+# ensure_datasets downloads from HuggingFace on first run, caches locally,
+# and returns a {"<stem>_<year>": Dataset} dict.
 datasets = pe.uk.ensure_datasets(
     datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
     years=[year],
@@ -494,7 +513,9 @@ datasets = pe.uk.ensure_datasets(
 )
 dataset = datasets[f"enhanced_frs_2023_24_{year}"]
 
+# pe.uk.model is the country model version pinned by this policyengine.py release.
 simulation = Simulation(dataset=dataset, tax_benefit_model_version=pe.uk.model)
+# ensure() loads a cached run if available, otherwise runs and caches.
 simulation.ensure()
 
 output = simulation.output_dataset.data
@@ -505,7 +526,8 @@ export function getPolicyengineAggregateExample(country) {
   if (country.id === 'us') {
     return `from policyengine.outputs import Aggregate, AggregateType
 
-# simulation comes from the setup step above
+# Outputs follow a construct -> .run() -> read result lifecycle.
+# simulation comes from the setup step above.
 agg = Aggregate(
     simulation=simulation,
     variable="eitc",
@@ -518,7 +540,8 @@ print(f"Total EITC: \${agg.result / 1e9:.1f}B")`;
 
   return `from policyengine.outputs import Aggregate, AggregateType
 
-# simulation comes from the setup step above
+# Outputs follow a construct -> .run() -> read result lifecycle.
+# simulation comes from the setup step above.
 agg = Aggregate(
     simulation=simulation,
     variable="universal_credit",
@@ -1478,6 +1501,96 @@ fig.update_layout(
 fig.show()`;
 }
 
+export function getPolicyengineMicrosimVisualizationExample(country) {
+  if (country.id === 'us') {
+    return `import plotly.graph_objects as go
+import policyengine as pe
+from policyengine.core import Simulation
+from policyengine.outputs import calculate_decile_impacts
+
+# Baseline + reform over the calibrated microdata.
+datasets = pe.us.ensure_datasets(
+    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
+    years=[2026],
+    data_folder="./data",
+)
+dataset = datasets["enhanced_cps_2024_2026"]
+
+baseline = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
+reformed = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=pe.us.model,
+    policy={"gov.irs.deductions.standard.amount.SINGLE": 30950},
+)
+
+# Decile-level mean change in household net income.
+impacts = calculate_decile_impacts(
+    baseline_simulation=baseline,
+    reform_simulation=reformed,
+    income_variable="household_net_income",
+)
+df = impacts.dataframe
+
+fig = go.Figure(
+    go.Bar(
+        x=df["decile"],
+        y=df["absolute_change"],
+        marker=dict(color="#2C6496"),
+    )
+)
+fig.update_layout(
+    title="Mean change in household net income by income decile (reform vs baseline)",
+    xaxis=dict(title="Income decile", tickmode="linear"),
+    yaxis=dict(title="Absolute change", tickformat="$,.0f"),
+    template="plotly_white",
+)
+fig.show()`;
+  }
+
+  return `import plotly.graph_objects as go
+import policyengine as pe
+from policyengine.core import Simulation
+from policyengine.outputs import calculate_decile_impacts
+
+# Baseline + reform over the calibrated microdata.
+datasets = pe.uk.ensure_datasets(
+    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+    years=[2026],
+    data_folder="./data",
+)
+dataset = datasets["enhanced_frs_2023_24_2026"]
+
+baseline = Simulation(dataset=dataset, tax_benefit_model_version=pe.uk.model)
+reformed = Simulation(
+    dataset=dataset,
+    tax_benefit_model_version=pe.uk.model,
+    policy={"gov.hmrc.income_tax.allowances.personal_allowance.amount": 15000},
+)
+
+# Decile-level mean change in household net income.
+impacts = calculate_decile_impacts(
+    baseline_simulation=baseline,
+    reform_simulation=reformed,
+    income_variable="household_net_income",
+)
+df = impacts.dataframe
+
+fig = go.Figure(
+    go.Bar(
+        x=df["decile"],
+        y=df["absolute_change"],
+        marker=dict(color="#2C6496"),
+    )
+)
+fig.update_layout(
+    title="Mean change in household net income by income decile (reform vs baseline)",
+    xaxis=dict(title="Income decile", tickmode="linear"),
+    yaxis=dict(title="Absolute change", tickformat="£,.0f"),
+    template="plotly_white",
+)
+fig.show()`;
+}
+
 export function getPolicyenginePinBundleExample(country) {
   const pkg = country.id === 'us' ? 'policyengine[us]' : 'policyengine[uk]';
   return `# Step 1: pin the exact policyengine.py release in your environment.
@@ -1545,6 +1658,75 @@ try:
     print("built with model:", data_manifest.build.built_with_model_package.version)
 except DataReleaseManifestUnavailableError as error:
     print("data manifest unavailable:", error)`;
+}
+
+export function getPolicyengineTraceCliExample(country) {
+  const cid = country.id;
+  return `# CLI entry point (installed by policyengine[${cid}]). Three subcommands:
+
+# 1. Print the bundled country release manifest (works offline).
+policyengine release-manifest ${cid}
+
+# 2. Emit a bundle TRO to a file (requires the data release manifest to be
+#    fetchable; falls back to DataReleaseManifestUnavailableError otherwise).
+policyengine trace-tro ${cid} --out ${cid}.trace.tro.jsonld
+
+# 3. Validate any TRO against the shipped JSON Schema (needs the jsonschema
+#    extra: pip install "policyengine[${cid}]" jsonschema).
+policyengine trace-tro-validate ${cid}.trace.tro.jsonld`;
+}
+
+export function getPolicyengineSimulationTroExample(country) {
+  const cid = country.id;
+  return `# Per-simulation TRO: chain a bundle TRO to the reform and the results
+# payload for the run. The composition pins three artifacts by sha256:
+#   - bundle TRO (hashed, plus a canonical bundle_tro_url anchor)
+#   - reform JSON
+#   - results JSON
+# A verifier can fetch bundle_tro_url, recompute its sha256, and confirm the
+# chain without trusting the caller.
+import json
+from pathlib import Path
+
+from policyengine.provenance.trace import (
+    build_simulation_trace_tro,
+    extract_bundle_tro_reference,
+    serialize_trace_tro,
+)
+
+# Load a bundle TRO you generated earlier (or the one shipped with the
+# release at src/policyengine/data/release_manifests/\${cid}.trace.tro.jsonld).
+bundle_tro = json.loads(Path("${cid}.trace.tro.jsonld").read_text())
+
+reference = extract_bundle_tro_reference(bundle_tro)
+print("bundle fingerprint:", reference["fingerprint"][:16], "...")
+print("policyengine version:", reference["policyengine_version"])
+
+# Whatever produced this analysis - just a dict the verifier can rehash.
+results_payload = {
+    "decile_impacts": [
+        {"decile": 1, "absolute_change": 12.5},
+        {"decile": 5, "absolute_change": 48.1},
+        {"decile": 10, "absolute_change": 91.3},
+    ],
+    "baseline_gini": 0.784,
+    "reform_gini": 0.782,
+}
+reform_payload = {"gov.irs.credits.ctc.amount.adult_dependent": 1000}
+
+sim_tro = build_simulation_trace_tro(
+    bundle_tro=bundle_tro,
+    results_payload=results_payload,
+    reform_payload=reform_payload,
+    reform_name="CTC adult-dependent +$1,000",
+    simulation_id="ctc-adult-dep-1000",
+    bundle_tro_url=(
+        "https://raw.githubusercontent.com/PolicyEngine/policyengine.py/"
+        "v4.0.0/src/policyengine/data/release_manifests/${cid}.trace.tro.jsonld"
+    ),
+)
+Path("${cid}.simulation.trace.tro.jsonld").write_bytes(serialize_trace_tro(sim_tro))
+print("wrote simulation TRO")`;
 }
 
 export function getPolicyengineTraceExportExample(country) {

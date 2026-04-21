@@ -6,10 +6,10 @@ export default function PythonHeroSection({ country }) {
           Python package guide
         </p>
         <h1 className="mb-4 text-4xl font-bold text-text-primary md:text-5xl">
-          Learn {country.pythonGuidePackage} through {country.adjective} examples
+          <code className="rounded bg-white px-2 py-1 text-4xl md:text-5xl">policyengine.py</code> for {country.adjective} tax and benefit analysis
         </h1>
         <p className="mx-auto max-w-3xl text-lg text-text-secondary md:text-xl">
-          Guided examples for household impact, policy reforms, weighted microsimulation, and regional analysis with <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-base">{country.pythonGuidePackage}</code>.
+          Reference examples covering household impact, policy reforms, microsimulation over calibrated microdata, and regional breakdowns.
         </p>
       </div>
     </section>

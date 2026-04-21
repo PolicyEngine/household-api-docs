@@ -17,14 +17,17 @@ import {
   getPolicyengineMapToAggregationExample,
   getPolicyengineMicrosimAlignmentExample,
   getPolicyengineMappingExample,
+  getPolicyengineMicrosimVisualizationExample,
   getPolicyenginePandasExample,
   getPolicyenginePinBundleExample,
   getPolicyengineProgramExample,
   getPolicyengineProgrammaticSituationExample,
   getPolicyengineRegionalExample,
   getPolicyengineReleaseBundleExample,
+  getPolicyengineSimulationTroExample,
   getPolicyengineStructuralReformExample,
   getPolicyengineTimeSeriesExample,
+  getPolicyengineTraceCliExample,
   getPolicyengineTraceExample,
   getPolicyengineTraceExportExample,
   getPolicyengineVisualizationExample,
@@ -40,6 +43,7 @@ const HOUSEHOLD_TOPICS = [
   { id: 'programmatic', label: 'Building situations' },
   { id: 'reforms', label: 'Household reforms' },
   { id: 'trace', label: 'Tracing calculations' },
+  { id: 'chart', label: 'Charting a household' },
 ];
 
 const ANALYSIS_TOPICS = [
@@ -48,7 +52,7 @@ const ANALYSIS_TOPICS = [
   { id: 'metrics', label: 'Weights and totals' },
   { id: 'reforms', label: 'Baseline vs reform' },
   { id: 'regions', label: 'Regions and budgets' },
-  { id: 'visualization', label: 'Visualization' },
+  { id: 'visualization', label: 'Decile impact chart' },
 ];
 
 const REPRODUCIBILITY_TOPICS = [
@@ -169,6 +173,16 @@ function TopicSection({
         <div className="rounded-2xl border border-border-light bg-bg-secondary p-5">
           <h3 className="text-2xl font-semibold text-text-primary">{panel.title}</h3>
           <p className="mt-3 text-sm text-text-secondary">{panel.body}</p>
+          {panel.reference && (
+            <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-[max-content_1fr] sm:gap-x-4">
+              {panel.reference.map(({ term, definition }) => (
+                <div key={term} className="contents">
+                  <dt className="font-mono text-xs text-text-primary sm:pt-0.5">{term}</dt>
+                  <dd className="text-text-secondary">{definition}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
         <div className="mt-6">
           {panel.blocks.map((block) => (
@@ -178,6 +192,8 @@ function TopicSection({
               language={block.language}
               title={block.title}
               output={block.output}
+              outputImage={block.outputImage}
+              outputImageAlt={block.outputImageAlt}
             />
           ))}
         </div>
@@ -197,6 +213,20 @@ function TopicSection({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function SectionHeader({ eyebrow, title, subtitle }) {
+  return (
+    <div className="mx-auto max-w-6xl px-6 pt-6 pb-4">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
+        {eyebrow}
+      </p>
+      <h2 className="mt-2 text-3xl font-semibold text-text-primary">{title}</h2>
+      {subtitle && (
+        <p className="mt-3 max-w-3xl text-sm text-text-secondary">{subtitle}</p>
+      )}
     </div>
   );
 }
@@ -405,10 +435,27 @@ Name: household_net_income, dtype: float32`,
     trace: {
       title: 'Tracing calculations: drop to the country package',
       body:
-        'The policyengine.py wrapper does not expose print_computation_log. When you need a step-by-step dependency tree - for debugging unexpected values, teaching, or writing up how a variable is built - run the same situation through the country package\'s Simulation directly. The tracer prints one line per variable: name, period, branch, and the computed array.',
+        'Reach for trace when a variable came out differently than you expected and the short explanation is "because of some other variable" - the tracer walks the dependency tree down to the input leaves. policyengine.py does not expose the tracer; run the same situation through the country package\'s Simulation, set sim.trace = True before calculating, then print the computation log. Each line has the same shape:',
+      reference: [
+        {
+          term: 'variable<period, branch> = [array]',
+          definition:
+            'variable name / year / simulation branch / computed values, one per entity. Indentation is dependency depth - the most indented lines are the inputs (not computations) that the variable ultimately depends on.',
+        },
+        {
+          term: '(default)',
+          definition:
+            'The active simulation branch. Stays (default) on baseline runs. Under a reform, calculations that touched the reform show up on a non-default branch, which is how you compare baseline vs. reform trees side by side.',
+        },
+        {
+          term: 'max_depth=N',
+          definition:
+            'Caps how far down the tree the log prints. max_depth=1 shows only the top-level inputs; max_depth=None prints the full tree. Start shallow and widen when a specific subtree looks wrong.',
+        },
+      ],
       blocks: [
         {
-          title: `Trace a ${isUS ? 'EITC' : 'Universal Credit'} calculation`,
+          title: `Trace ${isUS ? 'EITC' : 'Universal Credit'} for one household`,
           language: 'python',
           code: getPolicyengineTraceExample(country),
           output: isUS
@@ -428,14 +475,39 @@ Name: household_net_income, dtype: float32`,
       filer_adjusted_earnings<2026, (default)> = [50000.]
       adjusted_gross_income<2026, (default)> = [50000.]
       eitc_phase_out_start<2026, (default)> = [10860.]
-      eitc_phase_out_rate<2026, (default)> = [0.0765]`
+      eitc_phase_out_rate<2026, (default)> = [0.0765]
+    tax_unit_is_required_to_file<2026, (default)> = [ True]
+      ...
+    ...`
             : `  universal_credit<2026, (default)> = [0.]
     would_claim_uc<2026, (default)> = [ True]
     universal_credit_pre_benefit_cap<2026, (default)> = [0.]
       would_claim_uc<2026, (default)> = [ True]
       uc_maximum_amount<2026, (default)> = [5079.1323]
       uc_income_reduction<2026, (default)> = [5079.1323]
-    benefit_cap_reduction<2026, (default)> = [0.]`,
+    benefit_cap_reduction<2026, (default)> = [0.]
+      child_benefit<2026, (default)> = [0.]
+      ...`,
+        },
+      ],
+    },
+    chart: {
+      title: 'Chart a household across earnings',
+      body:
+        'Once you have a variation grid, dropping it into Plotly produces the sort of marginal-tax / budget-set chart used to teach how a program behaves across the earnings range. This example plots household net income and one benefit on the same axes.',
+      blocks: [
+        {
+          title: isUS
+            ? 'Household net income and EITC by employment income'
+            : 'Household net income and universal credit by employment income',
+          language: 'python',
+          code: getPolicyengineVisualizationExample(country),
+          outputImage: isUS
+            ? '/python-guide/us-variation-chart.png'
+            : '/python-guide/uk-variation-chart.png',
+          outputImageAlt: isUS
+            ? 'US household net income and EITC by employment income'
+            : 'UK household net income and universal credit by employment income',
         },
       ],
     },
@@ -683,16 +755,20 @@ CAGR: 2.68%`,
       ],
     },
     visualization: {
-      title: 'Publication-ready charts with Plotly',
+      title: 'Chart the distributional impact',
       body:
-        'Plotly is bundled with policyengine.py and is the same charting layer policyengine.org uses. For one-off analysis, you can drop a variation grid or aggregate table straight into go.Figure and get an interactive chart. For PolicyEngine-branded output, the country model packages expose format_fig, which applies the same typography and colour palette you see on the main site.',
+        'Once a baseline and reform simulation are in hand, decile-level outputs go straight into Plotly. The bar chart below is the mean change in household net income by income decile - the standard distributional visualisation for policy analysis.',
       blocks: [
         {
-          title: 'Chart a household variation grid',
+          title: 'Decile impact chart (mean change in household net income)',
           language: 'python',
-          code: getPolicyengineVisualizationExample(country),
-          output:
-            'Plotly figure opens in the browser (interactive). Replace fig.show() with fig.write_image("chart.png") to save a static version, or fig.write_html("chart.html") to embed it in a dashboard.',
+          code: getPolicyengineMicrosimVisualizationExample(country),
+          outputImage: isUS
+            ? '/python-guide/us-decile-impacts-chart.png'
+            : '/python-guide/uk-decile-impacts-chart.png',
+          outputImageAlt: isUS
+            ? 'US mean change in household net income by income decile under the reform'
+            : 'UK mean change in household net income by income decile under the reform',
         },
       ],
     },
@@ -748,12 +824,34 @@ data manifest unavailable: No data release manifest was published for this data 
       ],
     },
     trace: {
-      title: 'TRACE export for papers, audits, and cross-tool provenance',
+      title: 'Emit and validate TRACE Transparent Research Objects',
       body:
-        'TRACE (Transparent Research And Citation Exchange) is a JSON-LD standard for describing analytical artifacts. policyengine.py v4 ships a CLI (policyengine trace-tro <country>) and a Python helper that wraps the runtime bundle and the data build manifest into a TRO pinning four artifacts by sha256. Use this when you need to cite a run in a paper or submit provenance to an audit - the internal manifests remain authoritative, TRACE is the export surface.',
+        'TRACE (Transparent Research And Citation Exchange) is a JSON-LD standard for describing analytical artifacts. policyengine.py emits two TRO kinds and ships a CLI for both generation and schema validation. Every content hash is computed over the canonical JSON serialization used by policyengine.provenance.trace.canonical_json_bytes, so any third-party verifier can reproduce the hashes exactly.',
+      reference: [
+        {
+          term: 'Bundle TRO',
+          definition:
+            'Composition pins 4 artifacts by sha256 - the bundle manifest, the data release manifest, the certified dataset, and the country model wheel (resolved from PyPI when not in the bundled manifest). Use to cite the model + data pair itself.',
+        },
+        {
+          term: 'Simulation TRO',
+          definition:
+            'Composition pins 3 artifacts by sha256 - the bundle TRO, the reform JSON, and the results JSON. Records pe:bundleFingerprint and an optional pe:bundleTroUrl anchor so verifiers can cross-check the bundle bytes at a canonical location. Use to cite one specific run.',
+        },
+        {
+          term: 'pe:* namespace',
+          definition:
+            'PolicyEngine-specific metadata on the Performance node: pe:certifiedForModelVersion, pe:compatibilityBasis (exact_build_model_version | matching_data_build_fingerprint | legacy_compatible_model_package), pe:builtWithModelVersion, pe:dataBuildId, pe:certifiedBy. pe:emittedIn is "local" or "github-actions"; CI runs additionally carry pe:ciRunUrl, pe:ciGitSha, pe:ciGitRef.',
+        },
+        {
+          term: 'TROv vocabulary',
+          definition:
+            'The standards-based core (https://w3id.org/trace/2023/05/trov#) - TransparentResearchObject, ArtifactComposition, CompositionFingerprint, ArtifactArrangement, TransparentResearchPerformance. PolicyEngine-specific fields live under the pe: namespace so SHACL validation against the TROv shapes is unaffected.',
+        },
+      ],
       blocks: [
         {
-          title: 'Emit a TRACE TRO alongside your results',
+          title: 'Emit a bundle TRO from Python (with graceful fallback)',
           language: 'python',
           code: getPolicyengineTraceExportExample(country),
           output: isUS
@@ -763,6 +861,61 @@ country: us`
             : `data manifest unavailable: No data release manifest was published for this data package.
 wrote runtime-only bundle to outputs/release_bundle.json
 country: uk`,
+        },
+        {
+          title: 'CLI one-liners',
+          language: 'bash',
+          code: getPolicyengineTraceCliExample(country),
+          output: isUS
+            ? `# policyengine release-manifest us  (first 5 lines)
+{
+  "bundle_id": "us-4.0.0",
+  "certification": {
+    "built_with_model_git_sha": null,
+    "built_with_model_version": "1.647.0",
+    ...
+
+# policyengine trace-tro us --out us.trace.tro.jsonld
+# (fails today because the policyengine-us-data release manifest is not yet
+# published to HF for version 1.73.0; from CI with a published manifest the
+# command writes a ~6KB JSON-LD file.)
+policyengine.provenance.manifest.DataReleaseManifestUnavailableError:
+  No data release manifest was published for this data package.
+
+# policyengine trace-tro-validate us.trace.tro.jsonld  (against a TRO
+# generated in CI or from the bundled release_manifests/us.trace.tro.jsonld)
+ok: us.trace.tro.jsonld`
+            : `# policyengine release-manifest uk  (first 5 lines)
+{
+  "bundle_id": "uk-4.0.0",
+  "certification": {
+    "built_with_model_git_sha": null,
+    "built_with_model_version": "2.88.0",
+    ...
+
+# policyengine trace-tro uk --out uk.trace.tro.jsonld
+# (fails today because the policyengine-uk-data release manifest is private
+# and not yet published; set HUGGING_FACE_TOKEN or rely on CI-generated TROs.)
+policyengine.provenance.manifest.DataReleaseManifestUnavailableError:
+  Could not fetch the data release manifest from Hugging Face. If this
+  country uses a private data repo, set HUGGING_FACE_TOKEN.
+
+# policyengine trace-tro-validate uk.trace.tro.jsonld
+ok: uk.trace.tro.jsonld`,
+        },
+        {
+          title: 'Chain a simulation TRO onto a bundle TRO',
+          language: 'python',
+          code: getPolicyengineSimulationTroExample(country),
+          output: isUS
+            ? `bundle fingerprint: 9bec29b98c8189fe ...
+policyengine version: 4.0.0
+wrote simulation TRO`
+            : `# UK requires a published / CI-generated bundle TRO first
+# (the bundled manifest omits the dataset sha256 for the private repo).
+bundle fingerprint: <bundle sha256 prefix> ...
+policyengine version: 4.0.0
+wrote simulation TRO`,
         },
       ],
     },
@@ -855,6 +1008,11 @@ country: uk`,
       </section>
 
       <section id="household-analysis" className="px-6 pb-10">
+        <SectionHeader
+          eyebrow="Simulation"
+          title="Household-level analysis"
+          subtitle={`Per-household calculations with pe.${country.id}.calculate_household: reforms, variation grids, programmatic builders, tracing, and charts.`}
+        />
         <div className="mx-auto max-w-6xl">
           <TopicSection
             items={HOUSEHOLD_TOPICS}
@@ -866,6 +1024,11 @@ country: uk`,
       </section>
 
       <section id="microsimulation-analysis" className="px-6 pb-10">
+        <SectionHeader
+          eyebrow="Microsimulation"
+          title="Population-level analysis"
+          subtitle="Aggregate estimates over calibrated microdata: weighted totals, baseline-vs-reform impacts, regional slices, and distributional charts."
+        />
         <div className="mx-auto max-w-6xl">
           <TopicSection
             items={ANALYSIS_TOPICS}
@@ -877,25 +1040,18 @@ country: uk`,
       </section>
 
       <section id="reproducibility" className="px-6 pb-10">
-        <div className="mx-auto max-w-6xl rounded-3xl border border-border-light bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">
-            Reproducibility
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold text-text-primary">
-            Certified bundles, explicit compatibility, and TRACE export
-          </h2>
-          <p className="mt-3 text-sm text-text-secondary">
-            Reproducibility in policyengine.py is a contract, not a convention. A published release pins a country model version to an exact certified data artifact, and the package refuses to mix a model with data it was not certified against. The three steps below are how you put that contract to work in an analysis.
-          </p>
-
-          <div className="mt-6">
-            <TopicSection
-              items={REPRODUCIBILITY_TOPICS}
-              selected={reproTopic}
-              onChange={setReproTopic}
-              panels={reproPanels}
-            />
-          </div>
+        <SectionHeader
+          eyebrow="Reproducibility"
+          title="Pin, verify, export"
+          subtitle="A policyengine.py release pins a country model to an exact certified data artifact and refuses to mix a model with data it was not certified against. Pin the bundle in requirements, verify the two manifest layers, and emit a TRACE TRO for citations."
+        />
+        <div className="mx-auto max-w-6xl">
+          <TopicSection
+            items={REPRODUCIBILITY_TOPICS}
+            selected={reproTopic}
+            onChange={setReproTopic}
+            panels={reproPanels}
+          />
         </div>
       </section>
 
