@@ -1,10 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { IconMenu2, IconX } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@policyengine/design-system/tokens';
+import { COUNTRY_SELECTOR_OPTIONS } from '@/utils/countryDocs';
 
 export default function MobileMenu({ country, opened, onOpen, onClose, navItems }) {
+  const pathname = usePathname();
+
   // Lock body scroll when sheet is open
   useEffect(() => {
     if (opened) {
@@ -16,6 +20,15 @@ export default function MobileMenu({ country, opened, onOpen, onClose, navItems 
       document.body.style.overflow = '';
     };
   }, [opened]);
+
+  function handleCountryChange(newCountryId) {
+    const pathSuffix = pathname?.startsWith(`/${country.id}/`)
+      ? pathname.slice(country.id.length + 2)
+      : '';
+    const nextPath = pathSuffix ? `/${newCountryId}/${pathSuffix}` : `/${newCountryId}`;
+    onClose();
+    window.location.href = nextPath;
+  }
 
   return (
     <>
@@ -72,6 +85,52 @@ export default function MobileMenu({ country, opened, onOpen, onClose, navItems 
             </div>
             {/* SheetContent nav items */}
             <div className="flex flex-col" style={{ gap: spacing.lg, padding: spacing.lg }}>
+              <div>
+                <span
+                  style={{
+                    color: colors.text.inverse,
+                    fontWeight: typography.fontWeight.medium,
+                    fontSize: typography.fontSize.sm,
+                    marginBottom: spacing.xs,
+                    display: 'block',
+                    fontFamily: typography.fontFamily.primary,
+                  }}
+                >
+                  Countries
+                </span>
+                <div
+                  className="flex flex-col"
+                  style={{ gap: spacing.xs, paddingLeft: spacing.md }}
+                >
+                  {COUNTRY_SELECTOR_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleCountryChange(option.id)}
+                      style={{
+                        color: colors.text.inverse,
+                        textDecoration: 'none',
+                        fontWeight:
+                          country.id === option.id
+                            ? typography.fontWeight.semibold
+                            : typography.fontWeight.normal,
+                        fontSize: typography.fontSize.sm,
+                        fontFamily: typography.fontFamily.primary,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: 0,
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span>{option.label}</span>
+                      {country.id === option.id && <span>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {navItems.map((item) =>
                 item.hasDropdown && item.dropdownItems ? (
                   // Render dropdown as a section
