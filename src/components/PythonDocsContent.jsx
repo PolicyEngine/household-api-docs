@@ -503,8 +503,8 @@ Name: household_net_income, dtype: float32`,
           language: 'python',
           code: getPolicyengineVisualizationExample(country),
           outputImage: isUS
-            ? '/python-guide/us-variation-chart.png'
-            : '/python-guide/uk-variation-chart.png',
+            ? '/_zones/household-api-docs/python-guide/us-variation-chart.png'
+            : '/_zones/household-api-docs/python-guide/uk-variation-chart.png',
           outputImageAlt: isUS
             ? 'US household net income and EITC by employment income'
             : 'UK household net income and universal credit by employment income',
@@ -764,8 +764,8 @@ CAGR: 2.68%`,
           language: 'python',
           code: getPolicyengineMicrosimVisualizationExample(country),
           outputImage: isUS
-            ? '/python-guide/us-decile-impacts-chart.png'
-            : '/python-guide/uk-decile-impacts-chart.png',
+            ? '/_zones/household-api-docs/python-guide/us-decile-impacts-chart.png'
+            : '/_zones/household-api-docs/python-guide/uk-decile-impacts-chart.png',
           outputImageAlt: isUS
             ? 'US mean change in household net income by income decile under the reform'
             : 'UK mean change in household net income by income decile under the reform',
