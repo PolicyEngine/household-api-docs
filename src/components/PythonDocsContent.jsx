@@ -824,9 +824,9 @@ data manifest unavailable: No data release manifest was published for this data 
       ],
     },
     trace: {
-      title: 'Emit and validate TRACE Transparent Research Objects',
+      title: 'Cite a specific PolicyEngine run',
       body:
-        'TRACE (Transparent Research And Citation Exchange) is a JSON-LD standard for describing analytical artifacts. policyengine.py emits two TRO kinds and ships a CLI for both generation and schema validation. Every content hash is computed over the canonical JSON serialization used by policyengine.provenance.trace.canonical_json_bytes, so any third-party verifier can reproduce the hashes exactly.',
+        'TRACE (Transparent Research And Citation Exchange) is a JSON-LD standard for describing analytical artifacts. For PolicyEngine, the primary citation surface is a run you executed on policyengine.org: the webapp signs the simulation on our infrastructure, produces a TRO URL, and a paper that cites that URL is durable even if the researcher never installs the Python package. This section covers both that webapp-run path (the one most users want) and the Python / CLI path for researchers running policyengine.py locally who want to emit their own TRO. Every content hash is computed over the canonical JSON serialization used by policyengine.provenance.trace.canonical_json_bytes, so any third-party verifier can reproduce the hashes exactly.',
       reference: [
         {
           term: 'Bundle TRO',
@@ -851,7 +851,37 @@ data manifest unavailable: No data release manifest was published for this data 
       ],
       blocks: [
         {
-          title: 'Emit a bundle TRO from Python (with graceful fallback)',
+          title: 'Primary citation path: policyengine.org runs, institutionally signed',
+          language: 'text',
+          code: `Every simulation executed on policyengine.org produces a
+Transparent Research Object (TRO) that our infrastructure signs on
+your behalf. The result page exposes a "Cite this result" action that
+downloads the JSON-LD TRO and a durable permalink.
+
+Why this is the primary surface:
+  - PolicyEngine runs the simulation on pinned software and pinned
+    calibrated microdata that live on our infrastructure. A reviewer
+    who cannot re-run the simulation locally (for instance, because
+    the underlying UK microdata is UKDS-licensed and cannot be
+    redistributed) still has a verifiable chain of evidence.
+  - The institutional signature says "PolicyEngine ran this with
+    these pinned versions, these inputs, and these outputs." The
+    reader does not have to trust the researcher's laptop.
+  - Software and data versions are captured at the point of
+    execution, so the citation stays interpretable after future
+    PolicyEngine releases.
+
+What to cite in a paper:
+  - Citation URL: the permalink returned alongside the "Cite this
+    result" download.
+  - Verification: a reader can run
+      policyengine trace-tro-validate <downloaded-file>.jsonld
+    to confirm the SHA-256 hashes in the TRO match the linked
+    artifacts.`,
+          output: `(Webapp integration is currently in progress - see policyengine-api#3485 and policyengine-app#2830. In the meantime, the Python / CLI emitters below produce the same kind of TRO from a local policyengine.py install.)`,
+        },
+        {
+          title: 'Secondary: emit a bundle TRO from Python yourself',
           language: 'python',
           code: getPolicyengineTraceExportExample(country),
           output: isUS
@@ -863,7 +893,7 @@ wrote runtime-only bundle to outputs/release_bundle.json
 country: uk`,
         },
         {
-          title: 'CLI one-liners',
+          title: 'Secondary: CLI one-liners',
           language: 'bash',
           code: getPolicyengineTraceCliExample(country),
           output: isUS
