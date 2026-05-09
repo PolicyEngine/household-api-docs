@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { IconWorld } from '@tabler/icons-react';
-import { colors, typography } from '@policyengine/design-system/tokens';
+import { colors, typography } from '@policyengine/ui-kit/legacy/tokens';
 import { COUNTRY_SELECTOR_OPTIONS } from '@/utils/countryDocs';
 
 export default function CountrySelector({ country }) {

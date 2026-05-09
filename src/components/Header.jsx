@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import HeaderContent from '@/components/homeHeader/HeaderContent';
-import { colors, spacing, typography } from '@policyengine/design-system/tokens';
+import { colors, spacing, typography } from '@policyengine/ui-kit/legacy/tokens';
 
 // Inline useDisclosure (drop-in from app-v2 src/hooks/useDisclosure.ts)
 function useDisclosure(initialState = false) {

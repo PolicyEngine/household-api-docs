@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, typography, spacing } from '@policyengine/design-system/tokens';
+import { colors, typography, spacing } from '@policyengine/ui-kit/legacy/tokens';
 
 export default function ModelLink({ country }) {
   return (
