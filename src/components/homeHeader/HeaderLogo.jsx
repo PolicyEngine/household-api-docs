@@ -1,6 +1,6 @@
 'use client';
 
-import { spacing } from '@policyengine/design-system/tokens';
+import { spacing } from '@policyengine/ui-kit/legacy/tokens';
 const PolicyEngineLogo = 'https://www.policyengine.org/assets/logos/policyengine/white.svg';
 
 const logoContainerStyles = {

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { IconMenu2, IconX } from '@tabler/icons-react';
-import { colors, spacing, typography } from '@policyengine/design-system/tokens';
+import { colors, spacing, typography } from '@policyengine/ui-kit/legacy/tokens';
 import { COUNTRY_SELECTOR_OPTIONS } from '@/utils/countryDocs';
 
 export default function MobileMenu({ country, opened, onOpen, onClose, navItems }) {
