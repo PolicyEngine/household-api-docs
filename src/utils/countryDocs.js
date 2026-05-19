@@ -149,6 +149,8 @@ const COUNTRY_DOCS = {
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-us',
     hostedCalculateUrl: 'https://household.api.policyengine.org/us/calculate',
     dockerCalculateUrl: 'http://localhost:8080/us/calculate',
+    openApiSpecUrl: 'https://household.api.policyengine.org/specification',
+    selfHostedOpenApiSpecPath: '/specification',
     requestSummary:
       'Hosted REST, self-hosted Docker, and direct Python access all evaluate the same US household policies.',
     pythonPackageSummary:
@@ -251,6 +253,8 @@ const COUNTRY_DOCS = {
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-uk',
     hostedCalculateUrl: 'https://household.api.policyengine.org/uk/calculate',
     dockerCalculateUrl: 'http://localhost:8080/uk/calculate',
+    openApiSpecUrl: 'https://household.api.policyengine.org/specification',
+    selfHostedOpenApiSpecPath: '/specification',
     requestSummary:
       'Hosted REST, self-hosted Docker, and direct Python access all evaluate the same UK household policies.',
     pythonPackageSummary:
@@ -2305,7 +2309,10 @@ export function getHostedCurlRequest(country) {
   --url ${country.hostedCalculateUrl} \\
   --header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
   --header 'Content-Type: application/json' \\
-  --data '${formatJson({ household: country.requestHousehold })}'`;
+  --data '${formatJson({
+    version: 'current',
+    household: country.requestHousehold,
+  })}'`;
 }
 
 export function getDockerCurlRequest(country) {
@@ -2313,6 +2320,324 @@ export function getDockerCurlRequest(country) {
   --url ${country.dockerCalculateUrl} \\
   --header 'Content-Type: application/json' \\
   --data '${formatJson({ household: country.requestHousehold })}'`;
+}
+
+export function getCalculateRequestExamples(country) {
+  const firstResultVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
+  const firstEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
+  const stateOrHousingGroup =
+    country.id === 'uk'
+      ? {
+          households: {
+            household_id: {
+              members: ['person_id'],
+              housing_costs: {
+                2025: 9600,
+              },
+            },
+          },
+        }
+      : {
+          households: {
+            household_id: {
+              members: ['person_id'],
+              state_name: {
+                2025: 'CA',
+              },
+            },
+          },
+        };
+
+  return [
+    {
+      id: 'version',
+      key: 'version',
+      label: 'version',
+      requirement: 'Optional',
+      defaultValue: 'current',
+      title: 'version',
+      type: 'string',
+      description:
+        'Hosted gateway routing key. The only accepted values are current, frontier, or an exact numerical version string.',
+      notes: [
+        'Use `current` for the stable deployed model.',
+        'Use `frontier` for the next deployed model.',
+        'Use an exact numerical version string, such as `1.691.1`, to route to that deployed version directly.',
+        'Self-hosted Docker calls can omit this key.',
+      ],
+      code: formatJson({
+        version: 'current',
+        household: {
+          '...': 'household payload',
+        },
+      }),
+    },
+    {
+      id: 'household',
+      key: 'household',
+      label: 'household',
+      requirement: 'Required',
+      defaultValue: 'none',
+      title: 'household',
+      type: 'object',
+      description:
+        'The calculation payload. It maps entity-group names to entity IDs, then variable names, then period keys and values.',
+      notes: [
+        'The people group is required.',
+        'Set an output variable to null for the period you want calculated.',
+      ],
+      code: formatJson({
+        household: {
+          people: {
+            person_id: {
+              age: {
+                2025: 30,
+              },
+              employment_income: {
+                2025: 50000,
+              },
+            },
+          },
+          [firstEntityGroup]: {
+            entity_id: {
+              members: ['person_id'],
+              [firstResultVariable]: {
+                2025: null,
+              },
+            },
+          },
+          ...stateOrHousingGroup,
+        },
+      }),
+    },
+    {
+      id: 'policy',
+      key: 'policy',
+      label: 'policy',
+      requirement: 'Optional',
+      defaultValue: '{}',
+      title: 'policy',
+      type: 'object',
+      description:
+        'Optional reform parameters passed through to the country tax-benefit model for the calculation.',
+      notes: [
+        'Omit this key, or pass an empty object, to calculate under baseline law.',
+        'Parameter paths and values follow the country package model.',
+      ],
+      code: formatJson({
+        household: {
+          '...': 'household payload',
+        },
+        policy: {},
+      }),
+    },
+    {
+      id: 'enable-ai-explainer',
+      key: 'enable_ai_explainer',
+      label: 'enable_ai_explainer',
+      requirement: 'Optional',
+      defaultValue: 'false',
+      title: 'enable_ai_explainer',
+      type: 'boolean',
+      description:
+        'When true, successful responses include a computation_tree_uuid for downstream AI explanation flows.',
+      notes: [
+        'The default response omits computation_tree_uuid.',
+        'Use this only when a caller needs an explanation trace.',
+      ],
+      code: formatJson({
+        household: {
+          '...': 'household payload',
+        },
+        enable_ai_explainer: true,
+      }),
+    },
+    {
+      id: 'axes',
+      key: 'household.axes',
+      label: 'household.axes',
+      requirement: 'Optional',
+      defaultValue: 'omitted',
+      title: 'household.axes',
+      type: 'array',
+      description:
+        'Optional bounded scan instructions. Each axis varies one variable over a min/max range for a fixed period.',
+      notes: [
+        'Each axis requires name, min, max, and count.',
+        'The API caps axes entries and count values to protect calculation capacity.',
+      ],
+      code: formatJson({
+        household: {
+          people: {
+            person_id: {
+              age: {
+                2025: 30,
+              },
+            },
+          },
+          axes: [
+            {
+              name: 'employment_income',
+              period: '2025',
+              min: 0,
+              max: 100000,
+              count: 11,
+            },
+          ],
+        },
+      }),
+    },
+  ];
+}
+
+function getExampleModelVersion(country) {
+  return country.id === 'uk' ? '2.31.0' : '1.691.1';
+}
+
+export function getCalculateSuccessResponseExample(country) {
+  const firstResultVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
+  const firstEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
+  const firstEntityId = Object.keys(country.requestHousehold[firstEntityGroup] ?? {})[0] ?? 'entity';
+
+  return formatJson({
+    status: 'ok',
+    message: null,
+    result: {
+      [firstEntityGroup]: {
+        [firstEntityId]: {
+          [firstResultVariable]: {
+            2025: 1200,
+          },
+        },
+      },
+    },
+    policyengine_bundle: {
+      model_version: getExampleModelVersion(country),
+      data_version: null,
+      dataset: null,
+    },
+    warnings: [],
+    computation_tree_uuid: null,
+  });
+}
+
+export function getCalculateDeprecatedWarningResponseExample(country) {
+  const firstResultVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
+  const firstEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
+  const firstEntityId = Object.keys(country.requestHousehold[firstEntityGroup] ?? {})[0] ?? 'entity';
+
+  return formatJson({
+    status: 'ok',
+    message: null,
+    result: {
+      [firstEntityGroup]: {
+        [firstEntityId]: {
+          [firstResultVariable]: {
+            2025: 1200,
+          },
+        },
+      },
+    },
+    policyengine_bundle: {
+      model_version: getExampleModelVersion(country),
+      data_version: null,
+      dataset: null,
+    },
+    warnings: [
+      'Input `medical_out_of_pocket_expenses` on `people/you` is deprecated and was ignored for this calculation. Removed in policyengine-us 1.673.0. Migrate non-premium spending to `other_medical_expenses` and premium spending to `health_insurance_premiums`.',
+    ],
+    computation_tree_uuid: null,
+  });
+}
+
+export function getCalculateValidationErrorExample(country) {
+  return formatJson({
+    status: 'error',
+    message: 'Invalid household variables.',
+    errors: [
+      `Variable \`not_a_variable\` on \`people/you\` is not available in PolicyEngine model version ${getExampleModelVersion(country)} used by this API. Remove it or migrate to a supported variable.`,
+    ],
+  });
+}
+
+export function getCalculateResponseExamples(country) {
+  return [
+    {
+      id: '200-success',
+      status: '200',
+      label: 'Calculation succeeded',
+      title: '200 calculation succeeded',
+      code: getCalculateSuccessResponseExample(country),
+    },
+    {
+      id: '200-deprecated-variable-warning',
+      status: '200',
+      label: 'Calculation succeeded with deprecated variable warning',
+      title: '200 calculation succeeded with deprecated variable warning',
+      code: getCalculateDeprecatedWarningResponseExample(country),
+    },
+    {
+      id: '400-invalid-variables',
+      status: '400',
+      label: 'Invalid household variables',
+      title: '400 invalid household variables',
+      code: getCalculateValidationErrorExample(country),
+    },
+    {
+      id: '400-malformed-request',
+      status: '400',
+      label: 'Malformed request body',
+      title: '400 malformed request body',
+      code: formatJson({
+        status: 'error',
+        message:
+          'Invalid period 2025-13. Periods must be valid PolicyEngine periods, such as 2025 or 2025-01.',
+      }),
+    },
+    {
+      id: '401-invalid-token',
+      status: '401',
+      label: 'Missing or invalid token',
+      title: '401 missing or invalid token',
+      code: formatJson({
+        error: 'invalid_token',
+        error_description:
+          'Authorization header must contain a valid bearer token.',
+      }),
+    },
+    {
+      id: '403-insufficient-scope',
+      status: '403',
+      label: 'Token lacks access',
+      title: '403 token lacks access',
+      code: formatJson({
+        error: 'insufficient_scope',
+        error_description:
+          'The token was accepted but is not authorized to access this endpoint.',
+      }),
+    },
+    {
+      id: '404-country-not-supported',
+      status: '404',
+      label: 'Country not supported',
+      title: '404 country not supported',
+      code: formatJson({
+        status: 'error',
+        message: 'Country ca not found. Available countries are: us, uk',
+      }),
+    },
+    {
+      id: '500-calculation-failed',
+      status: '500',
+      label: 'Calculation failed',
+      title: '500 calculation failed',
+      code: formatJson({
+        status: 'error',
+        message:
+          'Error calculating household under policy: <calculation error>',
+      }),
+    },
+  ];
 }
 
 export function getPythonRequestExample(country) {

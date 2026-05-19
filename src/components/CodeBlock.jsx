@@ -19,7 +19,7 @@ export default function CodeBlock({ code, language = 'python', title, output, ou
   };
 
   return (
-    <div className="rounded-lg border border-border-light overflow-hidden my-4">
+    <div className="my-4 min-w-0 overflow-hidden rounded-lg border border-border-light">
       <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-border-light">
         <span className="text-sm font-medium text-text-secondary">{title || language}</span>
         <button
@@ -38,6 +38,8 @@ export default function CodeBlock({ code, language = 'python', title, output, ou
           borderRadius: 0,
           fontSize: '14px',
           lineHeight: '1.6',
+          maxWidth: '100%',
+          overflowX: 'auto',
         }}
       >
         {code}

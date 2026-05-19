@@ -61,6 +61,12 @@ const REPRODUCIBILITY_TOPICS = [
   { id: 'trace', label: 'TRACE export' },
 ];
 
+const ZONE_ASSET_PREFIX = process.env.NEXT_PUBLIC_ZONE_ASSET_PREFIX ?? '';
+
+function zoneAssetPath(path) {
+  return `${ZONE_ASSET_PREFIX}${path}`;
+}
+
 const US_ENTITY_ROWS = [
   { entity: 'person', scope: 'Individual', examples: 'employment_income, age, is_disabled' },
   { entity: 'marital_unit', scope: 'Married couple or single adult', examples: 'joint return grouping' },
@@ -503,8 +509,8 @@ Name: household_net_income, dtype: float32`,
           language: 'python',
           code: getPolicyengineVisualizationExample(country),
           outputImage: isUS
-            ? '/_zones/household-api-docs/python-guide/us-variation-chart.png'
-            : '/_zones/household-api-docs/python-guide/uk-variation-chart.png',
+            ? zoneAssetPath('/python-guide/us-variation-chart.png')
+            : zoneAssetPath('/python-guide/uk-variation-chart.png'),
           outputImageAlt: isUS
             ? 'US household net income and EITC by employment income'
             : 'UK household net income and universal credit by employment income',
@@ -764,8 +770,8 @@ CAGR: 2.68%`,
           language: 'python',
           code: getPolicyengineMicrosimVisualizationExample(country),
           outputImage: isUS
-            ? '/_zones/household-api-docs/python-guide/us-decile-impacts-chart.png'
-            : '/_zones/household-api-docs/python-guide/uk-decile-impacts-chart.png',
+            ? zoneAssetPath('/python-guide/us-decile-impacts-chart.png')
+            : zoneAssetPath('/python-guide/uk-decile-impacts-chart.png'),
           outputImageAlt: isUS
             ? 'US mean change in household net income by income decile under the reform'
             : 'UK mean change in household net income by income decile under the reform',
