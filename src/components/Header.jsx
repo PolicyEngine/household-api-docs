@@ -41,6 +41,7 @@ function buildNavItems(country) {
       dropdownItems: [
         { label: 'Team', href: country.teamUrl },
         { label: 'Supporters', href: country.supportersUrl },
+        { label: 'Citations', href: country.citationsUrl },
       ],
     },
     {
