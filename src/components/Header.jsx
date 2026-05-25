@@ -42,6 +42,7 @@ function buildNavItems(country) {
         { label: 'Team', href: country.teamUrl },
         { label: 'Supporters', href: country.supportersUrl },
         { label: 'Citations', href: country.citationsUrl },
+        { label: 'Events', href: country.eventsUrl },
       ],
     },
     {
