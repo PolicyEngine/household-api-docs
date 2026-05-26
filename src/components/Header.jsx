@@ -14,6 +14,7 @@ function useDisclosure(initialState = false) {
 }
 
 function buildNavItems(country) {
+  const modelBase = country.modelUrl;
   return [
     {
       label: 'Research',
@@ -22,8 +23,28 @@ function buildNavItems(country) {
     },
     {
       label: 'Model',
-      href: country.modelUrl,
-      hasDropdown: false,
+      hasDropdown: true,
+      dropdownItems: [
+        {
+          label: 'Rules',
+          href: `${modelBase}/rules`,
+          children: [
+            { label: 'Coverage', href: `${modelBase}/rules/coverage` },
+            { label: 'Parameters', href: `${modelBase}/rules/parameters` },
+            { label: 'Variables', href: `${modelBase}/rules/variables` },
+          ],
+        },
+        {
+          label: 'Data',
+          href: `${modelBase}/data`,
+          children: [
+            { label: 'Pipeline', href: `${modelBase}/data/pipeline` },
+            { label: 'Calibration', href: `${modelBase}/data/calibration` },
+            { label: 'Validation', href: `${modelBase}/data/validation` },
+          ],
+        },
+        { label: 'Behavioral responses', href: `${modelBase}/behavioral` },
+      ],
     },
     {
       label: 'API',

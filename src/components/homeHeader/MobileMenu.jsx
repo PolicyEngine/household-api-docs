@@ -151,7 +151,7 @@ export default function MobileMenu({ country, opened, onOpen, onClose, navItems 
                       className="flex flex-col"
                       style={{ gap: spacing.xs, paddingLeft: spacing.md }}
                     >
-                      {item.dropdownItems.map((dropdownItem) => (
+                      {item.dropdownItems.flatMap((dropdownItem) => [
                         <a
                           key={dropdownItem.label}
                           href={dropdownItem.href}
@@ -165,8 +165,25 @@ export default function MobileMenu({ country, opened, onOpen, onClose, navItems 
                           }}
                         >
                           {dropdownItem.label}
-                        </a>
-                      ))}
+                        </a>,
+                        ...(dropdownItem.children ?? []).map((grand) => (
+                          <a
+                            key={`${dropdownItem.label}-${grand.label}`}
+                            href={grand.href}
+                            style={{
+                              color: colors.text.inverse,
+                              textDecoration: 'none',
+                              fontWeight: typography.fontWeight.normal,
+                              fontSize: typography.fontSize.sm,
+                              fontFamily: typography.fontFamily.primary,
+                              paddingLeft: '14px',
+                              opacity: 0.85,
+                            }}
+                          >
+                            {grand.label}
+                          </a>
+                        )),
+                      ])}
                     </div>
                   </div>
                 ) : (
