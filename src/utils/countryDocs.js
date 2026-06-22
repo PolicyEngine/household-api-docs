@@ -2432,27 +2432,6 @@ export function getCalculateRequestExamples(country) {
       }),
     },
     {
-      id: 'enable-ai-explainer',
-      key: 'enable_ai_explainer',
-      label: 'enable_ai_explainer',
-      requirement: 'Optional',
-      defaultValue: 'false',
-      title: 'enable_ai_explainer',
-      type: 'boolean',
-      description:
-        'When true, successful responses include a computation_tree_uuid for downstream AI explanation flows.',
-      notes: [
-        'The default response omits computation_tree_uuid.',
-        'Use this only when a caller needs an explanation trace.',
-      ],
-      code: formatJson({
-        household: {
-          '...': 'household payload',
-        },
-        enable_ai_explainer: true,
-      }),
-    },
-    {
       id: 'axes',
       key: 'household.axes',
       label: 'household.axes',
