@@ -2851,12 +2851,12 @@ export function getCalculateResponseExamples(country) {
     {
       id: '500-calculation-failed',
       status: '500',
-      label: 'Calculation failed',
-      title: '500 calculation failed',
+      label: 'Internal calculation error',
+      title: '500 internal calculation error',
       code: formatJson({
         status: 'error',
         message:
-          'Error calculating household under policy: <calculation error>',
+          'Error calculating household under policy: <internal calculation error>',
       }),
     },
   ];
