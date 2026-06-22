@@ -261,7 +261,7 @@ const COUNTRY_DOCS = {
     pythonPackage: 'policyengine-us',
     pythonImport: 'policyengine_us',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-us',
-    exampleModelVersion: '1.726.0',
+    exampleModelVersion: '1.732.0',
     hostedCalculateUrl: 'https://household.api.policyengine.org/us/calculate',
     dockerCalculateUrl: 'http://localhost:8080/us/calculate',
     openApiSpecUrl: 'https://household.api.policyengine.org/specification',
@@ -350,7 +350,7 @@ const COUNTRY_DOCS = {
       variable: 'eitc',
       entityGroup: 'tax_units',
       entityId: 'your tax unit',
-      exampleValue: 1200,
+      exampleValue: 0.0,
     },
     fullHousehold: US_FULL_HOUSEHOLD,
     fullApiHousehold: US_FULL_API_HOUSEHOLD,
@@ -492,13 +492,13 @@ const COUNTRY_DOCS = {
           result: {
             benunits: {
               family: {
-                child_benefit: { '2026': 1354.5997 },
-                universal_credit: { '2026': 12721.318 },
+                child_benefit: { '2026': 1400.6571 },
+                universal_credit: { '2026': 13210.467 },
               },
             },
             households: {
               home: {
-                household_net_income: { '2026': 31836.469 },
+                household_net_income: { '2026': 32371.676 },
               },
             },
           },
@@ -2742,7 +2742,7 @@ export function getCalculateRequestExamples(country) {
 }
 
 function getExampleModelVersion(country) {
-  return country.exampleModelVersion ?? (country.id === 'uk' ? '2.88.18' : '1.726.0');
+  return country.exampleModelVersion ?? (country.id === 'uk' ? '2.88.18' : '1.732.0');
 }
 
 export function getCalculateSuccessResponseExample(country) {
