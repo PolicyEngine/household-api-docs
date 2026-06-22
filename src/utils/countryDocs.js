@@ -2516,8 +2516,6 @@ export function getCalculateSuccessResponseExample(country) {
       data_version: null,
       dataset: null,
     },
-    warnings: [],
-    computation_tree_uuid: null,
   });
 }
 
@@ -2546,7 +2544,6 @@ export function getCalculateDeprecatedWarningResponseExample(country) {
     warnings: [
       'Input `medical_out_of_pocket_expenses` on `people/you` is deprecated and was ignored for this calculation. Removed in policyengine-us 1.673.0. Migrate non-premium spending to `other_medical_expenses` and premium spending to `health_insurance_premiums`.',
     ],
-    computation_tree_uuid: null,
   });
 }
 
@@ -2591,7 +2588,7 @@ export function getCalculateResponseExamples(country) {
       code: formatJson({
         status: 'error',
         message:
-          'Invalid period 2025-13. Periods must be valid PolicyEngine periods, such as 2025 or 2025-01.',
+          'Invalid period key `2025-13` for `employment_income` on `people/you`. Expected a year (e.g. "2026") or a month (e.g. "2026-01").',
       }),
     },
     {
@@ -2606,24 +2603,13 @@ export function getCalculateResponseExamples(country) {
       }),
     },
     {
-      id: '403-insufficient-scope',
-      status: '403',
-      label: 'Token lacks access',
-      title: '403 token lacks access',
-      code: formatJson({
-        error: 'insufficient_scope',
-        error_description:
-          'The token was accepted but is not authorized to access this endpoint.',
-      }),
-    },
-    {
       id: '404-country-not-supported',
       status: '404',
       label: 'Country not supported',
       title: '404 country not supported',
       code: formatJson({
         status: 'error',
-        message: 'Country ca not found. Available countries are: us, uk',
+        message: 'Country zz not found. Available countries are: uk, us, ca, ng, il',
       }),
     },
     {
