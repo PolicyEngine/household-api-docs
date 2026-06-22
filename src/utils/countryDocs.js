@@ -2830,7 +2830,7 @@ export function getCalculateResponseExamples(country) {
     {
       id: '401-invalid-token',
       status: '401',
-      label: 'Missing or invalid token',
+      label: 'Missing or invalid auth token',
       title: '401 missing or invalid token',
       code: formatJson({
         error: 'invalid_token',
