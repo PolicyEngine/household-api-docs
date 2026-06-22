@@ -57,7 +57,7 @@ export default function HouseholdSection({ country, accessMode }) {
               <tr className="border-t border-border-light bg-gray-50">
                 <td className="px-4 py-3 font-mono text-sm">Year</td>
                 <td className="px-4 py-3 text-text-secondary">Time period for the value</td>
-                <td className="px-4 py-3 font-mono text-xs text-text-secondary">&quot;2025&quot;</td>
+                <td className="px-4 py-3 font-mono text-xs text-text-secondary">&quot;2026&quot;</td>
               </tr>
               <tr className="border-t border-border-light">
                 <td className="px-4 py-3 font-mono text-sm">Value</td>

@@ -2345,13 +2345,13 @@ sim = Simulation(situation=household)
 #   - Household-level variables: one value per household
 
 # Person-level variable — array length = number of people
-person_level = sim.calculate("${country.variableExamples[0]}", 2025)
+person_level = sim.calculate("${country.variableExamples[0]}", 2026)
 print("Person-level array:", person_level)
 print("Person-level shape:", person_level.shape)
 print("Length:", len(person_level), "(one value per person)")
 
 # Higher-level variable — array length = number of that entity
-result_level = sim.calculate("${resultsVariable}", 2025)
+result_level = sim.calculate("${resultsVariable}", 2026)
 print("Result-level array:", result_level)
 print("Result-level shape:", result_level.shape)
 
@@ -2372,11 +2372,11 @@ sim = Simulation(situation=household)
 
 # Enable trace before calculating — this records the dependency tree
 sim.trace = True
-sim.calculate("${traceVariable}", 2025)
+sim.calculate("${traceVariable}", 2026)
 
 # Print the computation log
 # Indentation = dependency depth (more indented = deeper in calculation tree)
-# Variable names show period and year, e.g. ctc_value<2025, (default)>
+# Variable names show period and year, e.g. ctc_value<2026, (default)>
 # Values are arrays — array length indicates the entity level
 sim.tracer.print_computation_log(max_depth=4)`;
 }
@@ -2404,7 +2404,7 @@ df = sim.calculate_dataframe(
     [
     ${variableList}
     ],
-    period=2025,
+    period=2026,
     map_to="household",
 )
 
@@ -2438,8 +2438,8 @@ ctc_reform = Reform.from_dict(
 baseline = Simulation(situation=household)
 reformed = Simulation(situation=household, reform=ctc_reform)
 
-print("Baseline CTC:", baseline.calculate("ctc_value", 2025).sum())
-print("Reformed CTC:", reformed.calculate("ctc_value", 2025).sum())`;
+print("Baseline CTC:", baseline.calculate("ctc_value", 2026).sum())
+print("Reformed CTC:", reformed.calculate("ctc_value", 2026).sum())`;
 }
 
 export function getUSPythonStructuralReformExample() {
@@ -2486,8 +2486,8 @@ my_reform = {
 baseline = Simulation(situation=household)
 reformed = Simulation(situation=household, reform=my_reform)
 
-print("Baseline:", baseline.calculate("${country.fullExampleVariable}", 2025).sum())
-print("Reformed:", reformed.calculate("${country.fullExampleVariable}", 2025).sum())`;
+print("Baseline:", baseline.calculate("${country.fullExampleVariable}", 2026).sum())
+print("Reformed:", reformed.calculate("${country.fullExampleVariable}", 2026).sum())`;
 }
 
 export function getUSMicrosimulationOverviewExample() {
@@ -2501,8 +2501,8 @@ baseline = Microsimulation(dataset=ENHANCED_CPS)
 
 # calculate() on a Microsimulation works the same way as Simulation
 # but returns arrays representing the full population sample
-ctc = baseline.calculate("ctc_value", period=2025)
-weights = baseline.calculate("household_weight", period=2025)
+ctc = baseline.calculate("ctc_value", period=2026)
+weights = baseline.calculate("household_weight", period=2026)
 
 print("Records:", len(weights))
 # .sum() on microsimulation results is automatically weighted
@@ -2526,11 +2526,11 @@ CORE_VARIABLES = [
 baseline = Microsimulation(dataset=ENHANCED_CPS)
 
 # KEY DISTINCTION: calculate().sum() is automatically weighted
-auto_total = baseline.calculate("ctc_value", period=2025).sum()
+auto_total = baseline.calculate("ctc_value", period=2026).sum()
 
 # calculate_dataframe() is NOT automatically weighted
 # You must multiply by household_weight (or person_weight) yourself
-df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025))
+df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2026))
 unweighted_total = df["ctc_value"].sum()
 manual_total = (df["ctc_value"] * df["household_weight"]).sum()
 
@@ -2561,8 +2561,8 @@ ctc_expansion = Reform.from_dict(
 baseline = Microsimulation(dataset=ENHANCED_CPS)
 reformed = Microsimulation(dataset=ENHANCED_CPS, reform=ctc_expansion)
 
-baseline_total = baseline.calculate("ctc_value", period=2025).sum()
-reformed_total = reformed.calculate("ctc_value", period=2025).sum()
+baseline_total = baseline.calculate("ctc_value", period=2026).sum()
+reformed_total = reformed.calculate("ctc_value", period=2026).sum()
 
 print("Annual increase:", reformed_total - baseline_total)`;
 }
@@ -2575,7 +2575,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 CORE_VARIABLES = ["state_code", "household_weight", "ctc_value"]
 
 baseline = Microsimulation(dataset=ENHANCED_CPS)
-df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025))
+df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2026))
 
 # State-level analysis: group weighted DataFrames by geography
 # Remember to weight manually since this is a DataFrame
@@ -2591,7 +2591,7 @@ print(state_totals.head(10))
 # Multi-year budget window: loop over years
 # calculate().sum() handles weighting automatically
 annual_impacts = []
-for year in range(2025, 2035):
+for year in range(2026, 2036):
     annual_impacts.append(
         {
             "year": year,
@@ -2613,7 +2613,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 PERSON_VARIABLES = ["person_weight", "snap", "is_child"]
 
 baseline = Microsimulation(dataset=ENHANCED_CPS)
-people = pd.DataFrame(baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2025))
+people = pd.DataFrame(baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2026))
 
 # Weight with person_weight when the question is about people, not households
 snap_enrolled = people[people["snap"] > 0]["person_weight"].sum()
@@ -2824,7 +2824,7 @@ export function getCalculateResponseExamples(country) {
       code: formatJson({
         status: 'error',
         message:
-          'Invalid period key `2025-13` for `employment_income` on `people/you`. Expected a year (e.g. "2026") or a month (e.g. "2026-01").',
+          'Invalid period key `2026-13` for `employment_income` on `people/you`. Expected a year (e.g. "2026") or a month (e.g. "2026-01").',
       }),
     },
     {
