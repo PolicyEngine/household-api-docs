@@ -1,14 +1,14 @@
 const US_REQUEST_HOUSEHOLD = {
   people: {
     you: {
-      age: { '2025': 30 },
-      employment_income: { '2025': 50000 },
+      age: { '2026': 30 },
+      employment_income: { '2026': 50000 },
     },
   },
   households: {
     'your household': {
       members: ['you'],
-      state_code: { '2025': 'CA' },
+      state_code: { '2026': 'CA' },
     },
   },
   families: {
@@ -36,24 +36,24 @@ const US_REQUEST_HOUSEHOLD = {
 const US_FULL_HOUSEHOLD = {
   people: {
     adult1: {
-      age: { '2025': 40 },
-      employment_income: { '2025': 30000 },
+      age: { '2026': 40 },
+      employment_income: { '2026': 30000 },
     },
     adult2: {
-      age: { '2025': 38 },
-      employment_income: { '2025': 20000 },
+      age: { '2026': 38 },
+      employment_income: { '2026': 20000 },
     },
     child1: {
-      age: { '2025': 10 },
+      age: { '2026': 10 },
     },
     child2: {
-      age: { '2025': 7 },
+      age: { '2026': 7 },
     },
   },
   households: {
     'my household': {
       members: ['adult1', 'adult2', 'child1', 'child2'],
-      state_code: { '2025': 'AZ' },
+      state_code: { '2026': 'AZ' },
     },
   },
   families: {
@@ -83,13 +83,13 @@ const US_API_REQUEST_HOUSEHOLD = {
   households: {
     'your household': {
       ...US_REQUEST_HOUSEHOLD.households['your household'],
-      household_net_income: { '2025': null },
+      household_net_income: { '2026': null },
     },
   },
   tax_units: {
     'your tax unit': {
       ...US_REQUEST_HOUSEHOLD.tax_units['your tax unit'],
-      eitc: { '2025': null },
+      eitc: { '2026': null },
     },
   },
 };
@@ -99,7 +99,7 @@ const US_FULL_API_HOUSEHOLD = {
   tax_units: {
     'my tax unit': {
       ...US_FULL_HOUSEHOLD.tax_units['my tax unit'],
-      eitc: { '2025': null },
+      eitc: { '2026': null },
     },
   },
 };
@@ -107,8 +107,8 @@ const US_FULL_API_HOUSEHOLD = {
 const UK_REQUEST_HOUSEHOLD = {
   people: {
     person: {
-      age: { '2025': 30 },
-      employment_income: { '2025': 30000 },
+      age: { '2026': 30 },
+      employment_income: { '2026': 30000 },
     },
   },
   benunits: {
@@ -126,18 +126,18 @@ const UK_REQUEST_HOUSEHOLD = {
 const UK_FULL_HOUSEHOLD = {
   people: {
     parent_1: {
-      age: { '2025': 35 },
-      employment_income: { '2025': 25000 },
+      age: { '2026': 35 },
+      employment_income: { '2026': 25000 },
     },
     parent_2: {
-      age: { '2025': 33 },
-      employment_income: { '2025': 15000 },
+      age: { '2026': 33 },
+      employment_income: { '2026': 15000 },
     },
     child_1: {
-      age: { '2025': 8 },
+      age: { '2026': 8 },
     },
     child_2: {
-      age: { '2025': 5 },
+      age: { '2026': 5 },
     },
   },
   benunits: {
@@ -148,7 +148,7 @@ const UK_FULL_HOUSEHOLD = {
   households: {
     home: {
       members: ['parent_1', 'parent_2', 'child_1', 'child_2'],
-      housing_costs: { '2025': 9600 },
+      housing_costs: { '2026': 9600 },
     },
   },
 };
@@ -158,13 +158,13 @@ const UK_API_REQUEST_HOUSEHOLD = {
   people: {
     person: {
       ...UK_REQUEST_HOUSEHOLD.people.person,
-      income_tax: { '2025': null },
+      income_tax: { '2026': null },
     },
   },
   households: {
     household: {
       ...UK_REQUEST_HOUSEHOLD.households.household,
-      household_net_income: { '2025': null },
+      household_net_income: { '2026': null },
     },
   },
 };
@@ -174,14 +174,14 @@ const UK_FULL_API_HOUSEHOLD = {
   benunits: {
     family: {
       ...UK_FULL_HOUSEHOLD.benunits.family,
-      child_benefit: { '2025': null },
-      universal_credit: { '2025': null },
+      child_benefit: { '2026': null },
+      universal_credit: { '2026': null },
     },
   },
   households: {
     home: {
       ...UK_FULL_HOUSEHOLD.households.home,
-      household_net_income: { '2025': null },
+      household_net_income: { '2026': null },
     },
   },
 };
@@ -189,10 +189,10 @@ const UK_FULL_API_HOUSEHOLD = {
 const UK_SINGLE_ADULT_API_HOUSEHOLD = {
   people: {
     person: {
-      age: { '2025': 30 },
-      employment_income: { '2025': 30000 },
-      income_tax: { '2025': null },
-      national_insurance: { '2025': null },
+      age: { '2026': 30 },
+      employment_income: { '2026': 30000 },
+      income_tax: { '2026': null },
+      national_insurance: { '2026': null },
     },
   },
   benunits: {
@@ -203,7 +203,7 @@ const UK_SINGLE_ADULT_API_HOUSEHOLD = {
   households: {
     household: {
       members: ['person'],
-      household_net_income: { '2025': null },
+      household_net_income: { '2026': null },
     },
   },
 };
@@ -211,33 +211,33 @@ const UK_SINGLE_ADULT_API_HOUSEHOLD = {
 const UK_SINGLE_PARENT_RENTER_API_HOUSEHOLD = {
   people: {
     parent: {
-      age: { '2025': 35 },
-      employment_income: { '2025': 20000 },
+      age: { '2026': 35 },
+      employment_income: { '2026': 20000 },
     },
     child: {
-      age: { '2025': 8 },
+      age: { '2026': 8 },
     },
   },
   benunits: {
     family: {
       members: ['parent', 'child'],
-      child_benefit: { '2025': null },
-      universal_credit: { '2025': null },
+      child_benefit: { '2026': null },
+      universal_credit: { '2026': null },
     },
   },
   households: {
     home: {
       members: ['parent', 'child'],
-      region: { '2025': 'LONDON' },
-      rent: { '2025': 12000 },
-      household_net_income: { '2025': null },
+      region: { '2026': 'LONDON' },
+      rent: { '2026': 12000 },
+      household_net_income: { '2026': null },
     },
   },
 };
 
 const UK_PERSONAL_ALLOWANCE_REFORM = {
   'gov.hmrc.income_tax.allowances.personal_allowance.amount': {
-    '2025-01-01.2100-12-31': 15000,
+    '2026-01-01.2100-12-31': 15000,
   },
 };
 
@@ -334,7 +334,7 @@ const COUNTRY_DOCS = {
       'Putting it all together: a married couple in Arizona with two children and $50,000 combined income, calculating their Earned Income Tax Credit.',
     fullExampleResultLabel: 'EITC',
     fullExampleVariable: 'eitc',
-    fullExampleResultPath: 'result["tax_units"]["my tax unit"]["eitc"]["2025"]',
+    fullExampleResultPath: 'result["tax_units"]["my tax unit"]["eitc"]["2026"]',
     quickstartHousehold: US_REQUEST_HOUSEHOLD,
     quickstartResults: [
       ['EITC', 'eitc'],
@@ -426,7 +426,7 @@ const COUNTRY_DOCS = {
       'Putting it all together: a UK family with two children, £40,000 combined employment income, and annual housing costs of £9,600, calculating Child Benefit.',
     fullExampleResultLabel: 'Child Benefit',
     fullExampleVariable: 'child_benefit',
-    fullExampleResultPath: 'result["benunits"]["family"]["child_benefit"]["2025"]',
+    fullExampleResultPath: 'result["benunits"]["family"]["child_benefit"]["2026"]',
     quickstartHousehold: UK_REQUEST_HOUSEHOLD,
     quickstartResults: [
       ['Income tax', 'income_tax'],
@@ -461,13 +461,13 @@ const COUNTRY_DOCS = {
           result: {
             people: {
               person: {
-                income_tax: { '2025': 3486 },
-                national_insurance: { '2025': 1394.4033 },
+                income_tax: { '2026': 3486 },
+                national_insurance: { '2026': 1394.4033 },
               },
             },
             households: {
               household: {
-                household_net_income: { '2025': 24960.55 },
+                household_net_income: { '2026': 24960.55 },
               },
             },
           },
@@ -492,13 +492,13 @@ const COUNTRY_DOCS = {
           result: {
             benunits: {
               family: {
-                child_benefit: { '2025': 1354.5997 },
-                universal_credit: { '2025': 12721.318 },
+                child_benefit: { '2026': 1354.5997 },
+                universal_credit: { '2026': 12721.318 },
               },
             },
             households: {
               home: {
-                household_net_income: { '2025': 31836.469 },
+                household_net_income: { '2026': 31836.469 },
               },
             },
           },
@@ -518,9 +518,9 @@ const COUNTRY_DOCS = {
           household: {
             people: {
               person: {
-                age: { '2025': 30 },
-                employment_income: { '2025': 30000 },
-                income_tax: { '2025': null },
+                age: { '2026': 30 },
+                employment_income: { '2026': 30000 },
+                income_tax: { '2026': null },
               },
             },
             benunits: {
@@ -531,7 +531,7 @@ const COUNTRY_DOCS = {
             households: {
               household: {
                 members: ['person'],
-                household_net_income: { '2025': null },
+                household_net_income: { '2026': null },
               },
             },
           },
@@ -543,12 +543,12 @@ const COUNTRY_DOCS = {
           result: {
             people: {
               person: {
-                income_tax: { '2025': 3000 },
+                income_tax: { '2026': 3000 },
               },
             },
             households: {
               household: {
-                household_net_income: { '2025': 25446.55 },
+                household_net_income: { '2026': 25446.55 },
               },
             },
           },
@@ -605,9 +605,7 @@ function buildEndpointHouseholdExample(country) {
           households: {
             household_id: {
               members: ['person_id'],
-              housing_costs: {
-                2025: 9600,
-              },
+              housing_costs: { 2026: 9600 },
             },
           },
         }
@@ -615,21 +613,15 @@ function buildEndpointHouseholdExample(country) {
           households: {
             household_id: {
               members: ['person_id'],
-              state_name: {
-                2025: 'CA',
-              },
+              state_name: { 2026: 'CA' },
             },
           },
         };
   const household = {
     people: {
       person_id: {
-        age: {
-          2025: 30,
-        },
-        employment_income: {
-          2025: country.id === 'uk' ? 30000 : 50000,
-        },
+        age: { 2026: 30 },
+        employment_income: { 2026: country.id === 'uk' ? 30000 : 50000 },
       },
     },
     ...stateOrHousingGroup,
@@ -648,9 +640,7 @@ function buildEndpointHouseholdExample(country) {
     ...(household[target.entityGroup] ?? {}),
     [exampleEntityId]: {
       ...existingEntity,
-      [target.variable]: {
-        2025: null,
-      },
+      [target.variable]: { 2026: null },
     },
   };
 
@@ -669,7 +659,7 @@ function formatPythonCalculations(results) {
   return results
     .map(
       ([label, variable]) =>
-        `${variable} = sim.calculate("${variable}", "2025")[0]\nprint(f"${label}: {${variable}:,.2f}")`
+        `${variable} = sim.calculate("${variable}", "2026")[0]\nprint(f"${label}: {${variable}:,.2f}")`
     )
     .join('\n\n');
 }
@@ -2240,8 +2230,8 @@ function formatUSQuickstartHousehold() {
     # People: each person is a named key with input variables keyed by period
     "people": {
         "you": {
-            "age": {"2025": 30},
-            "employment_income": {"2025": 50000}
+            "age": {"2026": 30},
+            "employment_income": {"2026": 50000}
         }
     },
 
@@ -2249,7 +2239,7 @@ function formatUSQuickstartHousehold() {
     "households": {
         "your household": {
             "members": ["you"],
-            "state_code": {"2025": "CA"}
+            "state_code": {"2026": "CA"}
         }
     },
 
@@ -2280,8 +2270,8 @@ function formatUKQuickstartHousehold() {
     # People: each person is a named key with input variables keyed by period
     "people": {
         "person": {
-            "age": {"2025": 30},
-            "employment_income": {"2025": 30000}
+            "age": {"2026": 30},
+            "employment_income": {"2026": 30000}
         }
     },
 
@@ -2322,7 +2312,7 @@ export function getPythonScenarioExample(country, household, results) {
   const resultLines = results
     .map(
       ([label, variable]) =>
-        `    "${label}": sim.calculate("${variable}", "2025")[0],`
+        `    "${label}": sim.calculate("${variable}", "2026")[0],`
     )
     .join('\n');
 
@@ -2434,11 +2424,11 @@ ctc_reform = Reform.from_dict(
     {
         # Increase CTC base amount from $2,000 to $3,000
         "gov.irs.credits.ctc.amount.base[0].amount": {
-            "2025-01-01.2100-12-31": 3000
+            "2026-01-01.2100-12-31": 3000
         },
         # Make CTC fully refundable
         "gov.irs.credits.ctc.refundable.fully_refundable": {
-            "2025-01-01.2100-12-31": True
+            "2026-01-01.2100-12-31": True
         },
     },
     country_id="us",
@@ -2489,7 +2479,7 @@ household = ${formatPythonObject(country.fullHousehold)}
 # Parameter paths match the tree at policyengine.org/${country.id}/model/rules/parameters
 my_reform = {
     "your.parameter.path": {
-        "2025-01-01.2100-12-31": "NEW_VALUE"
+        "2026-01-01.2100-12-31": "NEW_VALUE"
     }
 }
 
@@ -2560,7 +2550,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 ctc_expansion = Reform.from_dict(
     {
         "gov.irs.credits.ctc.amount.base[0].amount": {
-            "2025-01-01.2100-12-31": 3600
+            "2026-01-01.2100-12-31": 3600
         }
     },
     country_id="us",
@@ -2733,15 +2723,13 @@ export function getCalculateRequestExamples(country) {
         household: {
           people: {
             person_id: {
-              age: {
-                2025: 30,
-              },
+              age: { 2026: 30 },
             },
           },
           axes: [
             {
               name: 'employment_income',
-              period: '2025',
+              period: '2026',
               min: 0,
               max: 100000,
               count: 11,
@@ -2766,9 +2754,7 @@ export function getCalculateSuccessResponseExample(country) {
     result: {
       [target.entityGroup]: {
         [target.entityId]: {
-          [target.variable]: {
-            2025: target.exampleValue,
-          },
+          [target.variable]: { 2026: target.exampleValue },
         },
       },
     },
@@ -2789,9 +2775,7 @@ export function getCalculateDeprecatedWarningResponseExample(country) {
     result: {
       [target.entityGroup]: {
         [target.entityId]: {
-          [target.variable]: {
-            2025: target.exampleValue,
-          },
+          [target.variable]: { 2026: target.exampleValue },
         },
       },
     },
@@ -2902,7 +2886,7 @@ export function getPythonRequestExample(country) {
   const resultLines = country.requestResults
     .map(
       ([label, variable]) =>
-        `    "${label}": sim.calculate("${variable}", "2025")[0],`
+        `    "${label}": sim.calculate("${variable}", "2026")[0],`
     )
     .join('\n');
 
@@ -2959,7 +2943,7 @@ household = ${formatPythonObject(country.fullHousehold)}
 
 sim = Simulation(situation=household)
 
-${country.fullExampleVariable} = sim.calculate("${country.fullExampleVariable}", "2025")[0]
+${country.fullExampleVariable} = sim.calculate("${country.fullExampleVariable}", "2026")[0]
 print(f"${country.fullExampleResultLabel}: {${country.fullExampleVariable}:,.2f}")`;
 }
 
