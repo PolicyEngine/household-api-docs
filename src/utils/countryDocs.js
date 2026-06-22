@@ -78,6 +78,32 @@ const US_FULL_HOUSEHOLD = {
   },
 };
 
+const US_API_REQUEST_HOUSEHOLD = {
+  ...US_REQUEST_HOUSEHOLD,
+  households: {
+    'your household': {
+      ...US_REQUEST_HOUSEHOLD.households['your household'],
+      household_net_income: { '2025': null },
+    },
+  },
+  tax_units: {
+    'your tax unit': {
+      ...US_REQUEST_HOUSEHOLD.tax_units['your tax unit'],
+      eitc: { '2025': null },
+    },
+  },
+};
+
+const US_FULL_API_HOUSEHOLD = {
+  ...US_FULL_HOUSEHOLD,
+  tax_units: {
+    'my tax unit': {
+      ...US_FULL_HOUSEHOLD.tax_units['my tax unit'],
+      eitc: { '2025': null },
+    },
+  },
+};
+
 const UK_REQUEST_HOUSEHOLD = {
   people: {
     person: {
@@ -127,6 +153,94 @@ const UK_FULL_HOUSEHOLD = {
   },
 };
 
+const UK_API_REQUEST_HOUSEHOLD = {
+  ...UK_REQUEST_HOUSEHOLD,
+  people: {
+    person: {
+      ...UK_REQUEST_HOUSEHOLD.people.person,
+      income_tax: { '2025': null },
+    },
+  },
+  households: {
+    household: {
+      ...UK_REQUEST_HOUSEHOLD.households.household,
+      household_net_income: { '2025': null },
+    },
+  },
+};
+
+const UK_FULL_API_HOUSEHOLD = {
+  ...UK_FULL_HOUSEHOLD,
+  benunits: {
+    family: {
+      ...UK_FULL_HOUSEHOLD.benunits.family,
+      child_benefit: { '2025': null },
+      universal_credit: { '2025': null },
+    },
+  },
+  households: {
+    home: {
+      ...UK_FULL_HOUSEHOLD.households.home,
+      household_net_income: { '2025': null },
+    },
+  },
+};
+
+const UK_SINGLE_ADULT_API_HOUSEHOLD = {
+  people: {
+    person: {
+      age: { '2025': 30 },
+      employment_income: { '2025': 30000 },
+      income_tax: { '2025': null },
+      national_insurance: { '2025': null },
+    },
+  },
+  benunits: {
+    benunit: {
+      members: ['person'],
+    },
+  },
+  households: {
+    household: {
+      members: ['person'],
+      household_net_income: { '2025': null },
+    },
+  },
+};
+
+const UK_SINGLE_PARENT_RENTER_API_HOUSEHOLD = {
+  people: {
+    parent: {
+      age: { '2025': 35 },
+      employment_income: { '2025': 20000 },
+    },
+    child: {
+      age: { '2025': 8 },
+    },
+  },
+  benunits: {
+    family: {
+      members: ['parent', 'child'],
+      child_benefit: { '2025': null },
+      universal_credit: { '2025': null },
+    },
+  },
+  households: {
+    home: {
+      members: ['parent', 'child'],
+      region: { '2025': 'LONDON' },
+      rent: { '2025': 12000 },
+      household_net_income: { '2025': null },
+    },
+  },
+};
+
+const UK_PERSONAL_ALLOWANCE_REFORM = {
+  'gov.hmrc.income_tax.allowances.personal_allowance.amount': {
+    '2025-01-01.2100-12-31': 15000,
+  },
+};
+
 const COUNTRY_DOCS = {
   us: {
     id: 'us',
@@ -147,6 +261,7 @@ const COUNTRY_DOCS = {
     pythonPackage: 'policyengine-us',
     pythonImport: 'policyengine_us',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-us',
+    exampleModelVersion: '1.726.0',
     hostedCalculateUrl: 'https://household.api.policyengine.org/us/calculate',
     dockerCalculateUrl: 'http://localhost:8080/us/calculate',
     openApiSpecUrl: 'https://household.api.policyengine.org/specification',
@@ -226,11 +341,19 @@ const COUNTRY_DOCS = {
       ['Household net income', 'household_net_income'],
     ],
     requestHousehold: US_REQUEST_HOUSEHOLD,
+    apiRequestHousehold: US_API_REQUEST_HOUSEHOLD,
     requestResults: [
       ['eitc', 'eitc'],
       ['household_net_income', 'household_net_income'],
     ],
+    primaryRequestResult: {
+      variable: 'eitc',
+      entityGroup: 'tax_units',
+      entityId: 'your tax unit',
+      exampleValue: 1200,
+    },
     fullHousehold: US_FULL_HOUSEHOLD,
+    fullApiHousehold: US_FULL_API_HOUSEHOLD,
   },
   uk: {
     id: 'uk',
@@ -251,6 +374,7 @@ const COUNTRY_DOCS = {
     pythonPackage: 'policyengine-uk',
     pythonImport: 'policyengine_uk',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-uk',
+    exampleModelVersion: '2.88.18',
     hostedCalculateUrl: 'https://household.api.policyengine.org/uk/calculate',
     dockerCalculateUrl: 'http://localhost:8080/uk/calculate',
     openApiSpecUrl: 'https://household.api.policyengine.org/specification',
@@ -309,11 +433,133 @@ const COUNTRY_DOCS = {
       ['Household net income', 'household_net_income'],
     ],
     requestHousehold: UK_REQUEST_HOUSEHOLD,
+    apiRequestHousehold: UK_API_REQUEST_HOUSEHOLD,
     requestResults: [
       ['income_tax', 'income_tax'],
       ['household_net_income', 'household_net_income'],
     ],
+    primaryRequestResult: {
+      variable: 'income_tax',
+      entityGroup: 'people',
+      entityId: 'person',
+      exampleValue: 3486,
+    },
     fullHousehold: UK_FULL_HOUSEHOLD,
+    fullApiHousehold: UK_FULL_API_HOUSEHOLD,
+    apiRecipes: [
+      {
+        id: 'employee',
+        title: 'Single adult employee',
+        body:
+          'A one-person household requesting person-level income tax and National Insurance plus household net income.',
+        request: {
+          household: UK_SINGLE_ADULT_API_HOUSEHOLD,
+        },
+        response: {
+          status: 'ok',
+          message: null,
+          result: {
+            people: {
+              person: {
+                income_tax: { '2025': 3486 },
+                national_insurance: { '2025': 1394.4033 },
+              },
+            },
+            households: {
+              household: {
+                household_net_income: { '2025': 24960.55 },
+              },
+            },
+          },
+          policyengine_bundle: {
+            model_version: '2.88.18',
+            data_version: null,
+            dataset: null,
+          },
+        },
+      },
+      {
+        id: 'single-parent-renter',
+        title: 'Single parent renter',
+        body:
+          'A London renter with one child requesting Universal Credit, Child Benefit, and household net income.',
+        request: {
+          household: UK_SINGLE_PARENT_RENTER_API_HOUSEHOLD,
+        },
+        response: {
+          status: 'ok',
+          message: null,
+          result: {
+            benunits: {
+              family: {
+                child_benefit: { '2025': 1354.5997 },
+                universal_credit: { '2025': 12721.318 },
+              },
+            },
+            households: {
+              home: {
+                household_net_income: { '2025': 31836.469 },
+              },
+            },
+          },
+          policyengine_bundle: {
+            model_version: '2.88.18',
+            data_version: null,
+            dataset: null,
+          },
+        },
+      },
+      {
+        id: 'personal-allowance-reform',
+        title: 'Personal Allowance reform',
+        body:
+          'The same single adult employee under a policy reform that raises the Income Tax Personal Allowance to £15,000.',
+        request: {
+          household: {
+            people: {
+              person: {
+                age: { '2025': 30 },
+                employment_income: { '2025': 30000 },
+                income_tax: { '2025': null },
+              },
+            },
+            benunits: {
+              benunit: {
+                members: ['person'],
+              },
+            },
+            households: {
+              household: {
+                members: ['person'],
+                household_net_income: { '2025': null },
+              },
+            },
+          },
+          policy: UK_PERSONAL_ALLOWANCE_REFORM,
+        },
+        response: {
+          status: 'ok',
+          message: null,
+          result: {
+            people: {
+              person: {
+                income_tax: { '2025': 3000 },
+              },
+            },
+            households: {
+              household: {
+                household_net_income: { '2025': 25446.55 },
+              },
+            },
+          },
+          policyengine_bundle: {
+            model_version: '2.88.18',
+            data_version: null,
+            dataset: null,
+          },
+        },
+      },
+    ],
   },
 };
 
@@ -326,6 +572,89 @@ export const COUNTRY_SELECTOR_OPTIONS = SUPPORTED_COUNTRY_IDS.map((countryId) =>
 
 export function getCountryDoc(countryId) {
   return COUNTRY_DOCS[countryId] ?? null;
+}
+
+function getApiRequestHousehold(country) {
+  return country.apiRequestHousehold ?? country.requestHousehold;
+}
+
+function getFullApiHousehold(country) {
+  return country.fullApiHousehold ?? country.fullHousehold;
+}
+
+function getPrimaryRequestResult(country) {
+  const fallbackVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
+  const fallbackEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
+  const fallbackEntityId =
+    Object.keys(country.requestHousehold[fallbackEntityGroup] ?? {})[0] ?? 'entity';
+
+  return {
+    variable: fallbackVariable,
+    entityGroup: fallbackEntityGroup,
+    entityId: fallbackEntityId,
+    exampleValue: 1200,
+    ...(country.primaryRequestResult ?? {}),
+  };
+}
+
+function buildEndpointHouseholdExample(country) {
+  const target = getPrimaryRequestResult(country);
+  const stateOrHousingGroup =
+    country.id === 'uk'
+      ? {
+          households: {
+            household_id: {
+              members: ['person_id'],
+              housing_costs: {
+                2025: 9600,
+              },
+            },
+          },
+        }
+      : {
+          households: {
+            household_id: {
+              members: ['person_id'],
+              state_name: {
+                2025: 'CA',
+              },
+            },
+          },
+        };
+  const household = {
+    people: {
+      person_id: {
+        age: {
+          2025: 30,
+        },
+        employment_income: {
+          2025: country.id === 'uk' ? 30000 : 50000,
+        },
+      },
+    },
+    ...stateOrHousingGroup,
+  };
+  const exampleEntityId =
+    target.entityGroup === 'people'
+      ? 'person_id'
+      : target.entityGroup === 'households'
+        ? 'household_id'
+        : 'entity_id';
+  const existingEntity = household[target.entityGroup]?.[exampleEntityId] ?? {
+    members: ['person_id'],
+  };
+
+  household[target.entityGroup] = {
+    ...(household[target.entityGroup] ?? {}),
+    [exampleEntityId]: {
+      ...existingEntity,
+      [target.variable]: {
+        2025: null,
+      },
+    },
+  };
+
+  return household;
 }
 
 function formatJson(value) {
@@ -2311,7 +2640,7 @@ export function getHostedCurlRequest(country) {
   --header 'Content-Type: application/json' \\
   --data '${formatJson({
     version: 'current',
-    household: country.requestHousehold,
+    household: getApiRequestHousehold(country),
   })}'`;
 }
 
@@ -2319,35 +2648,10 @@ export function getDockerCurlRequest(country) {
   return `curl --request POST \\
   --url ${country.dockerCalculateUrl} \\
   --header 'Content-Type: application/json' \\
-  --data '${formatJson({ household: country.requestHousehold })}'`;
+  --data '${formatJson({ household: getApiRequestHousehold(country) })}'`;
 }
 
 export function getCalculateRequestExamples(country) {
-  const firstResultVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
-  const firstEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
-  const stateOrHousingGroup =
-    country.id === 'uk'
-      ? {
-          households: {
-            household_id: {
-              members: ['person_id'],
-              housing_costs: {
-                2025: 9600,
-              },
-            },
-          },
-        }
-      : {
-          households: {
-            household_id: {
-              members: ['person_id'],
-              state_name: {
-                2025: 'CA',
-              },
-            },
-          },
-        };
-
   return [
     {
       id: 'version',
@@ -2362,7 +2666,7 @@ export function getCalculateRequestExamples(country) {
       notes: [
         'Use `current` for the stable deployed model.',
         'Use `frontier` for the next deployed model.',
-        'Use an exact numerical version string, such as `1.691.1`, to route to that deployed version directly.',
+        `Use an exact numerical version string, such as \`${getExampleModelVersion(country)}\`, to route to that deployed version directly.`,
         'Self-hosted Docker calls can omit this key.',
       ],
       code: formatJson({
@@ -2384,30 +2688,10 @@ export function getCalculateRequestExamples(country) {
         'The calculation payload. It maps entity-group names to entity IDs, then variable names, then period keys and values.',
       notes: [
         'The people group is required.',
-        'Set an output variable to null for the period you want calculated.',
+        'Set every output variable you want calculated to null for that period.',
       ],
       code: formatJson({
-        household: {
-          people: {
-            person_id: {
-              age: {
-                2025: 30,
-              },
-              employment_income: {
-                2025: 50000,
-              },
-            },
-          },
-          [firstEntityGroup]: {
-            entity_id: {
-              members: ['person_id'],
-              [firstResultVariable]: {
-                2025: null,
-              },
-            },
-          },
-          ...stateOrHousingGroup,
-        },
+        household: buildEndpointHouseholdExample(country),
       }),
     },
     {
@@ -2470,22 +2754,20 @@ export function getCalculateRequestExamples(country) {
 }
 
 function getExampleModelVersion(country) {
-  return country.id === 'uk' ? '2.31.0' : '1.691.1';
+  return country.exampleModelVersion ?? (country.id === 'uk' ? '2.88.18' : '1.726.0');
 }
 
 export function getCalculateSuccessResponseExample(country) {
-  const firstResultVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
-  const firstEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
-  const firstEntityId = Object.keys(country.requestHousehold[firstEntityGroup] ?? {})[0] ?? 'entity';
+  const target = getPrimaryRequestResult(country);
 
   return formatJson({
     status: 'ok',
     message: null,
     result: {
-      [firstEntityGroup]: {
-        [firstEntityId]: {
-          [firstResultVariable]: {
-            2025: 1200,
+      [target.entityGroup]: {
+        [target.entityId]: {
+          [target.variable]: {
+            2025: target.exampleValue,
           },
         },
       },
@@ -2499,18 +2781,16 @@ export function getCalculateSuccessResponseExample(country) {
 }
 
 export function getCalculateDeprecatedWarningResponseExample(country) {
-  const firstResultVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
-  const firstEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
-  const firstEntityId = Object.keys(country.requestHousehold[firstEntityGroup] ?? {})[0] ?? 'entity';
+  const target = getPrimaryRequestResult(country);
 
   return formatJson({
     status: 'ok',
     message: null,
     result: {
-      [firstEntityGroup]: {
-        [firstEntityId]: {
-          [firstResultVariable]: {
-            2025: 1200,
+      [target.entityGroup]: {
+        [target.entityId]: {
+          [target.variable]: {
+            2025: target.exampleValue,
           },
         },
       },
@@ -2537,20 +2817,13 @@ export function getCalculateValidationErrorExample(country) {
 }
 
 export function getCalculateResponseExamples(country) {
-  return [
+  const examples = [
     {
       id: '200-success',
       status: '200',
       label: 'Calculation succeeded',
       title: '200 calculation succeeded',
       code: getCalculateSuccessResponseExample(country),
-    },
-    {
-      id: '200-deprecated-variable-warning',
-      status: '200',
-      label: 'Calculation succeeded with deprecated variable warning',
-      title: '200 calculation succeeded with deprecated variable warning',
-      code: getCalculateDeprecatedWarningResponseExample(country),
     },
     {
       id: '400-invalid-variables',
@@ -2603,6 +2876,26 @@ export function getCalculateResponseExamples(country) {
       }),
     },
   ];
+
+  if (country.id === 'us') {
+    examples.splice(1, 0, {
+      id: '200-deprecated-variable-warning',
+      status: '200',
+      label: 'Calculation succeeded with deprecated variable warning',
+      title: '200 calculation succeeded with deprecated variable warning',
+      code: getCalculateDeprecatedWarningResponseExample(country),
+    });
+  }
+
+  return examples;
+}
+
+export function getApiRecipeExamples(country) {
+  return (country.apiRecipes ?? []).map((recipe) => ({
+    ...recipe,
+    requestCode: formatJson(recipe.request),
+    responseCode: formatJson(recipe.response),
+  }));
 }
 
 export function getPythonRequestExample(country) {
@@ -2631,7 +2924,7 @@ export function getFullRestExample(country) {
 
 token = "YOUR_ACCESS_TOKEN"
 
-household = ${formatPythonObject(country.fullHousehold)}
+household = ${formatPythonObject(getFullApiHousehold(country))}
 
 response = requests.post(
     "${country.hostedCalculateUrl}",
@@ -2647,7 +2940,7 @@ print(f"${country.fullExampleResultLabel}: {${country.fullExampleVariable}:,.2f}
 export function getFullDockerExample(country) {
   return `import requests
 
-household = ${formatPythonObject(country.fullHousehold)}
+household = ${formatPythonObject(getFullApiHousehold(country))}
 
 response = requests.post(
     "${country.dockerCalculateUrl}",
