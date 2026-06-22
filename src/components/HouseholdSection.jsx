@@ -57,7 +57,7 @@ export default function HouseholdSection({ country, accessMode }) {
               <tr className="border-t border-border-light bg-gray-50">
                 <td className="px-4 py-3 font-mono text-sm">Year</td>
                 <td className="px-4 py-3 text-text-secondary">Time period for the value</td>
-                <td className="px-4 py-3 font-mono text-xs text-text-secondary">&quot;2025&quot;</td>
+                <td className="px-4 py-3 font-mono text-xs text-text-secondary">&quot;2026&quot;</td>
               </tr>
               <tr className="border-t border-border-light">
                 <td className="px-4 py-3 font-mono text-sm">Value</td>
@@ -103,8 +103,8 @@ export default function HouseholdSection({ country, accessMode }) {
         <p className="text-text-secondary mb-4">
           Set input variables as <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">{'{"year": value}'}</code>{' '}
           pairs. For outputs you want calculated, set the value to{' '}
-          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">null</code> (or simply omit the variable:
-          all computable variables are returned by default).
+          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">null</code>. The API computes the
+          output variables you request this way.
         </p>
         <CodeBlock code={formatHouseholdJson(country.step3Household)} language="json" title={country.step3Title} />
 

@@ -1,14 +1,14 @@
 const US_REQUEST_HOUSEHOLD = {
   people: {
     you: {
-      age: { '2025': 30 },
-      employment_income: { '2025': 50000 },
+      age: { '2026': 30 },
+      employment_income: { '2026': 50000 },
     },
   },
   households: {
     'your household': {
       members: ['you'],
-      state_code: { '2025': 'CA' },
+      state_code: { '2026': 'CA' },
     },
   },
   families: {
@@ -36,24 +36,24 @@ const US_REQUEST_HOUSEHOLD = {
 const US_FULL_HOUSEHOLD = {
   people: {
     adult1: {
-      age: { '2025': 40 },
-      employment_income: { '2025': 30000 },
+      age: { '2026': 40 },
+      employment_income: { '2026': 30000 },
     },
     adult2: {
-      age: { '2025': 38 },
-      employment_income: { '2025': 20000 },
+      age: { '2026': 38 },
+      employment_income: { '2026': 20000 },
     },
     child1: {
-      age: { '2025': 10 },
+      age: { '2026': 10 },
     },
     child2: {
-      age: { '2025': 7 },
+      age: { '2026': 7 },
     },
   },
   households: {
     'my household': {
       members: ['adult1', 'adult2', 'child1', 'child2'],
-      state_code: { '2025': 'AZ' },
+      state_code: { '2026': 'AZ' },
     },
   },
   families: {
@@ -78,11 +78,37 @@ const US_FULL_HOUSEHOLD = {
   },
 };
 
+const US_API_REQUEST_HOUSEHOLD = {
+  ...US_REQUEST_HOUSEHOLD,
+  households: {
+    'your household': {
+      ...US_REQUEST_HOUSEHOLD.households['your household'],
+      household_net_income: { '2026': null },
+    },
+  },
+  tax_units: {
+    'your tax unit': {
+      ...US_REQUEST_HOUSEHOLD.tax_units['your tax unit'],
+      eitc: { '2026': null },
+    },
+  },
+};
+
+const US_FULL_API_HOUSEHOLD = {
+  ...US_FULL_HOUSEHOLD,
+  tax_units: {
+    'my tax unit': {
+      ...US_FULL_HOUSEHOLD.tax_units['my tax unit'],
+      eitc: { '2026': null },
+    },
+  },
+};
+
 const UK_REQUEST_HOUSEHOLD = {
   people: {
     person: {
-      age: { '2025': 30 },
-      employment_income: { '2025': 30000 },
+      age: { '2026': 30 },
+      employment_income: { '2026': 30000 },
     },
   },
   benunits: {
@@ -100,18 +126,18 @@ const UK_REQUEST_HOUSEHOLD = {
 const UK_FULL_HOUSEHOLD = {
   people: {
     parent_1: {
-      age: { '2025': 35 },
-      employment_income: { '2025': 25000 },
+      age: { '2026': 35 },
+      employment_income: { '2026': 25000 },
     },
     parent_2: {
-      age: { '2025': 33 },
-      employment_income: { '2025': 15000 },
+      age: { '2026': 33 },
+      employment_income: { '2026': 15000 },
     },
     child_1: {
-      age: { '2025': 8 },
+      age: { '2026': 8 },
     },
     child_2: {
-      age: { '2025': 5 },
+      age: { '2026': 5 },
     },
   },
   benunits: {
@@ -122,8 +148,96 @@ const UK_FULL_HOUSEHOLD = {
   households: {
     home: {
       members: ['parent_1', 'parent_2', 'child_1', 'child_2'],
-      housing_costs: { '2025': 9600 },
+      housing_costs: { '2026': 9600 },
     },
+  },
+};
+
+const UK_API_REQUEST_HOUSEHOLD = {
+  ...UK_REQUEST_HOUSEHOLD,
+  people: {
+    person: {
+      ...UK_REQUEST_HOUSEHOLD.people.person,
+      income_tax: { '2026': null },
+    },
+  },
+  households: {
+    household: {
+      ...UK_REQUEST_HOUSEHOLD.households.household,
+      household_net_income: { '2026': null },
+    },
+  },
+};
+
+const UK_FULL_API_HOUSEHOLD = {
+  ...UK_FULL_HOUSEHOLD,
+  benunits: {
+    family: {
+      ...UK_FULL_HOUSEHOLD.benunits.family,
+      child_benefit: { '2026': null },
+      universal_credit: { '2026': null },
+    },
+  },
+  households: {
+    home: {
+      ...UK_FULL_HOUSEHOLD.households.home,
+      household_net_income: { '2026': null },
+    },
+  },
+};
+
+const UK_SINGLE_ADULT_API_HOUSEHOLD = {
+  people: {
+    person: {
+      age: { '2026': 30 },
+      employment_income: { '2026': 30000 },
+      income_tax: { '2026': null },
+      national_insurance: { '2026': null },
+    },
+  },
+  benunits: {
+    benunit: {
+      members: ['person'],
+    },
+  },
+  households: {
+    household: {
+      members: ['person'],
+      household_net_income: { '2026': null },
+    },
+  },
+};
+
+const UK_SINGLE_PARENT_RENTER_API_HOUSEHOLD = {
+  people: {
+    parent: {
+      age: { '2026': 35 },
+      employment_income: { '2026': 20000 },
+    },
+    child: {
+      age: { '2026': 8 },
+    },
+  },
+  benunits: {
+    family: {
+      members: ['parent', 'child'],
+      child_benefit: { '2026': null },
+      universal_credit: { '2026': null },
+    },
+  },
+  households: {
+    home: {
+      members: ['parent', 'child'],
+      region: { '2026': 'LONDON' },
+      rent: { '2026': 12000 },
+      household_net_income: { '2026': null },
+    },
+  },
+};
+
+const UK_PERSONAL_ALLOWANCE_REFORM = {
+  'gov.hmrc.income_tax.allowances.personal_allowance.amount': {
+    '2026-01-01.2100-12-31': 15000,
   },
 };
 
@@ -149,8 +263,11 @@ const COUNTRY_DOCS = {
     pythonPackage: 'policyengine-us',
     pythonImport: 'policyengine_us',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-us',
+    exampleModelVersion: '1.732.0',
     hostedCalculateUrl: 'https://household.api.policyengine.org/us/calculate',
     dockerCalculateUrl: 'http://localhost:8080/us/calculate',
+    openApiSpecUrl: 'https://household.api.policyengine.org/specification',
+    selfHostedOpenApiSpecPath: '/specification',
     requestSummary:
       'Hosted REST, self-hosted Docker, and direct Python access all evaluate the same US household policies.',
     pythonPackageSummary:
@@ -219,18 +336,26 @@ const COUNTRY_DOCS = {
       'Putting it all together: a married couple in Arizona with two children and $50,000 combined income, calculating their Earned Income Tax Credit.',
     fullExampleResultLabel: 'EITC',
     fullExampleVariable: 'eitc',
-    fullExampleResultPath: 'result["tax_units"]["my tax unit"]["eitc"]["2025"]',
+    fullExampleResultPath: 'result["tax_units"]["my tax unit"]["eitc"]["2026"]',
     quickstartHousehold: US_REQUEST_HOUSEHOLD,
     quickstartResults: [
       ['EITC', 'eitc'],
       ['Household net income', 'household_net_income'],
     ],
     requestHousehold: US_REQUEST_HOUSEHOLD,
+    apiRequestHousehold: US_API_REQUEST_HOUSEHOLD,
     requestResults: [
       ['eitc', 'eitc'],
       ['household_net_income', 'household_net_income'],
     ],
+    primaryRequestResult: {
+      variable: 'eitc',
+      entityGroup: 'tax_units',
+      entityId: 'your tax unit',
+      exampleValue: 0.0,
+    },
     fullHousehold: US_FULL_HOUSEHOLD,
+    fullApiHousehold: US_FULL_API_HOUSEHOLD,
   },
   uk: {
     id: 'uk',
@@ -253,8 +378,11 @@ const COUNTRY_DOCS = {
     pythonPackage: 'policyengine-uk',
     pythonImport: 'policyengine_uk',
     pythonRepoUrl: 'https://github.com/PolicyEngine/policyengine-uk',
+    exampleModelVersion: '2.88.18',
     hostedCalculateUrl: 'https://household.api.policyengine.org/uk/calculate',
     dockerCalculateUrl: 'http://localhost:8080/uk/calculate',
+    openApiSpecUrl: 'https://household.api.policyengine.org/specification',
+    selfHostedOpenApiSpecPath: '/specification',
     requestSummary:
       'Hosted REST, self-hosted Docker, and direct Python access all evaluate the same UK household policies.',
     pythonPackageSummary:
@@ -302,18 +430,140 @@ const COUNTRY_DOCS = {
       'Putting it all together: a UK family with two children, £40,000 combined employment income, and annual housing costs of £9,600, calculating Child Benefit.',
     fullExampleResultLabel: 'Child Benefit',
     fullExampleVariable: 'child_benefit',
-    fullExampleResultPath: 'result["benunits"]["family"]["child_benefit"]["2025"]',
+    fullExampleResultPath: 'result["benunits"]["family"]["child_benefit"]["2026"]',
     quickstartHousehold: UK_REQUEST_HOUSEHOLD,
     quickstartResults: [
       ['Income tax', 'income_tax'],
       ['Household net income', 'household_net_income'],
     ],
     requestHousehold: UK_REQUEST_HOUSEHOLD,
+    apiRequestHousehold: UK_API_REQUEST_HOUSEHOLD,
     requestResults: [
       ['income_tax', 'income_tax'],
       ['household_net_income', 'household_net_income'],
     ],
+    primaryRequestResult: {
+      variable: 'income_tax',
+      entityGroup: 'people',
+      entityId: 'person',
+      exampleValue: 3486,
+    },
     fullHousehold: UK_FULL_HOUSEHOLD,
+    fullApiHousehold: UK_FULL_API_HOUSEHOLD,
+    apiRecipes: [
+      {
+        id: 'employee',
+        title: 'Single adult employee',
+        body:
+          'A one-person household requesting person-level income tax and National Insurance plus household net income.',
+        request: {
+          household: UK_SINGLE_ADULT_API_HOUSEHOLD,
+        },
+        response: {
+          status: 'ok',
+          message: null,
+          result: {
+            people: {
+              person: {
+                income_tax: { '2026': 3486 },
+                national_insurance: { '2026': 1394.4033 },
+              },
+            },
+            households: {
+              household: {
+                household_net_income: { '2026': 24960.55 },
+              },
+            },
+          },
+          policyengine_bundle: {
+            model_version: '2.88.18',
+            data_version: null,
+            dataset: null,
+          },
+        },
+      },
+      {
+        id: 'single-parent-renter',
+        title: 'Single parent renter',
+        body:
+          'A London renter with one child requesting Universal Credit, Child Benefit, and household net income.',
+        request: {
+          household: UK_SINGLE_PARENT_RENTER_API_HOUSEHOLD,
+        },
+        response: {
+          status: 'ok',
+          message: null,
+          result: {
+            benunits: {
+              family: {
+                child_benefit: { '2026': 1400.6571 },
+                universal_credit: { '2026': 13210.467 },
+              },
+            },
+            households: {
+              home: {
+                household_net_income: { '2026': 32371.676 },
+              },
+            },
+          },
+          policyengine_bundle: {
+            model_version: '2.88.18',
+            data_version: null,
+            dataset: null,
+          },
+        },
+      },
+      {
+        id: 'personal-allowance-reform',
+        title: 'Personal Allowance reform',
+        body:
+          'The same single adult employee under a policy reform that raises the Income Tax Personal Allowance to £15,000.',
+        request: {
+          household: {
+            people: {
+              person: {
+                age: { '2026': 30 },
+                employment_income: { '2026': 30000 },
+                income_tax: { '2026': null },
+              },
+            },
+            benunits: {
+              benunit: {
+                members: ['person'],
+              },
+            },
+            households: {
+              household: {
+                members: ['person'],
+                household_net_income: { '2026': null },
+              },
+            },
+          },
+          policy: UK_PERSONAL_ALLOWANCE_REFORM,
+        },
+        response: {
+          status: 'ok',
+          message: null,
+          result: {
+            people: {
+              person: {
+                income_tax: { '2026': 3000 },
+              },
+            },
+            households: {
+              household: {
+                household_net_income: { '2026': 25446.55 },
+              },
+            },
+          },
+          policyengine_bundle: {
+            model_version: '2.88.18',
+            data_version: null,
+            dataset: null,
+          },
+        },
+      },
+    ],
   },
 };
 
@@ -328,6 +578,79 @@ export function getCountryDoc(countryId) {
   return COUNTRY_DOCS[countryId] ?? null;
 }
 
+function getApiRequestHousehold(country) {
+  return country.apiRequestHousehold ?? country.requestHousehold;
+}
+
+function getFullApiHousehold(country) {
+  return country.fullApiHousehold ?? country.fullHousehold;
+}
+
+function getPrimaryRequestResult(country) {
+  const fallbackVariable = country.requestResults[0]?.[1] ?? 'household_net_income';
+  const fallbackEntityGroup = country.id === 'uk' ? 'benunits' : 'tax_units';
+  const fallbackEntityId =
+    Object.keys(country.requestHousehold[fallbackEntityGroup] ?? {})[0] ?? 'entity';
+
+  return {
+    variable: fallbackVariable,
+    entityGroup: fallbackEntityGroup,
+    entityId: fallbackEntityId,
+    exampleValue: 1200,
+    ...(country.primaryRequestResult ?? {}),
+  };
+}
+
+function buildEndpointHouseholdExample(country) {
+  const target = getPrimaryRequestResult(country);
+  const stateOrHousingGroup =
+    country.id === 'uk'
+      ? {
+          households: {
+            household_id: {
+              members: ['person_id'],
+              housing_costs: { 2026: 9600 },
+            },
+          },
+        }
+      : {
+          households: {
+            household_id: {
+              members: ['person_id'],
+              state_name: { 2026: 'CA' },
+            },
+          },
+        };
+  const household = {
+    people: {
+      person_id: {
+        age: { 2026: 30 },
+        employment_income: { 2026: country.id === 'uk' ? 30000 : 50000 },
+      },
+    },
+    ...stateOrHousingGroup,
+  };
+  const exampleEntityId =
+    target.entityGroup === 'people'
+      ? 'person_id'
+      : target.entityGroup === 'households'
+        ? 'household_id'
+        : 'entity_id';
+  const existingEntity = household[target.entityGroup]?.[exampleEntityId] ?? {
+    members: ['person_id'],
+  };
+
+  household[target.entityGroup] = {
+    ...(household[target.entityGroup] ?? {}),
+    [exampleEntityId]: {
+      ...existingEntity,
+      [target.variable]: { 2026: null },
+    },
+  };
+
+  return household;
+}
+
 function formatJson(value) {
   return JSON.stringify(value, null, 2);
 }
@@ -340,7 +663,7 @@ function formatPythonCalculations(results) {
   return results
     .map(
       ([label, variable]) =>
-        `${variable} = sim.calculate("${variable}", "2025")[0]\nprint(f"${label}: {${variable}:,.2f}")`
+        `${variable} = sim.calculate("${variable}", "2026")[0]\nprint(f"${label}: {${variable}:,.2f}")`
     )
     .join('\n\n');
 }
@@ -1911,8 +2234,8 @@ function formatUSQuickstartHousehold() {
     # People: each person is a named key with input variables keyed by period
     "people": {
         "you": {
-            "age": {"2025": 30},
-            "employment_income": {"2025": 50000}
+            "age": {"2026": 30},
+            "employment_income": {"2026": 50000}
         }
     },
 
@@ -1920,7 +2243,7 @@ function formatUSQuickstartHousehold() {
     "households": {
         "your household": {
             "members": ["you"],
-            "state_code": {"2025": "CA"}
+            "state_code": {"2026": "CA"}
         }
     },
 
@@ -1951,8 +2274,8 @@ function formatUKQuickstartHousehold() {
     # People: each person is a named key with input variables keyed by period
     "people": {
         "person": {
-            "age": {"2025": 30},
-            "employment_income": {"2025": 30000}
+            "age": {"2026": 30},
+            "employment_income": {"2026": 30000}
         }
     },
 
@@ -1993,7 +2316,7 @@ export function getPythonScenarioExample(country, household, results) {
   const resultLines = results
     .map(
       ([label, variable]) =>
-        `    "${label}": sim.calculate("${variable}", "2025")[0],`
+        `    "${label}": sim.calculate("${variable}", "2026")[0],`
     )
     .join('\n');
 
@@ -2026,13 +2349,13 @@ sim = Simulation(situation=household)
 #   - Household-level variables: one value per household
 
 # Person-level variable — array length = number of people
-person_level = sim.calculate("${country.variableExamples[0]}", 2025)
+person_level = sim.calculate("${country.variableExamples[0]}", 2026)
 print("Person-level array:", person_level)
 print("Person-level shape:", person_level.shape)
 print("Length:", len(person_level), "(one value per person)")
 
 # Higher-level variable — array length = number of that entity
-result_level = sim.calculate("${resultsVariable}", 2025)
+result_level = sim.calculate("${resultsVariable}", 2026)
 print("Result-level array:", result_level)
 print("Result-level shape:", result_level.shape)
 
@@ -2053,11 +2376,11 @@ sim = Simulation(situation=household)
 
 # Enable trace before calculating — this records the dependency tree
 sim.trace = True
-sim.calculate("${traceVariable}", 2025)
+sim.calculate("${traceVariable}", 2026)
 
 # Print the computation log
 # Indentation = dependency depth (more indented = deeper in calculation tree)
-# Variable names show period and year, e.g. ctc_value<2025, (default)>
+# Variable names show period and year, e.g. ctc_value<2026, (default)>
 # Values are arrays — array length indicates the entity level
 sim.tracer.print_computation_log(max_depth=4)`;
 }
@@ -2085,7 +2408,7 @@ df = sim.calculate_dataframe(
     [
     ${variableList}
     ],
-    period=2025,
+    period=2026,
     map_to="household",
 )
 
@@ -2105,11 +2428,11 @@ ctc_reform = Reform.from_dict(
     {
         # Increase CTC base amount from $2,000 to $3,000
         "gov.irs.credits.ctc.amount.base[0].amount": {
-            "2025-01-01.2100-12-31": 3000
+            "2026-01-01.2100-12-31": 3000
         },
         # Make CTC fully refundable
         "gov.irs.credits.ctc.refundable.fully_refundable": {
-            "2025-01-01.2100-12-31": True
+            "2026-01-01.2100-12-31": True
         },
     },
     country_id="us",
@@ -2119,8 +2442,8 @@ ctc_reform = Reform.from_dict(
 baseline = Simulation(situation=household)
 reformed = Simulation(situation=household, reform=ctc_reform)
 
-print("Baseline CTC:", baseline.calculate("ctc_value", 2025).sum())
-print("Reformed CTC:", reformed.calculate("ctc_value", 2025).sum())`;
+print("Baseline CTC:", baseline.calculate("ctc_value", 2026).sum())
+print("Reformed CTC:", reformed.calculate("ctc_value", 2026).sum())`;
 }
 
 export function getUSPythonStructuralReformExample() {
@@ -2160,15 +2483,15 @@ household = ${formatPythonObject(country.fullHousehold)}
 # Parameter paths match the tree at policyengine.org/${country.id}/model/rules/parameters
 my_reform = {
     "your.parameter.path": {
-        "2025-01-01.2100-12-31": "NEW_VALUE"
+        "2026-01-01.2100-12-31": "NEW_VALUE"
     }
 }
 
 baseline = Simulation(situation=household)
 reformed = Simulation(situation=household, reform=my_reform)
 
-print("Baseline:", baseline.calculate("${country.fullExampleVariable}", 2025).sum())
-print("Reformed:", reformed.calculate("${country.fullExampleVariable}", 2025).sum())`;
+print("Baseline:", baseline.calculate("${country.fullExampleVariable}", 2026).sum())
+print("Reformed:", reformed.calculate("${country.fullExampleVariable}", 2026).sum())`;
 }
 
 export function getUSMicrosimulationOverviewExample() {
@@ -2182,8 +2505,8 @@ baseline = Microsimulation(dataset=ENHANCED_CPS)
 
 # calculate() on a Microsimulation works the same way as Simulation
 # but returns arrays representing the full population sample
-ctc = baseline.calculate("ctc_value", period=2025)
-weights = baseline.calculate("household_weight", period=2025)
+ctc = baseline.calculate("ctc_value", period=2026)
+weights = baseline.calculate("household_weight", period=2026)
 
 print("Records:", len(weights))
 # .sum() on microsimulation results is automatically weighted
@@ -2207,11 +2530,11 @@ CORE_VARIABLES = [
 baseline = Microsimulation(dataset=ENHANCED_CPS)
 
 # KEY DISTINCTION: calculate().sum() is automatically weighted
-auto_total = baseline.calculate("ctc_value", period=2025).sum()
+auto_total = baseline.calculate("ctc_value", period=2026).sum()
 
 # calculate_dataframe() is NOT automatically weighted
 # You must multiply by household_weight (or person_weight) yourself
-df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025))
+df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2026))
 unweighted_total = df["ctc_value"].sum()
 manual_total = (df["ctc_value"] * df["household_weight"]).sum()
 
@@ -2231,7 +2554,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 ctc_expansion = Reform.from_dict(
     {
         "gov.irs.credits.ctc.amount.base[0].amount": {
-            "2025-01-01.2100-12-31": 3600
+            "2026-01-01.2100-12-31": 3600
         }
     },
     country_id="us",
@@ -2242,8 +2565,8 @@ ctc_expansion = Reform.from_dict(
 baseline = Microsimulation(dataset=ENHANCED_CPS)
 reformed = Microsimulation(dataset=ENHANCED_CPS, reform=ctc_expansion)
 
-baseline_total = baseline.calculate("ctc_value", period=2025).sum()
-reformed_total = reformed.calculate("ctc_value", period=2025).sum()
+baseline_total = baseline.calculate("ctc_value", period=2026).sum()
+reformed_total = reformed.calculate("ctc_value", period=2026).sum()
 
 print("Annual increase:", reformed_total - baseline_total)`;
 }
@@ -2256,7 +2579,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 CORE_VARIABLES = ["state_code", "household_weight", "ctc_value"]
 
 baseline = Microsimulation(dataset=ENHANCED_CPS)
-df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2025))
+df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2026))
 
 # State-level analysis: group weighted DataFrames by geography
 # Remember to weight manually since this is a DataFrame
@@ -2272,7 +2595,7 @@ print(state_totals.head(10))
 # Multi-year budget window: loop over years
 # calculate().sum() handles weighting automatically
 annual_impacts = []
-for year in range(2025, 2035):
+for year in range(2026, 2036):
     annual_impacts.append(
         {
             "year": year,
@@ -2294,7 +2617,7 @@ ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
 PERSON_VARIABLES = ["person_weight", "snap", "is_child"]
 
 baseline = Microsimulation(dataset=ENHANCED_CPS)
-people = pd.DataFrame(baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2025))
+people = pd.DataFrame(baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2026))
 
 # Weight with person_weight when the question is about people, not households
 snap_enrolled = people[people["snap"] > 0]["person_weight"].sum()
@@ -2309,21 +2632,265 @@ export function getHostedCurlRequest(country) {
   --url ${country.hostedCalculateUrl} \\
   --header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
   --header 'Content-Type: application/json' \\
-  --data '${formatJson({ household: country.requestHousehold })}'`;
+  --data '${formatJson({
+    version: 'current',
+    household: getApiRequestHousehold(country),
+  })}'`;
 }
 
 export function getDockerCurlRequest(country) {
   return `curl --request POST \\
   --url ${country.dockerCalculateUrl} \\
   --header 'Content-Type: application/json' \\
-  --data '${formatJson({ household: country.requestHousehold })}'`;
+  --data '${formatJson({ household: getApiRequestHousehold(country) })}'`;
+}
+
+export function getCalculateRequestExamples(country) {
+  return [
+    {
+      id: 'version',
+      key: 'version',
+      label: 'version',
+      requirement: 'Optional',
+      defaultValue: 'current',
+      title: 'version',
+      type: 'string',
+      description:
+        'Hosted gateway routing key. The only accepted values are current, frontier, or an exact numerical version string.',
+      notes: [
+        'Use `current` for the stable deployed model.',
+        'Use `frontier` for the next deployed model.',
+        `Use an exact numerical version string, such as \`${getExampleModelVersion(country)}\`, to route to that deployed version directly.`,
+        'Self-hosted Docker calls can omit this key.',
+      ],
+      code: formatJson({
+        version: 'current',
+        household: {
+          '...': 'household payload',
+        },
+      }),
+    },
+    {
+      id: 'household',
+      key: 'household',
+      label: 'household',
+      requirement: 'Required',
+      defaultValue: 'none',
+      title: 'household',
+      type: 'object',
+      description:
+        'The calculation payload. It maps entity-group names to entity IDs, then variable names, then period keys and values.',
+      notes: [
+        'The people group is required.',
+        'Set every output variable you want calculated to null for that period.',
+      ],
+      code: formatJson({
+        household: buildEndpointHouseholdExample(country),
+      }),
+    },
+    {
+      id: 'policy',
+      key: 'policy',
+      label: 'policy',
+      requirement: 'Optional',
+      defaultValue: '{}',
+      title: 'policy',
+      type: 'object',
+      description:
+        'Optional reform parameters passed through to the country tax-benefit model for the calculation.',
+      notes: [
+        'Omit this key, or pass an empty object, to calculate under baseline law.',
+        'Parameter paths and values follow the country package model.',
+      ],
+      code: formatJson({
+        household: {
+          '...': 'household payload',
+        },
+        policy: {},
+      }),
+    },
+    {
+      id: 'axes',
+      key: 'household.axes',
+      label: 'household.axes',
+      requirement: 'Optional',
+      defaultValue: 'omitted',
+      title: 'household.axes',
+      type: 'array',
+      description:
+        'Optional bounded scan instructions. Each axis varies one variable over a min/max range for a fixed period.',
+      notes: [
+        'Each axis requires name, min, max, and count.',
+        'The API caps axes entries and count values to protect calculation capacity.',
+      ],
+      code: formatJson({
+        household: {
+          people: {
+            person_id: {
+              age: { 2026: 30 },
+            },
+          },
+          axes: [
+            {
+              name: 'employment_income',
+              period: '2026',
+              min: 0,
+              max: 100000,
+              count: 11,
+            },
+          ],
+        },
+      }),
+    },
+  ];
+}
+
+function getExampleModelVersion(country) {
+  return country.exampleModelVersion ?? (country.id === 'uk' ? '2.88.18' : '1.732.0');
+}
+
+export function getCalculateSuccessResponseExample(country) {
+  const target = getPrimaryRequestResult(country);
+
+  return formatJson({
+    status: 'ok',
+    message: null,
+    result: {
+      [target.entityGroup]: {
+        [target.entityId]: {
+          [target.variable]: { 2026: target.exampleValue },
+        },
+      },
+    },
+    policyengine_bundle: {
+      model_version: getExampleModelVersion(country),
+      data_version: null,
+      dataset: null,
+    },
+  });
+}
+
+export function getCalculateDeprecatedWarningResponseExample(country) {
+  const target = getPrimaryRequestResult(country);
+
+  return formatJson({
+    status: 'ok',
+    message: null,
+    result: {
+      [target.entityGroup]: {
+        [target.entityId]: {
+          [target.variable]: { 2026: target.exampleValue },
+        },
+      },
+    },
+    policyengine_bundle: {
+      model_version: getExampleModelVersion(country),
+      data_version: null,
+      dataset: null,
+    },
+    warnings: [
+      'Input `medical_out_of_pocket_expenses` on `people/you` is deprecated and was ignored for this calculation. Removed in policyengine-us 1.673.0. Migrate non-premium spending to `other_medical_expenses` and premium spending to `health_insurance_premiums`.',
+    ],
+  });
+}
+
+export function getCalculateValidationErrorExample(country) {
+  return formatJson({
+    status: 'error',
+    message: 'Invalid household variables.',
+    errors: [
+      `Variable \`not_a_variable\` on \`people/you\` is not available in PolicyEngine model version ${getExampleModelVersion(country)} used by this API. Remove it or migrate to a supported variable.`,
+    ],
+  });
+}
+
+export function getCalculateResponseExamples(country) {
+  const examples = [
+    {
+      id: '200-success',
+      status: '200',
+      label: 'Calculation succeeded',
+      title: '200 calculation succeeded',
+      code: getCalculateSuccessResponseExample(country),
+    },
+    {
+      id: '400-invalid-variables',
+      status: '400',
+      label: 'Invalid household variables',
+      title: '400 invalid household variables',
+      code: getCalculateValidationErrorExample(country),
+    },
+    {
+      id: '400-malformed-request',
+      status: '400',
+      label: 'Malformed request body',
+      title: '400 malformed request body',
+      code: formatJson({
+        status: 'error',
+        message:
+          'Invalid period key `2026-13` for `employment_income` on `people/you`. Expected a year (e.g. "2026") or a month (e.g. "2026-01").',
+      }),
+    },
+    {
+      id: '401-invalid-token',
+      status: '401',
+      label: 'Missing or invalid auth token',
+      title: '401 missing or invalid token',
+      code: formatJson({
+        error: 'invalid_token',
+        error_description:
+          'Authorization header must contain a valid bearer token.',
+      }),
+    },
+    {
+      id: '404-country-not-supported',
+      status: '404',
+      label: 'Country not supported',
+      title: '404 country not supported',
+      code: formatJson({
+        status: 'error',
+        message: 'Country zz not found. Available countries are: uk, us, ca, ng, il',
+      }),
+    },
+    {
+      id: '500-calculation-failed',
+      status: '500',
+      label: 'Internal calculation error',
+      title: '500 internal calculation error',
+      code: formatJson({
+        status: 'error',
+        message:
+          'Error calculating household under policy: <internal calculation error>',
+      }),
+    },
+  ];
+
+  if (country.id === 'us') {
+    examples.splice(1, 0, {
+      id: '200-deprecated-variable-warning',
+      status: '200',
+      label: 'Calculation succeeded with deprecated variable warning',
+      title: '200 calculation succeeded with deprecated variable warning',
+      code: getCalculateDeprecatedWarningResponseExample(country),
+    });
+  }
+
+  return examples;
+}
+
+export function getApiRecipeExamples(country) {
+  return (country.apiRecipes ?? []).map((recipe) => ({
+    ...recipe,
+    requestCode: formatJson(recipe.request),
+    responseCode: formatJson(recipe.response),
+  }));
 }
 
 export function getPythonRequestExample(country) {
   const resultLines = country.requestResults
     .map(
       ([label, variable]) =>
-        `    "${label}": sim.calculate("${variable}", "2025")[0],`
+        `    "${label}": sim.calculate("${variable}", "2026")[0],`
     )
     .join('\n');
 
@@ -2345,7 +2912,7 @@ export function getFullRestExample(country) {
 
 token = "YOUR_ACCESS_TOKEN"
 
-household = ${formatPythonObject(country.fullHousehold)}
+household = ${formatPythonObject(getFullApiHousehold(country))}
 
 response = requests.post(
     "${country.hostedCalculateUrl}",
@@ -2361,7 +2928,7 @@ print(f"${country.fullExampleResultLabel}: {${country.fullExampleVariable}:,.2f}
 export function getFullDockerExample(country) {
   return `import requests
 
-household = ${formatPythonObject(country.fullHousehold)}
+household = ${formatPythonObject(getFullApiHousehold(country))}
 
 response = requests.post(
     "${country.dockerCalculateUrl}",
@@ -2380,7 +2947,7 @@ household = ${formatPythonObject(country.fullHousehold)}
 
 sim = Simulation(situation=household)
 
-${country.fullExampleVariable} = sim.calculate("${country.fullExampleVariable}", "2025")[0]
+${country.fullExampleVariable} = sim.calculate("${country.fullExampleVariable}", "2026")[0]
 print(f"${country.fullExampleResultLabel}: {${country.fullExampleVariable}:,.2f}")`;
 }
 
