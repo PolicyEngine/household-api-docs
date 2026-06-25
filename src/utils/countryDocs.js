@@ -2851,13 +2851,6 @@ export function getCalculateResponseExamples(country) {
       }),
     },
     {
-      id: '422-unsupported-version',
-      status: '422',
-      label: 'Unsupported version selector',
-      title: '422 unsupported version selector',
-      code: getCalculateVersionRoutingErrorExample(country),
-    },
-    {
       id: '401-invalid-token',
       status: '401',
       label: 'Missing or invalid auth token',
@@ -2877,6 +2870,13 @@ export function getCalculateResponseExamples(country) {
         status: 'error',
         message: 'Country zz not found. Available countries are: uk, us, ca, ng, il',
       }),
+    },
+    {
+      id: '422-unsupported-version',
+      status: '422',
+      label: 'Unsupported version selector',
+      title: '422 unsupported version selector',
+      code: getCalculateVersionRoutingErrorExample(country),
     },
     {
       id: '500-calculation-failed',
