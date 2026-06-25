@@ -2874,8 +2874,8 @@ export function getCalculateResponseExamples(country) {
     {
       id: '422-unsupported-version',
       status: '422',
-      label: 'Unsupported version selector',
-      title: '422 unsupported version selector',
+      label: 'Unsupported version value',
+      title: '422 unsupported version value',
       code: getCalculateVersionRoutingErrorExample(country),
     },
     {
