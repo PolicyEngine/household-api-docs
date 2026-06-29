@@ -2656,11 +2656,12 @@ export function getCalculateRequestExamples(country) {
       title: 'version',
       type: 'string',
       description:
-        'Hosted gateway routing key. The only accepted values are current, frontier, or an exact numerical version string.',
+        'Hosted gateway routing key. The only accepted values are current, frontier, or an exact active country package version string.',
       notes: [
         'Use `current` for the stable deployed model.',
         'Use `frontier` for the next deployed model.',
         `Use an exact numerical version string, such as \`${getExampleModelVersion(country)}\`, to route to that deployed version directly.`,
+        'Inactive or unrecognized exact version strings return a 422 `unsupported_version` response.',
         'Self-hosted Docker calls can omit this key.',
       ],
       code: formatJson({
@@ -2749,6 +2750,10 @@ function getExampleModelVersion(country) {
   return country.exampleModelVersion ?? (country.id === 'uk' ? '2.88.18' : '1.732.0');
 }
 
+function getExampleFrontierModelVersion(country) {
+  return country.exampleFrontierModelVersion ?? (country.id === 'uk' ? '2.88.19' : '1.733.0');
+}
+
 export function getCalculateSuccessResponseExample(country) {
   const target = getPrimaryRequestResult(country);
 
@@ -2804,6 +2809,20 @@ export function getCalculateValidationErrorExample(country) {
   });
 }
 
+export function getCalculateVersionRoutingErrorExample(country) {
+  return formatJson({
+    status: 'error',
+    code: 'unsupported_version',
+    message: `No active household API app serves \`${country.id}\` package version \`0.0.0\``,
+    requested_version: '0.0.0',
+    country_id: country.id,
+    available_versions: {
+      current: getExampleModelVersion(country),
+      frontier: getExampleFrontierModelVersion(country),
+    },
+  });
+}
+
 export function getCalculateResponseExamples(country) {
   const examples = [
     {
@@ -2851,6 +2870,13 @@ export function getCalculateResponseExamples(country) {
         status: 'error',
         message: 'Country zz not found. Available countries are: uk, us, ca, ng, il',
       }),
+    },
+    {
+      id: '422-unsupported-version',
+      status: '422',
+      label: 'Unsupported version value',
+      title: '422 unsupported version value',
+      code: getCalculateVersionRoutingErrorExample(country),
     },
     {
       id: '500-calculation-failed',
