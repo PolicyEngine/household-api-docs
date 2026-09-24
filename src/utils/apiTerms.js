@@ -41,15 +41,17 @@ PolicyEngine logs request and response data solely for speed of execution (cachi
 
 ## 5. Open‑Source Components
 
-1. **Python Package.** Our reference Python implementation is licensed under the AGPL. API use does **not** trigger AGPL source‑code disclosure, but running or distributing the package yourself does.
+1. **Open‑Source Software.** The following PolicyEngine software described in our documentation is licensed under the AGPL: policyengine-household-api (including the PolicyEngine code in its Docker image), policyengine-core, policyengine.py, policyengine-us, and policyengine-uk. Third‑party software, such as the operating system and libraries in the Docker image, and the datasets our documentation references keep their own licenses and terms. Using PolicyEngine's hosted API does **not** trigger AGPL source‑code disclosure.
 
-2. **Priority of Terms.** In case of conflict, these API Terms govern your API access; the AGPL governs your use of our open‑source code.
+2. **Running Our Software Yourself.** Installing and running the unmodified software yourself does not by itself require you to release any source code: the AGPL affirms your unlimited permission to run it (AGPL section 2). Source‑code obligations arise only if you (a) convey (for example, distribute) copies of the software, or of a work based on it, to others, in which case you must pass them on under the AGPL and meet its notice and Corresponding Source requirements (AGPL sections 4–6); or (b) modify the software, or create a work based on it, and let users interact with that version remotely through a computer network, in which case you must prominently offer all those users access to the Corresponding Source of that version from a network server at no charge (AGPL section 13). The AGPL's own text and definitions control over this summary.
+
+3. **Priority of Terms.** In case of conflict, these API Terms govern your API access; the AGPL, or any other open‑source license under which PolicyEngine publishes the relevant code or documentation, governs your use of that code or documentation. These API Terms do not restrict your use of copies of our open‑source software, including the Docker image, that you run yourself.
 
 ---
 
 ## 6. Intellectual‑Property Rights
 
-1. **PolicyEngine IP.** Aside from the limited license in Section 2, PolicyEngine retains all rights in the API, documentation, and underlying models.
+1. **PolicyEngine IP.** Aside from the limited license in Section 2 and the open‑source licenses under which PolicyEngine publishes its code and documentation, including the AGPL described in Section 5, PolicyEngine, its contributors, and its licensors retain all rights in the API, documentation, and underlying models. PolicyEngine claims no rights in the laws and regulations that legislatures and governments make, or in the tax rates, brackets, thresholds, benefit amounts, and other values set by or under those laws, which the models encode, and does not assert database rights against anyone who extracts or reuses them, including from PolicyEngine's parameter files. This does not change the license that applies to copying or adapting the code, documentation, or parameter files themselves.
 
 2. **Feedback.** You grant PolicyEngine a perpetual, irrevocable, royalty‑free license to use any feedback you provide to improve the API.
 
@@ -139,7 +141,13 @@ Questions may be directed to **legal@policyengine.org**
 
 ---
 
-**By using the API you acknowledge that you have read, understood, and agree to be bound by these Terms.**`;
+**By using the API you acknowledge that you have read, understood, and agree to be bound by these Terms.**
+
+---
+
+## Changelog
+
+**2026-09-24.** Section 5 now names the open‑source packages it covers and states when AGPL obligations apply: running the unmodified software yourself carries no conditions, while conveying the software or offering a modified version over a network does. The priority clause, now Section 5.3 (formerly 5.2), also covers PolicyEngine's other open‑source licenses and states that these Terms do not restrict copies of our open‑source software that you run yourself. Section 6.1 now recognizes the open‑source licenses that apply to PolicyEngine's code and documentation and the rights of PolicyEngine's contributors and licensors, and states that PolicyEngine claims no rights in the underlying law, rates, and thresholds and does not assert database rights against their extraction or reuse. Because these changes only describe rights and terms that already apply under the AGPL and other licenses, or narrow PolicyEngine's claims, PolicyEngine waives the Section 15 notice period and they take effect on posting.`;
 
 const DEFAULT_TERMS_CONTEXT = {
   jurisdiction: 'the United States',
