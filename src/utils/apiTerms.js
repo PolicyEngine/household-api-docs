@@ -1,6 +1,6 @@
 const API_TERMS_TEMPLATE = `# PolicyEngine API Terms of Service
 
-These PolicyEngine API Terms of Service ("**Terms**") form a binding agreement between PolicyEngine, Inc. ("**PolicyEngine," "we," "us," or "our"**) and the entity or person agreeing to them ("**Customer," "you," or "your"**) that accesses or uses the PolicyEngine application‑programming interface, endpoints, documentation, and any related services (collectively, the "**API**"). **By requesting API credentials, making an API call, or otherwise using the API, you accept these Terms.**
+These PolicyEngine API Terms of Service ("**Terms**") form a binding agreement between PSL Foundation, a South Carolina nonprofit corporation, acting as fiscal sponsor of its PolicyEngine program ("**PolicyEngine," "we," "us," or "our"**) and the entity or person agreeing to them ("**Customer," "you," or "your"**) that accesses or uses the PolicyEngine application‑programming interface, endpoints, documentation, and any related services (collectively, the "**API**"). **By requesting API credentials, making an API call, or otherwise using the API, you accept these Terms.**
 
 ---
 
@@ -125,7 +125,7 @@ We may modify these Terms or the API by posting an updated version or sending no
 
 ## 16. Governing Law; Dispute Resolution
 
-These Terms are governed by the laws of {{jurisdiction}}, excluding its conflict of law rules. The parties will resolve disputes exclusively in the federal or state courts located in {{courtLocation}}, and consent to personal jurisdiction there.
+These Terms, and any dispute arising out of or relating to them or to your use of the API, are governed by the laws of the State of South Carolina, without regard to its conflict‑of‑laws rules. Any such dispute will be resolved exclusively in the state courts located in Richland County, South Carolina, or, if federal subject‑matter jurisdiction exists, in the United States District Court for the District of South Carolina, Columbia Division, and each party consents to the personal jurisdiction of, and venue in, those courts. If you are a consumer, nothing in this Section deprives you of the protection of mandatory laws of your country of residence or of any right you have to bring proceedings in its courts.
 
 ---
 
@@ -147,25 +147,10 @@ Questions may be directed to **legal@policyengine.org**
 
 ## Changelog
 
+**2026-09-30.** The opening paragraph now names PolicyEngine's legal entity: PSL Foundation, a South Carolina nonprofit corporation, acting as fiscal sponsor of its PolicyEngine program. It previously named "PolicyEngine, Inc.", which is not PolicyEngine's legal entity. PolicyEngine has been a fiscally sponsored program of PSL Foundation since before these Terms were first posted, so this correction takes effect on posting. Section 16 now chooses the laws of the State of South Carolina and the state courts in Richland County, South Carolina, or the United States District Court for the District of South Carolina, Columbia Division, and it applies to every API user. It previously chose "the laws of the United States" and courts in Washington, DC (on the UK page, "the laws of the United Kingdom" and courts in London). Section 16 also now states that consumers keep the mandatory protections of their country of residence. Under Section 15, the Section 16 changes take effect on 2026-10-30; until then, Section 16 as previously posted applies.
+
 **2026-09-24.** Section 5 now names the open‑source packages it covers and states when AGPL obligations apply: running the unmodified software yourself carries no conditions, while conveying the software or offering a modified version over a network does. The priority clause, now Section 5.3 (formerly 5.2), also covers PolicyEngine's other open‑source licenses and states that these Terms do not restrict copies of our open‑source software that you run yourself. Section 6.1 now recognizes the open‑source licenses that apply to PolicyEngine's code and documentation and the rights of PolicyEngine's contributors and licensors, and states that PolicyEngine claims no rights in the underlying law, rates, and thresholds and does not assert database rights against their extraction or reuse. Because these changes only describe rights and terms that already apply under the AGPL and other licenses, or narrow PolicyEngine's claims, PolicyEngine waives the Section 15 notice period and they take effect on posting.`;
 
-const DEFAULT_TERMS_CONTEXT = {
-  jurisdiction: 'the United States',
-  courtLocation: 'Washington, DC',
-};
-
-const TERMS_CONTEXT_BY_COUNTRY = {
-  uk: {
-    jurisdiction: 'the United Kingdom',
-    courtLocation: 'London',
-  },
-  us: DEFAULT_TERMS_CONTEXT,
-};
-
 export function getApiTermsMarkdown(countryId) {
-  const context = TERMS_CONTEXT_BY_COUNTRY[countryId] ?? DEFAULT_TERMS_CONTEXT;
-
-  return API_TERMS_TEMPLATE.replaceAll('{{jurisdiction}}', context.jurisdiction)
-    .replaceAll('{{courtLocation}}', context.courtLocation)
-    .replaceAll('{{privacyLink}}', `/${countryId}/privacy`);
+  return API_TERMS_TEMPLATE.replaceAll('{{privacyLink}}', `/${countryId}/privacy`);
 }
