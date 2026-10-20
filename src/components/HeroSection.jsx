@@ -17,6 +17,14 @@ export default function HeroSection({ country }) {
           the self-hosted Docker image. Use the API guide when you need tokens, endpoints, request
           bodies, or deployment instructions.
         </p>
+        <p className="mt-6">
+          <a
+            href={`/${country.id}/api/apps`}
+            className="font-semibold text-primary-600 hover:text-primary-700"
+          >
+            See the apps built on PolicyEngine →
+          </a>
+        </p>
       </div>
     </section>
   );
