@@ -8,9 +8,9 @@ function AppLogo({ app }) {
     return (
       <img
         src={zoneAssetPath(app.logo)}
-        alt={`${app.name} logo`}
-        height={40}
-        className="h-10 w-auto max-w-[200px] object-contain object-left"
+        alt=""
+        height={48}
+        className="h-12 w-auto max-w-[200px] object-contain object-left"
       />
     );
   }
@@ -18,7 +18,7 @@ function AppLogo({ app }) {
   return (
     <div
       aria-hidden="true"
-      className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-50 font-semibold text-primary-700"
+      className="flex h-12 w-12 items-center justify-center rounded-md bg-primary-50 text-lg font-semibold text-primary-700"
     >
       {getAppMonogram(app.name)}
     </div>

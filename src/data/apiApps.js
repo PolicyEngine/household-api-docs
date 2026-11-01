@@ -8,6 +8,10 @@
 // Set `integration` from the app's code or its maker's own statement. Use null
 // when neither settles how the app reaches PolicyEngine; the card then shows no
 // integration tag.
+//
+// Take each logo from its maker's own site. An app with no logo of its own uses
+// its maker's, never a host's or a partner's. Serve vector logos as SVG files
+// with no scripts or external references; src/data/apiApps.test.js checks them.
 export const API_APPS = [
   {
     id: 'benefit-navigator',
@@ -18,7 +22,7 @@ export const API_APPS = [
       'Helps caseworkers at California nonprofits and agencies screen clients for public benefits and tax credits such as SNAP, Medicaid and the EITC.',
     countries: ['us'],
     integration: 'hosted-api',
-    logo: null,
+    logo: '/api-apps/amplifi.svg',
     evidence: [
       {
         label: "Amplifi's about page",
@@ -35,7 +39,7 @@ export const API_APPS = [
       'Estimates which public benefits Connecticut households may qualify for, in English and Spanish.',
     countries: ['us'],
     integration: null,
-    logo: null,
+    logo: '/api-apps/benefitter.svg',
     evidence: [
       {
         label: "Benefitter's terms",
@@ -52,7 +56,7 @@ export const API_APPS = [
       'Helps job seekers search for work and estimates the SNAP, Medicaid, tax credits and other benefits they might qualify for.',
     countries: ['us'],
     integration: 'web-api',
-    logo: null,
+    logo: '/api-apps/cindy-career-copilot.png',
     evidence: [
       {
         label: "Cindy's privacy policy",
@@ -69,7 +73,7 @@ export const API_APPS = [
       'Matches California patients to hospital charity-care programs, screens them for Medi-Cal and Covered California subsidies, and drafts an assistance letter.',
     countries: ['us'],
     integration: 'web-api',
-    logo: null,
+    logo: '/api-apps/cobijo-health.svg',
     evidence: [
       {
         label: "Cobijo Health's about page",
@@ -86,7 +90,7 @@ export const API_APPS = [
       'Shows whether a raise could leave a household with less money after taxes, benefits and premiums, and maps benefit cliffs by state.',
     countries: ['us'],
     integration: 'open-source-model',
-    logo: null,
+    logo: '/api-apps/hotgap.svg',
     evidence: [
       {
         label: 'HotGap on GitHub',
@@ -103,7 +107,7 @@ export const API_APPS = [
       'Presents UK public finances as a ledger and lets readers model tax and spending changes, with household gains and losses.',
     countries: ['uk'],
     integration: 'web-api',
-    logo: null,
+    logo: '/api-apps/ledgergov-uk.svg',
     evidence: [
       {
         label: "LedgerGov.UK's method page",
@@ -120,7 +124,7 @@ export const API_APPS = [
       'Estimates the hourly wage that covers basic living costs and taxes for 12 family types in every US county, metro area and state.',
     countries: ['us'],
     integration: 'open-source-model',
-    logo: null,
+    logo: '/api-apps/living-wage-institute.png',
     evidence: [
       {
         label: "Living Wage Institute's post",
@@ -171,7 +175,7 @@ export const API_APPS = [
       'Projects 2026 federal and state income taxes for individuals and models changes such as stock sales, income shifts and charitable donations.',
     countries: ['us'],
     integration: 'open-source-model',
-    logo: null,
+    logo: '/api-apps/taxvant.png',
     evidence: [
       {
         label: "TaxVant's engine on GitHub",
@@ -188,7 +192,7 @@ export const API_APPS = [
       "Shows UK voters the candidates on their ballot and what each party's pledges would change in tax and benefits for a household like theirs.",
     countries: ['uk'],
     integration: 'open-source-model',
-    logo: null,
+    logo: '/api-apps/whats-it-to-me.png',
     evidence: [
       {
         label: "What's It To Me? on GitHub",
