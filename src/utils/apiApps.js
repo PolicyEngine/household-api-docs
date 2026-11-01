@@ -13,6 +13,35 @@ const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LOGO_PATTERN = /^\/api-apps\/[a-z0-9-]+\.(?:png|svg|webp)$/;
 const MAX_DESCRIPTION_LENGTH = 200;
 
+const SVG_ELEMENTS = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline']);
+const SVG_ATTRIBUTES = new Set([
+  'xmlns',
+  'width',
+  'height',
+  'viewBox',
+  'd',
+  'points',
+  'x',
+  'y',
+  'cx',
+  'cy',
+  'r',
+  'rx',
+  'ry',
+  'fill',
+  'fill-rule',
+  'clip-rule',
+  'stroke',
+  'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+]);
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+const SVG_TAG = /<\s*([^\s/>]+)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+const SVG_CLOSING_TAG = /<\/[a-z]+>/g;
+const SVG_ATTRIBUTE = /([^\s=/]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+const SVG_PLAIN_VALUE = /^[\w\s#.,-]*$/;
+
 export function compareApiAppsByName(a, b) {
   return NAME_COLLATOR.compare(a.name, b.name) || NAME_COLLATOR.compare(a.id, b.id);
 }
@@ -31,7 +60,7 @@ export function partitionApiAppsByCountry(apps, countryId) {
   };
 }
 
-export function usesPolicyEngineApi(app) {
+function usesPolicyEngineApi(app) {
   return API_INTEGRATIONS.includes(app.integration);
 }
 
@@ -86,7 +115,7 @@ export function getApiAppProblems(app, supportedCountryIds) {
     if (new Set(app.countries).size !== app.countries.length) problems.push('countries repeat');
   }
 
-  if (app.integration !== null && !(app.integration in INTEGRATION_LABELS)) {
+  if (app.integration !== null && !Object.hasOwn(INTEGRATION_LABELS, app.integration)) {
     problems.push(`unknown integration: ${app.integration}`);
   }
 
@@ -101,6 +130,36 @@ export function getApiAppProblems(app, supportedCountryIds) {
       if (!item.label?.trim()) problems.push('evidence label is required');
       if (!isHttpsUrl(item.url)) problems.push(`evidence url must be https: ${item.url}`);
     }
+  }
+
+  return problems;
+}
+
+// The zone serves logos from policyengine.org, where a browser that opens an SVG
+// directly runs whatever it holds. Allow plain shapes and nothing else.
+export function getSvgLogoProblems(svg) {
+  const problems = [];
+
+  if (!/^\s*<svg[\s>]/.test(svg)) problems.push('file must start with an svg element');
+
+  for (const [, element, attributes] of svg.matchAll(SVG_TAG)) {
+    if (!SVG_ELEMENTS.has(element)) problems.push(`element not allowed: ${element}`);
+
+    for (const [, name, doubleQuoted, singleQuoted] of attributes.matchAll(SVG_ATTRIBUTE)) {
+      const value = doubleQuoted ?? singleQuoted;
+      if (!SVG_ATTRIBUTES.has(name)) problems.push(`attribute not allowed: ${name}`);
+      if (name === 'xmlns' ? value !== SVG_NAMESPACE : !SVG_PLAIN_VALUE.test(value)) {
+        problems.push(`value not allowed in ${name}: ${value}`);
+      }
+    }
+
+    if (attributes.replace(SVG_ATTRIBUTE, '').replace('/', '').trim()) {
+      problems.push(`malformed attributes in ${element}`);
+    }
+  }
+
+  if (svg.replace(SVG_TAG, '').replace(SVG_CLOSING_TAG, '').trim()) {
+    problems.push('text outside elements is not allowed');
   }
 
   return problems;

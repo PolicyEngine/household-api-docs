@@ -5,12 +5,15 @@ import {
   getApiAppProblems,
   getApiAppsPreview,
   getAppMonogram,
+  getSvgLogoProblems,
   partitionApiAppsByCountry,
   sortApiApps,
-  usesPolicyEngineApi,
 } from './apiApps';
 
 const COUNTRY_IDS = ['us', 'uk'];
+
+// Stated here rather than imported, so the tests can't inherit a bug in the code.
+const CALLS_AN_API = new Set(['hosted-api', 'self-hosted-api', 'web-api']);
 
 const countriesArb = fc.subarray(COUNTRY_IDS, { minLength: 1 });
 
@@ -38,6 +41,26 @@ const ids = (apps) => apps.map((app) => app.id);
 function isSortedByName(apps) {
   return apps.every((app, index) => index === 0 || compareApiAppsByName(apps[index - 1], app) <= 0);
 }
+
+describe('sortApiApps', () => {
+  it('orders names alphabetically, ignoring case and reading digits as numbers', () => {
+    const apps = [
+      { id: 'a', name: 'banana' },
+      { id: 'b', name: 'Apple' },
+      { id: 'c', name: 'app 10' },
+      { id: 'd', name: 'app 2' },
+    ];
+    expect(sortApiApps(apps).map((app) => app.name)).toEqual(['app 2', 'app 10', 'Apple', 'banana']);
+  });
+
+  it('breaks a name tie by id, whatever the case of the names', () => {
+    const apps = [
+      { id: 'b', name: 'same' },
+      { id: 'a', name: 'Same' },
+    ];
+    expect(ids(sortApiApps(apps))).toEqual(['a', 'b']);
+  });
+});
 
 describe('partitionApiAppsByCountry', () => {
   it('splits the apps into two disjoint lists that together hold every app once', () => {
@@ -94,7 +117,7 @@ describe('getApiAppsPreview', () => {
   it('returns the first API apps of the local-then-other order, up to the limit', () => {
     fc.assert(
       fc.property(appsArb, fc.constantFrom(...COUNTRY_IDS), fc.integer({ min: -2, max: 30 }), (apps, countryId, limit) => {
-        const apiApps = apps.filter(usesPolicyEngineApi);
+        const apiApps = apps.filter((app) => CALLS_AN_API.has(app.integration));
         const preview = getApiAppsPreview(apps, countryId, limit);
         const { local, other } = partitionApiAppsByCountry(apiApps, countryId);
         expect(preview).toHaveLength(Math.min(Math.max(0, limit), apiApps.length));
@@ -106,7 +129,8 @@ describe('getApiAppsPreview', () => {
   it('never previews an app that does not call an API', () => {
     fc.assert(
       fc.property(appsArb, fc.constantFrom(...COUNTRY_IDS), (apps, countryId) => {
-        expect(getApiAppsPreview(apps, countryId, 30).every(usesPolicyEngineApi)).toBe(true);
+        const preview = getApiAppsPreview(apps, countryId, 30);
+        expect(preview.every((app) => CALLS_AN_API.has(app.integration))).toBe(true);
       }),
     );
   });
@@ -150,6 +174,11 @@ describe('getApiAppProblems', () => {
     expect(getApiAppProblems({ ...validApp, integration: null }, COUNTRY_IDS)).toEqual([]);
   });
 
+  it('accepts a description of exactly 200 characters', () => {
+    const description = `${'a'.repeat(199)}.`;
+    expect(getApiAppProblems({ ...validApp, description }, COUNTRY_IDS)).toEqual([]);
+  });
+
   it.each([
     ['an http product URL', { url: 'http://example.org/' }],
     ['no public evidence', { evidence: [] }],
@@ -158,10 +187,68 @@ describe('getApiAppProblems', () => {
     ['no countries', { countries: [] }],
     ['an unknown integration', { integration: 'carrier-pigeon' }],
     ['a missing integration', { integration: undefined }],
+    ['an inherited key as integration: toString', { integration: 'toString' }],
+    ['an inherited key as integration: constructor', { integration: 'constructor' }],
+    ['an inherited key as integration: valueOf', { integration: 'valueOf' }],
+    ['an inherited key as integration: __proto__', { integration: '__proto__' }],
+    ['no name', { name: ' ' }],
+    ['no organization', { organization: '' }],
+    ['no description', { description: '' }],
+    ['a description over 200 characters', { description: `${'a'.repeat(200)}.` }],
+    ['repeated countries', { countries: ['us', 'us'] }],
+    ['evidence without a label', { evidence: [{ label: ' ', url: 'https://example.org/' }] }],
     ['a description without a final period', { description: 'Screens households' }],
     ['a logo outside the api-apps folder', { logo: '/assets/logo.png' }],
     ['an id that is not kebab-case', { id: 'Example_App' }],
   ])('rejects %s', (_, change) => {
     expect(getApiAppProblems({ ...validApp, ...change }, COUNTRY_IDS)).not.toEqual([]);
+  });
+});
+
+describe('getSvgLogoProblems', () => {
+  const wrap = (body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">${body}</svg>`;
+
+  it('accepts plain shapes', () => {
+    const svg = wrap('<g><rect width="8" height="8" rx="2" fill="#000"/><path d="M1 1h3" stroke="#fff"/></g>');
+    expect(getSvgLogoProblems(svg)).toEqual([]);
+  });
+
+  it.each([
+    ['a script', wrap('<script>alert(1)</script>')],
+    ['an event handler', wrap('<rect onload="alert(1)"/>')],
+    ['a use reference', wrap('<use href="https://example.org/a.svg#x"/>')],
+    ['an embedded image', wrap('<image href="https://example.org/a.png"/>')],
+    ['an external fill', wrap('<rect fill="url(https://example.org/a.svg#x)"/>')],
+    ['an inline style', wrap('<rect style="fill:url(https://example.org/a.svg#x)"/>')],
+    ['a style element', wrap('<style>@font-face{src:url(https://example.org/a.woff)}</style>')],
+    ['an iframe', wrap('<iframe src="https://example.org/"></iframe>')],
+    ['foreign content', wrap('<foreignObject><p>hello</p></foreignObject>')],
+    ['an animation', wrap('<rect><animate attributeName="href" to="https://example.org/"/></rect>')],
+    ['a set element', wrap('<rect><set attributeName="onmouseover" to="alert(1)"/></rect>')],
+    ['a DOCTYPE', `<!DOCTYPE svg [<!ENTITY a "b">]>${wrap('')}`],
+    ['an XML declaration', `<?xml version="1.0"?>${wrap('')}`],
+    ['a comment', wrap('<!-- note -->')],
+    ['a namespaced script', wrap('<svg:script>alert(1)</svg:script>')],
+    ['an uppercase script', wrap('<SCRIPT>alert(1)</SCRIPT>')],
+    ['a foreign namespace', '<svg xmlns="https://example.org/"></svg>'],
+    ['a handler after a quoted bracket', wrap('<rect fill=">" onload="alert(1)"/>')],
+    ['an unquoted attribute', wrap('<rect onload=alert(1)/>')],
+    ['text', wrap('hello')],
+    ['no svg root', '<rect/>'],
+    ['an empty style element', wrap('<style></style>')],
+    ['an event handler with a plain value', wrap('<rect onclick="go"/>')],
+    ['a local href', wrap('<rect href="logo"/>')],
+  ])('rejects %s', (_, svg) => {
+    expect(getSvgLogoProblems(svg)).not.toEqual([]);
+  });
+
+  it('rejects every element outside the allowed shapes', () => {
+    const allowed = ['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline'];
+    fc.assert(
+      fc.property(fc.stringMatching(/^[a-zA-Z][a-zA-Z0-9-]{0,11}$/), (element) => {
+        fc.pre(!allowed.includes(element));
+        expect(getSvgLogoProblems(wrap(`<${element}/>`))).not.toEqual([]);
+      }),
+    );
   });
 });

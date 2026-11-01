@@ -2,16 +2,18 @@
 //
 // List an app only when its maker has a public page saying the app uses
 // PolicyEngine (the first `evidence` entry links to it) and has agreed to be
-// listed or announced the integration itself. Never add an organization whose
-// use of PolicyEngine is known only from private correspondence or billing.
+// listed or announced the integration itself. The live app must use PolicyEngine
+// today: leave an app off while its own code or copy says PolicyEngine comes in a
+// later release. Never add an organization whose use of PolicyEngine is known only
+// from private correspondence or other non-public sources.
 //
 // Set `integration` from the app's code or its maker's own statement. Use null
 // when neither settles how the app reaches PolicyEngine; the card then shows no
 // integration tag.
 //
-// Take each logo from its maker's own site. An app with no logo of its own uses
-// its maker's, never a host's or a partner's. Serve vector logos as SVG files
-// with no scripts or external references; src/data/apiApps.test.js checks them.
+// Use each app's own logo, as its maker's site shows it. An app with no logo of
+// its own uses its maker's, never a host's or a partner's. SVG logos may hold only
+// plain shapes; src/data/apiApps.test.js checks every file in public/api-apps.
 export const API_APPS = [
   {
     id: 'benefit-navigator',
@@ -21,29 +23,12 @@ export const API_APPS = [
     description:
       'Helps caseworkers at California nonprofits and agencies screen clients for public benefits and tax credits such as SNAP, Medicaid and the EITC.',
     countries: ['us'],
-    integration: 'hosted-api',
-    logo: '/api-apps/amplifi.svg',
+    integration: null,
+    logo: '/api-apps/benefit-navigator.svg',
     evidence: [
       {
         label: "Amplifi's about page",
         url: 'https://www.amplifi.org/about-benefit-navigator',
-      },
-    ],
-  },
-  {
-    id: 'benefitter',
-    name: 'Benefitter',
-    organization: 'Commonweal Systems',
-    url: 'https://benefitter.app',
-    description:
-      'Estimates which public benefits Connecticut households may qualify for, in English and Spanish.',
-    countries: ['us'],
-    integration: null,
-    logo: '/api-apps/benefitter.svg',
-    evidence: [
-      {
-        label: "Benefitter's terms",
-        url: 'https://benefitter.app/benefitter-terms.html',
       },
     ],
   },
@@ -172,14 +157,14 @@ export const API_APPS = [
     organization: 'Niti Labs',
     url: 'https://taxvant.com',
     description:
-      'Projects 2026 federal and state income taxes for individuals and models changes such as stock sales, income shifts and charitable donations.',
+      'Models federal and state income taxes in all 50 states, including Roth conversions, capital gains and year-end moves.',
     countries: ['us'],
     integration: 'open-source-model',
     logo: '/api-apps/taxvant.png',
     evidence: [
       {
-        label: "TaxVant's engine on GitHub",
-        url: 'https://github.com/NitiLabs/niti-engine',
+        label: "TaxVant's about page",
+        url: 'https://taxvant.com/about',
       },
     ],
   },
@@ -195,8 +180,8 @@ export const API_APPS = [
     logo: '/api-apps/whats-it-to-me.png',
     evidence: [
       {
-        label: "What's It To Me? on GitHub",
-        url: 'https://github.com/highlyvisual/voter-app',
+        label: "What's It To Me?'s about page",
+        url: 'https://whatsittome.org/about',
       },
     ],
   },

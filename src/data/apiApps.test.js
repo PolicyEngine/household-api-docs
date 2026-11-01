@@ -1,12 +1,12 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { API_APPS } from './apiApps';
-import { getApiAppProblems } from '@/utils/apiApps';
+import { getApiAppProblems, getSvgLogoProblems } from '@/utils/apiApps';
 import { SUPPORTED_COUNTRY_IDS } from '@/utils/countryDocs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../../public', import.meta.url));
-const ACTIVE_SVG_CONTENT = /<script|<foreignObject|<image|\son\w+\s*=|href\s*=|@import/i;
+const LOGO_FILES = readdirSync(`${PUBLIC_DIR}/api-apps`);
 
 describe('API_APPS', () => {
   it.each(API_APPS.map((app) => [app.id, app]))('%s is a complete, listable entry', (_, app) => {
@@ -24,9 +24,15 @@ describe('API_APPS', () => {
     }
   });
 
-  it('keeps SVG logos free of scripts and external references', () => {
-    for (const app of API_APPS.filter((entry) => entry.logo?.endsWith('.svg'))) {
-      expect(readFileSync(`${PUBLIC_DIR}${app.logo}`, 'utf8'), app.logo).not.toMatch(ACTIVE_SVG_CONTENT);
+  it('keeps no logo file that no entry uses', () => {
+    const logos = API_APPS.map((app) => app.logo);
+    expect(LOGO_FILES.filter((file) => !logos.includes(`/api-apps/${file}`))).toEqual([]);
+  });
+
+  it('keeps every SVG logo to plain shapes', () => {
+    for (const file of LOGO_FILES.filter((name) => name.endsWith('.svg'))) {
+      const svg = readFileSync(`${PUBLIC_DIR}/api-apps/${file}`, 'utf8');
+      expect(getSvgLogoProblems(svg), file).toEqual([]);
     }
   });
 });

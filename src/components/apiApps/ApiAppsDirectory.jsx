@@ -29,9 +29,9 @@ export default function ApiAppsDirectory({ country }) {
             Apps built on PolicyEngine
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-text-secondary md:text-xl">
-            These products calculate taxes and benefits for the people who use them with
-            PolicyEngine, through the API or by running the open-source model. Each card links to
-            the app and to its maker&apos;s own page on how it uses PolicyEngine.
+            These products use PolicyEngine to calculate taxes and benefits, through one of its
+            APIs or by running the open-source model. Each card links to the app and to its
+            maker&apos;s own page saying so.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
@@ -59,7 +59,7 @@ export default function ApiAppsDirectory({ country }) {
             <AppGrid apps={local} />
           ) : (
             <p className="text-text-secondary">
-              No {country.adjective} apps are listed yet. Yours could be the first.
+              We don&apos;t list any {country.adjective} apps yet. Yours could be the first.
             </p>
           )}
         </div>
