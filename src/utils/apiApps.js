@@ -37,7 +37,7 @@ const SVG_ATTRIBUTES = new Set([
   'stroke-linejoin',
 ]);
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-const SVG_TAG = /<\s*([^\s/>]+)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+const SVG_TAG = /<\s*([^\s/><"']+)(?=[\s/>])((?:[^<>"']|"[^"]*"|'[^']*')*)>/g;
 const SVG_CLOSING_TAG = /<\/[a-z]+>/g;
 const SVG_ATTRIBUTE = /([^\s=/]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 const SVG_PLAIN_VALUE = /^[\w\s#.,-]*$/;

@@ -6,7 +6,7 @@ import { getApiAppProblems, getSvgLogoProblems } from '@/utils/apiApps';
 import { SUPPORTED_COUNTRY_IDS } from '@/utils/countryDocs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../../public', import.meta.url));
-const LOGO_FILES = readdirSync(`${PUBLIC_DIR}/api-apps`);
+const LOGO_FILES = readdirSync(`${PUBLIC_DIR}/api-apps`).filter((file) => !file.startsWith('.'));
 
 describe('API_APPS', () => {
   it.each(API_APPS.map((app) => [app.id, app]))('%s is a complete, listable entry', (_, app) => {

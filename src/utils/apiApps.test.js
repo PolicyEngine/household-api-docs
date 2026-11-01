@@ -208,8 +208,15 @@ describe('getApiAppProblems', () => {
 describe('getSvgLogoProblems', () => {
   const wrap = (body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">${body}</svg>`;
 
-  it('accepts plain shapes', () => {
-    const svg = wrap('<g><rect width="8" height="8" rx="2" fill="#000"/><path d="M1 1h3" stroke="#fff"/></g>');
+  it('accepts every allowed shape', () => {
+    const svg = wrap(`<g>
+      <rect width="8" height="8" rx="2" fill="#000"/>
+      <path d="M1 1h3" stroke="#fff" stroke-width="2"/>
+      <circle cx="4" cy="4" r="2"/>
+      <ellipse cx="4" cy="4" rx="2" ry="1"/>
+      <polygon points="0,0 1,1 2,0"/>
+      <polyline points="0,0 1,1 2,0" fill="none"/>
+    </g>`);
     expect(getSvgLogoProblems(svg)).toEqual([]);
   });
 
@@ -238,17 +245,34 @@ describe('getSvgLogoProblems', () => {
     ['an empty style element', wrap('<style></style>')],
     ['an event handler with a plain value', wrap('<rect onclick="go"/>')],
     ['a local href', wrap('<rect href="logo"/>')],
+    ['a local url in a value', wrap('<rect fill="url(#a)"/>')],
+    ['a colon in a value', wrap('<rect fill="a:b"/>')],
+    ['a slash in a value', wrap('<rect fill="a/b"/>')],
+    ['an entity-encoded url in a value', wrap('<rect fill="&#117;rl&#40;#a&#41;"/>')],
+    ['attributes on a closing tag', wrap('<g></g x="1">')],
+    ['an uppercase shape', wrap('<RECT/>')],
+    ['a shape before the root', `<rect/>${wrap('')}`],
   ])('rejects %s', (_, svg) => {
     expect(getSvgLogoProblems(svg)).not.toEqual([]);
   });
 
   it('rejects every element outside the allowed shapes', () => {
     const allowed = ['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline'];
+    const elementArb = fc.oneof(
+      fc.constantFrom('script', 'style', 'image', 'use', 'a', 'foreignObject', 'animate', 'set', 'text'),
+      fc.stringMatching(/^[a-zA-Z][a-zA-Z0-9-]{0,11}$/).filter((name) => !allowed.includes(name)),
+    );
     fc.assert(
-      fc.property(fc.stringMatching(/^[a-zA-Z][a-zA-Z0-9-]{0,11}$/), (element) => {
-        fc.pre(!allowed.includes(element));
+      fc.property(elementArb, (element) => {
         expect(getSvgLogoProblems(wrap(`<${element}/>`))).not.toEqual([]);
       }),
     );
   });
+
+  it.each(['onload', 'onerror', 'style', 'href', 'xlink:href', 'class', 'id'])(
+    'rejects the %s attribute even with a plain value',
+    (attribute) => {
+      expect(getSvgLogoProblems(wrap(`<rect ${attribute}="plain"/>`))).not.toEqual([]);
+    },
+  );
 });
