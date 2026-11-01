@@ -9,7 +9,7 @@ export function generateStaticParams() {
 
 const TITLE = 'Apps built on PolicyEngine';
 const DESCRIPTION =
-  'Benefit screeners and tax calculators that use the PolicyEngine API or open-source model to calculate taxes and benefits.';
+  'Apps that use the PolicyEngine API or open-source model to calculate taxes and benefits.';
 
 export async function generateMetadata({ params }) {
   const { countryId } = await params;

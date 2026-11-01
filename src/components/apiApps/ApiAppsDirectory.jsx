@@ -86,7 +86,8 @@ export default function ApiAppsDirectory({ country }) {
               hello@policyengine.org
             </a>{' '}
             with its name, a link, one sentence on what it does, and a public page that mentions
-            PolicyEngine. We list an app once its makers agree to be listed.
+            PolicyEngine. If you&apos;d rather we didn&apos;t list your app, email the same address
+            and we&apos;ll remove it.
           </p>
         </div>
       </section>

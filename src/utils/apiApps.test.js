@@ -7,16 +7,30 @@ import {
   getAppMonogram,
   partitionApiAppsByCountry,
   sortApiApps,
+  usesPolicyEngineApi,
 } from './apiApps';
 
 const COUNTRY_IDS = ['us', 'uk'];
 
 const countriesArb = fc.subarray(COUNTRY_IDS, { minLength: 1 });
 
+const integrationArb = fc.constantFrom(
+  'hosted-api',
+  'self-hosted-api',
+  'web-api',
+  'open-source-model',
+  null,
+);
+
 const appsArb = fc
-  .array(fc.record({ name: fc.string({ minLength: 1, maxLength: 12 }), countries: countriesArb }), {
-    maxLength: 25,
-  })
+  .array(
+    fc.record({
+      name: fc.string({ minLength: 1, maxLength: 12 }),
+      countries: countriesArb,
+      integration: integrationArb,
+    }),
+    { maxLength: 25 },
+  )
   .map((records) => records.map((record, index) => ({ id: `app-${index}`, ...record })));
 
 const ids = (apps) => apps.map((app) => app.id);
@@ -77,33 +91,41 @@ describe('partitionApiAppsByCountry', () => {
 });
 
 describe('getApiAppsPreview', () => {
-  it('returns the first apps of the local-then-other order, up to the limit', () => {
+  it('returns the first API apps of the local-then-other order, up to the limit', () => {
     fc.assert(
       fc.property(appsArb, fc.constantFrom(...COUNTRY_IDS), fc.integer({ min: -2, max: 30 }), (apps, countryId, limit) => {
+        const apiApps = apps.filter(usesPolicyEngineApi);
         const preview = getApiAppsPreview(apps, countryId, limit);
-        const { local, other } = partitionApiAppsByCountry(apps, countryId);
-        expect(preview).toHaveLength(Math.min(Math.max(0, limit), apps.length));
+        const { local, other } = partitionApiAppsByCountry(apiApps, countryId);
+        expect(preview).toHaveLength(Math.min(Math.max(0, limit), apiApps.length));
         expect(ids(preview)).toEqual(ids([...local, ...other]).slice(0, preview.length));
+      }),
+    );
+  });
+
+  it('never previews an app that does not call an API', () => {
+    fc.assert(
+      fc.property(appsArb, fc.constantFrom(...COUNTRY_IDS), (apps, countryId) => {
+        expect(getApiAppsPreview(apps, countryId, 30).every(usesPolicyEngineApi)).toBe(true);
       }),
     );
   });
 });
 
 describe('getAppMonogram', () => {
-  it('returns at most two characters, each the uppercased first letter of a word', () => {
+  it('returns at most two uppercase initials for ASCII names', () => {
     fc.assert(
-      fc.property(fc.string({ maxLength: 40 }), (name) => {
-        const monogram = getAppMonogram(name);
-        const words = name.match(/[\p{L}\p{N}]+/gu) ?? [];
-        expect([...monogram].length).toBeLessThanOrEqual(2);
-        expect(monogram).toBe(words.slice(0, 2).map((word) => word[0].toUpperCase()).join(''));
+      fc.property(fc.stringMatching(/^[a-zA-Z0-9 .'?-]{0,40}$/), (name) => {
+        expect(getAppMonogram(name)).toMatch(/^[A-Z0-9]{0,2}$/);
       }),
     );
   });
 
-  it('uses the first two words', () => {
-    expect(getAppMonogram('Benefits Navigator')).toBe('BN');
+  it('takes one initial from each of the first two words', () => {
+    expect(getAppMonogram('Benefit Navigator')).toBe('BN');
     expect(getAppMonogram('MyFriendBen')).toBe('M');
+    expect(getAppMonogram("What's It To Me?")).toBe('WI');
+    expect(getAppMonogram('LedgerGov.UK')).toBe('L');
   });
 });
 
@@ -124,6 +146,10 @@ describe('getApiAppProblems', () => {
     expect(getApiAppProblems(validApp, COUNTRY_IDS)).toEqual([]);
   });
 
+  it('accepts an entry whose integration its maker has not settled', () => {
+    expect(getApiAppProblems({ ...validApp, integration: null }, COUNTRY_IDS)).toEqual([]);
+  });
+
   it.each([
     ['an http product URL', { url: 'http://example.org/' }],
     ['no public evidence', { evidence: [] }],
@@ -131,6 +157,7 @@ describe('getApiAppProblems', () => {
     ['an unsupported country', { countries: ['ca'] }],
     ['no countries', { countries: [] }],
     ['an unknown integration', { integration: 'carrier-pigeon' }],
+    ['a missing integration', { integration: undefined }],
     ['a description without a final period', { description: 'Screens households' }],
     ['a logo outside the api-apps folder', { logo: '/assets/logo.png' }],
     ['an id that is not kebab-case', { id: 'Example_App' }],

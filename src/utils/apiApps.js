@@ -5,6 +5,8 @@ export const INTEGRATION_LABELS = {
   'open-source-model': 'Runs the open-source model',
 };
 
+const API_INTEGRATIONS = ['hosted-api', 'self-hosted-api', 'web-api'];
+
 const NAME_COLLATOR = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -29,17 +31,24 @@ export function partitionApiAppsByCountry(apps, countryId) {
   };
 }
 
+export function usesPolicyEngineApi(app) {
+  return API_INTEGRATIONS.includes(app.integration);
+}
+
+// The API docs page previews only the apps that call an API.
 export function getApiAppsPreview(apps, countryId, limit) {
-  const { local, other } = partitionApiAppsByCountry(apps, countryId);
+  const { local, other } = partitionApiAppsByCountry(apps.filter(usesPolicyEngineApi), countryId);
   return [...local, ...other].slice(0, Math.max(0, limit));
 }
 
 export function getAppMonogram(name) {
-  const words = name.match(/[\p{L}\p{N}]+/gu) ?? [];
-  return words
+  return name
+    .split(/\s+/)
+    .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0])
+    .filter(Boolean)
     .slice(0, 2)
-    .map((word) => word[0].toUpperCase())
-    .join('');
+    .join('')
+    .toUpperCase();
 }
 
 function isHttpsUrl(value) {
@@ -77,7 +86,9 @@ export function getApiAppProblems(app, supportedCountryIds) {
     if (new Set(app.countries).size !== app.countries.length) problems.push('countries repeat');
   }
 
-  if (!(app.integration in INTEGRATION_LABELS)) problems.push(`unknown integration: ${app.integration}`);
+  if (app.integration !== null && !(app.integration in INTEGRATION_LABELS)) {
+    problems.push(`unknown integration: ${app.integration}`);
+  }
 
   if (app.logo !== null && !LOGO_PATTERN.test(app.logo ?? '')) {
     problems.push('logo must be null or a /api-apps/<name>.<png|svg|webp> path');

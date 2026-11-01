@@ -53,7 +53,7 @@ export default function ApiAppCard({ app }) {
         {app.countries.map((countryId) => (
           <Tag key={countryId}>{getCountryDoc(countryId)?.label ?? countryId.toUpperCase()}</Tag>
         ))}
-        <Tag>{INTEGRATION_LABELS[app.integration]}</Tag>
+        {app.integration && <Tag>{INTEGRATION_LABELS[app.integration]}</Tag>}
       </div>
 
       <div className="mt-auto flex flex-wrap gap-x-5 gap-y-2 pt-5 text-sm font-semibold">
