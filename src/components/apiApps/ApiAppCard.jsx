@@ -9,9 +9,8 @@ function AppLogo({ app }) {
       <img
         src={zoneAssetPath(app.logo)}
         alt={`${app.name} logo`}
-        width={48}
-        height={48}
-        className="h-12 w-12 shrink-0 rounded-md border border-border-light bg-white object-contain p-1"
+        height={40}
+        className="h-10 w-auto max-w-[200px] object-contain object-left"
       />
     );
   }
@@ -19,7 +18,7 @@ function AppLogo({ app }) {
   return (
     <div
       aria-hidden="true"
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary-50 text-lg font-semibold text-primary-700"
+      className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-50 font-semibold text-primary-700"
     >
       {getAppMonogram(app.name)}
     </div>
@@ -39,13 +38,9 @@ export default function ApiAppCard({ app }) {
 
   return (
     <article className="flex h-full flex-col rounded-lg border border-border-light bg-white p-5">
-      <div className="flex items-center gap-4">
-        <AppLogo app={app} />
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold leading-snug text-text-primary">{app.name}</h3>
-          <p className="text-sm text-text-secondary">{app.organization}</p>
-        </div>
-      </div>
+      <AppLogo app={app} />
+      <h3 className="mt-3 text-lg font-semibold leading-snug text-text-primary">{app.name}</h3>
+      <p className="text-sm text-text-secondary">{app.organization}</p>
 
       <p className="mt-4 text-text-secondary">{app.description}</p>
 
@@ -56,7 +51,7 @@ export default function ApiAppCard({ app }) {
         {app.integration && <Tag>{INTEGRATION_LABELS[app.integration]}</Tag>}
       </div>
 
-      <div className="mt-auto flex flex-wrap gap-x-5 gap-y-2 pt-5 text-sm font-semibold">
+      <div className="mt-auto flex flex-col items-start gap-2 pt-5 text-sm font-semibold">
         <a
           href={app.url}
           target="_blank"
