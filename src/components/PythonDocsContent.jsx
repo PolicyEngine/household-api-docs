@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import CodeBlock from './CodeBlock';
+import { zoneAssetPath } from '@/utils/zoneAssets';
 import {
   getPolicyengineAggregateExample,
   getPolicyengineAxisExample,
@@ -60,12 +61,6 @@ const REPRODUCIBILITY_TOPICS = [
   { id: 'manifests', label: 'Two-manifest architecture' },
   { id: 'trace', label: 'TRACE export' },
 ];
-
-const ZONE_ASSET_PREFIX = process.env.NEXT_PUBLIC_ZONE_ASSET_PREFIX ?? '';
-
-function zoneAssetPath(path) {
-  return `${ZONE_ASSET_PREFIX}${path}`;
-}
 
 const US_ENTITY_ROWS = [
   { entity: 'person', scope: 'Individual', examples: 'employment_income, age, is_disabled' },

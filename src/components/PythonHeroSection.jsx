@@ -11,6 +11,14 @@ export default function PythonHeroSection({ country }) {
         <p className="mx-auto max-w-3xl text-lg text-text-secondary md:text-xl">
           Reference examples covering household impact, policy reforms, microsimulation over calibrated microdata, and regional breakdowns.
         </p>
+        <p className="mt-6">
+          <a
+            href={`/${country.id}/api/apps`}
+            className="font-semibold text-primary-600 hover:text-primary-700"
+          >
+            See the apps built on PolicyEngine →
+          </a>
+        </p>
       </div>
     </section>
   );

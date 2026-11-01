@@ -8,6 +8,7 @@ import HouseholdSection from './HouseholdSection';
 import ApiRecipesSection from './ApiRecipesSection';
 import OpenApiReferenceSection from './OpenApiReferenceSection';
 import ModelLink from './ModelLink';
+import ApiAppsPreviewSection from './apiApps/ApiAppsPreviewSection';
 import TermsLinkSection from './TermsLinkSection';
 
 export default function ApiDocsContent({ country }) {
@@ -22,6 +23,7 @@ export default function ApiDocsContent({ country }) {
       <ApiRecipesSection country={country} />
       <OpenApiReferenceSection country={country} />
       <ModelLink country={country} />
+      <ApiAppsPreviewSection country={country} />
       <TermsLinkSection country={country} />
     </>
   );
