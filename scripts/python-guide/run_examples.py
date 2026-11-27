@@ -11,7 +11,7 @@ usage: python run_examples.py <workdir>/blocks.json <workdir>/outputs.json [--on
 Run it with the Python of a virtual environment that has the policyengine
 version the page documents installed with its us and plotting extras, plus
 kaleido for the chart; the published outputs came from
-`uv pip install "policyengine[us,plotting]==6.16.1" "kaleido==0.2.1"`. The examples run
+`uv pip install "policyengine[us,plotting]==6.20.3" "kaleido==0.2.1"`. The examples run
 in the folder that holds outputs.json, so the datasets they download land in
 <workdir>/data, outside the repository. write_outputs.py then turns
 outputs.json into src/utils/pythonGuideUsOutputs.js.

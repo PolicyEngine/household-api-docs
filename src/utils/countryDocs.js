@@ -1962,7 +1962,7 @@ fig.show()`;
 export function getPolicyenginePinBundleExample(country) {
   const isUS = country.id === 'us';
   const pkg = isUS ? 'policyengine[us]' : 'policyengine[uk]';
-  const pinnedVersion = isUS ? '6.16.1' : '4.3.0';
+  const pinnedVersion = isUS ? '6.20.3' : '4.3.0';
   // The US dataset path carries a frozen release id, so the US example prints
   // the compatibility basis instead of the path.
   const lastLine = isUS
@@ -2098,7 +2098,7 @@ export function getPolicyengineSimulationTroExample(country) {
       : `src/policyengine/data/release_manifests/\${cid}.trace.tro.jsonld`;
   const shippedTroUrl =
     cid === 'us'
-      ? '"6.16.1/src/policyengine/data/bundle/us.trace.tro.jsonld"'
+      ? '"6.20.3/src/policyengine/data/bundle/us.trace.tro.jsonld"'
       : `"v4.0.0/src/policyengine/data/release_manifests/${cid}.trace.tro.jsonld"`;
   return `# Per-simulation TRO: chain a bundle TRO to the reform and the results
 # payload for the run. The composition pins three artifacts by sha256:
