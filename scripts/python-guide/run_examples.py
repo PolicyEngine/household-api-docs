@@ -21,14 +21,16 @@ in the work folder as us-decile-impacts-chart.png at the size of the chart
 the page shipped before (2000 x 1040: 1000 x 520 at scale 2).
 
 Several examples build the same simulation again: the same dataset file and
-year, the same model object, and the same policy. A full US run took about
-30 minutes on the machine that produced the published outputs, so the runner
-wraps Simulation.ensure() to reuse a finished run when every input field
-matches one that already ran. It copies the same three fields ensure()'s own
-in-memory cache restores (output_dataset, spm and spm_receipt). Inputs that
-differ in any field, such as the regional example's extra_variables or a
-reform, run on their own. The runner logs each reuse to stderr and records it
-on the block, so outputs.json says which outputs came from a reused run.
+year, the same model object, and the same policy. The full US run with
+policyengine 6.20.3 spent about 38 minutes in its blocks: about 10 building
+the baseline, 11 on the economic-impact example, 13 on the decile chart and
+4 on the regional example. So the runner wraps Simulation.ensure() to reuse a
+finished run when every input field matches one that already ran. It copies
+the same three fields ensure()'s own in-memory cache restores
+(output_dataset, spm and spm_receipt). Inputs that differ in any field, such
+as the regional example's extra_variables or a reform, run on their own. The
+runner logs each reuse to stderr and records it on the block, so outputs.json
+says which outputs came from a reused run.
 """
 
 import contextlib
