@@ -1378,7 +1378,7 @@ deciles = analysis.decile_impacts.dataframe[
     ["decile", "baseline_mean", "reform_mean", "absolute_change"]
 ]
 programs = analysis.program_statistics.dataframe[
-    ["program_name", "change", "winners", "losers"]
+    ["program_name", "baseline_total", "reform_total", "change"]
 ]
 print(deciles.head().to_string(index=False))
 print(programs.head().to_string(index=False))
@@ -1422,7 +1422,16 @@ print(
 )`;
 }
 
-export function getPolicyengineProgramExample() {
+export function getPolicyengineProgramExample(country) {
+  if (country?.id === 'us') {
+    return `# analysis comes from the full reform analysis step above
+programs = analysis.program_statistics.dataframe[
+    ["program_name", "baseline_total", "reform_total", "change"]
+]
+
+print(programs.head())`;
+  }
+
   return `# analysis comes from the full reform analysis step above
 programs = analysis.program_statistics.dataframe[
     ["program_name", "change", "winners", "losers"]
