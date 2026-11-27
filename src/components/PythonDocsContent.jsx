@@ -34,6 +34,10 @@ import {
   getPolicyengineWeightingExample,
   getPythonInstallExample,
 } from '@/utils/countryDocs';
+import {
+  PYTHON_GUIDE_US_IMAGES as US_IMAGES,
+  PYTHON_GUIDE_US_OUTPUTS as US_OUTPUTS,
+} from '@/utils/pythonGuideUsOutputs';
 
 const HOUSEHOLD_TOPICS = [
   { id: 'impact', label: 'Household impact' },
@@ -523,19 +527,14 @@ Name: household_net_income, dtype: float32`,
     setup: {
       title: 'Representative datasets replace the old Microsimulation entry point',
       body:
-        `For population analysis, move to dataset-backed Simulation objects. pe.${country.id}.ensure_datasets() is the entry point: it loads cached HDF5 datasets when present and otherwise downloads and uprates them. Simulation.ensure() is the new canonical run method - it loads a cached result if available, otherwise runs and caches. pe.${country.id}.model supplies the pinned TaxBenefitModelVersion.`,
+        `For population analysis, move to dataset-backed Simulation objects. pe.${country.id}.ensure_datasets() is the entry point: it loads cached HDF5 datasets when present and otherwise downloads and uprates them. Simulation.ensure() is the new canonical run method - it loads a cached result if available, otherwise runs and caches. pe.${country.id}.model supplies the pinned TaxBenefitModelVersion.${isUS ? " In the US, ensure_datasets() loads the default dataset this policyengine.py release certifies, Microcosm's national file. policyengine.py's region registry gives state and congressional district analyses Microcosm's local-area file instead (see Regions and budgets)." : ''}`,
       blocks: [
         {
           title: `${country.adjective} dataset-backed simulation`,
           language: 'python',
           code: getPolicyengineDatasetExample(country),
           output: isUS
-            ? `         weight  household_net_income  household_tax
-0      0.000000         162787.765625   49123.687500
-1  94409.679688          13163.706055   -1462.839600
-2      0.000000          14824.270508       0.000000
-3      0.000000         144380.109375   33226.578125
-4      0.000000         157499.937500   31022.513672`
+            ? US_OUTPUTS['setup.dataset']
             : `       weight  household_net_income  household_tax
 0  808.091309          22852.031250    3373.469727
 1  166.748154          29921.960938    4778.160645
@@ -547,7 +546,7 @@ Name: household_net_income, dtype: float32`,
           title: 'Old Microsimulation mental model -> new Simulation mental model',
           language: 'python',
           code: getPolicyengineMicrosimAlignmentExample(country),
-          output: isUS ? 'us-4.0.0\nMicroDataFrame' : 'uk-4.0.0\nMicroDataFrame',
+          output: isUS ? US_OUTPUTS['setup.alignment'] : 'uk-4.0.0\nMicroDataFrame',
         },
       ],
     },
@@ -561,10 +560,7 @@ Name: household_net_income, dtype: float32`,
           language: 'python',
           code: getPolicyengineAxisExample(country),
           output: isUS
-            ? `{'person': 101384, 'tax_unit': 56658, 'spm_unit': 43134, 'household': 41314}
-person variables: ['employment_income', 'ssi', 'medicare_cost']
-tax-unit variables: ['income_tax', 'state_income_tax', 'eitc']
-household variables: ['household_net_income', 'household_tax']`
+            ? US_OUTPUTS['outputs.axis']
             : `{'person': 115710, 'benunit': 61898, 'household': 53508}
 person variables: ['employment_income', 'income_tax']
 benunit variables: ['universal_credit', 'child_benefit']
@@ -575,18 +571,7 @@ household variables: ['household_net_income', 'household_tax']`,
           language: 'python',
           code: getPolicyengineMappingExample(country),
           output: isUS
-            ? `         weight         snap
-0      0.000000     0.000000
-1  94409.679688  6588.717773
-2      0.000000  2169.539795
-3      0.000000     0.000000
-4      0.000000     0.000000
-         weight  household_tax
-0      0.000000     49123.6875
-1      0.000000     49123.6875
-2      0.000000     49123.6875
-3      0.000000     49123.6875
-4  94409.679688     -1462.8396`
+            ? US_OUTPUTS['outputs.mapping']
             : `       weight  universal_credit
 0  808.091309               0.0
 1  166.748154               0.0
@@ -605,15 +590,7 @@ household variables: ['household_net_income', 'household_tax']`,
           language: 'python',
           code: getPolicyenginePandasExample(country),
           output: isUS
-            ? `         weight  household_net_income  household_weight
-0      0.000000         162787.765625          0.000000
-1  94409.679688          13163.706055      94409.679688
-2      0.000000          14824.270508          0.000000
-3      0.000000         144380.109375          0.000000
-4      0.000000         157499.937500          0.000000
-MicroSeries mean: $190,730
-Plain pandas mean (unweighted): $20,883,836
-Manual pandas mean: $190,730`
+            ? US_OUTPUTS['outputs.pandas']
             : `       weight  household_net_income  household_weight
 0  808.091309          22852.031250        808.091309
 1  166.748154          29921.960938        166.748154
@@ -636,28 +613,21 @@ Manual pandas mean: £53,816`,
           language: 'python',
           code: getPolicyengineWeightingExample(country),
           output: isUS
-            ? 'MicroSeries\nWeighted total EITC: $62.3B\nWeighted mean EITC: $319'
+            ? US_OUTPUTS['metrics.weighting']
             : 'MicroSeries\nWeighted total UC: £82.2bn\nWeighted mean UC: £2,305',
         },
         {
           title: 'Compute a top-line aggregate',
           language: 'python',
           code: getPolicyengineAggregateExample(country),
-          output: isUS ? 'Total EITC: $62.3B' : 'Total universal credit: £82.2bn',
+          output: isUS ? US_OUTPUTS['metrics.aggregate'] : 'Total universal credit: £82.2bn',
         },
         {
           title: 'Person-level program enrollment',
           language: 'python',
           code: getPolicyengineEnrollmentExample(country),
           output: isUS
-            ? `SNAP recipients: 61,687,344
-Children in SNAP units: 15,868,462
-          snap  is_child  person_weight
-0     0.000000     False       0.000000
-1     0.000000     False       0.000000
-2     0.000000      True       0.000000
-3     0.000000      True       0.000000
-4  6588.717773     False   94409.679688`
+            ? US_OUTPUTS['metrics.enrollment']
             : `People with UC entitlement: 13,366,974
 Children with UC entitlement: 5,890,033
    universal_credit  is_child  person_weight
@@ -679,19 +649,7 @@ Children with UC entitlement: 5,890,033
           language: 'python',
           code: getPolicyengineEconomicImpactExample(country),
           output: isUS
-            ? ` decile  baseline_mean  reform_mean  absolute_change
-      1   -9249.685951 -9070.988891       178.697060
-      2   17137.479529 17164.445664        26.966135
-      3   31090.281789 31403.339569       313.057780
-      4   49172.217449 49846.434791       674.217342
-      5   69417.956212 70476.013552      1058.057340
-        program_name        change      winners       losers
-          income_tax -1.012413e+11 1.403724e+08 1.947391e+08
-employee_payroll_tax  0.000000e+00 1.950783e+08 1.950783e+08
-                snap  0.000000e+00 0.000000e+00 0.000000e+00
-                eitc  0.000000e+00 0.000000e+00 0.000000e+00
-                 ctc  0.000000e+00 0.000000e+00 0.000000e+00
-baseline Gini: 0.7840, reform Gini: 0.7823`
+            ? US_OUTPUTS['reforms.economic_impact']
             : ` decile  baseline_mean  reform_mean  absolute_change
       1    9846.328747  9872.733765        26.405018
       2   18724.772391 18941.946284       217.173892
@@ -711,12 +669,7 @@ baseline Gini: 0.3170, reform Gini: 0.3167`,
           language: 'python',
           code: getPolicyengineProgramExample(country),
           output: isUS
-            ? `        program_name        change      winners       losers
-          income_tax -1.012413e+11 1.403724e+08 1.947391e+08
-employee_payroll_tax  0.000000e+00 1.950783e+08 1.950783e+08
-                snap  0.000000e+00 0.000000e+00 0.000000e+00
-                eitc  0.000000e+00 0.000000e+00 0.000000e+00
-                 ctc  0.000000e+00 0.000000e+00 0.000000e+00`
+            ? US_OUTPUTS['reforms.program']
             : `      program_name        change      winners       losers
         income_tax -2.177037e+10 3.116015e+07 7.120972e+07
 national_insurance  0.000000e+00 7.120972e+07 7.120972e+07
@@ -729,27 +682,21 @@ national_insurance  0.000000e+00 7.120972e+07 7.120972e+07
     regions: {
       title: 'Regional analysis and budget windows live in the same workflow',
       body: isUS
-        ? 'In v4, regional breakdowns are just filter_variable + filter_variable_eq on any Aggregate or ChangeAggregate. state_code is an Enum variable on every household. Budget scoring typically runs over a 10-year window to match CBO and JCT conventions - use ChangeAggregate inside a year loop.'
+        ? `filter_variable and filter_variable_eq slice any Aggregate or ChangeAggregate by a household variable, such as state_code on the national file in the example below. policyengine.py's region registry gives state and congressional district analyses Microcosm's local-area file instead: pe.us.model.get_region("state/ca") returns that file as the region's dataset_path, with a scoping_strategy that keeps California's households, and a Simulation given a scoping_strategy applies it before it runs. Budget scoring typically runs over a 10-year window to match CBO and JCT conventions; use ChangeAggregate inside a year loop.`
         : 'In v4, regional breakdowns are just filter_variable + filter_variable_eq on any Aggregate or ChangeAggregate. region is an Enum variable on every UK household. The packaged enhanced FRS is uprated through 2030, matching the OBR five-year forecast horizon.',
       blocks: [
         {
           title: `${country.adjective} regional analysis`,
           language: 'python',
           code: getPolicyengineRegionalExample(country),
-          output: isUS ? 'California EITC: $10.6B' : 'London universal credit: £13.5bn',
+          output: isUS ? US_OUTPUTS['regions.regional'] : 'London universal credit: £13.5bn',
         },
         {
           title: isUS ? '10-year budget window with CAGR' : 'Five-year OBR-style window with CAGR',
           language: 'python',
           code: getPolicyengineTimeSeriesExample(country),
           output: isUS
-            ? `# A 10-year US run takes ~30 minutes and is memory-heavy; on a laptop with
-# less than 16 GB of RAM, downsample to cps_small_2024 or shorten the window.
-# Indicative shape (exact numbers depend on dataset version):
-2026: ~$100B
-2035: ~$115B
-10-year total: ~$1,100B
-CAGR: ~0.2% - 1.5%`
+            ? US_OUTPUTS['regions.time_series']
             : `2026: £21.1bn
 2027: £21.7bn
 2028: £22.3bn
@@ -770,7 +717,7 @@ CAGR: 2.68%`,
           language: 'python',
           code: getPolicyengineMicrosimVisualizationExample(country),
           outputImage: isUS
-            ? zoneAssetPath('/python-guide/us-decile-impacts-chart.png')
+            ? US_IMAGES['visualization.deciles'] && zoneAssetPath(US_IMAGES['visualization.deciles'])
             : zoneAssetPath('/python-guide/uk-decile-impacts-chart.png'),
           outputImageAlt: isUS
             ? 'US mean change in household net income by income decile under the reform'
@@ -783,19 +730,16 @@ CAGR: 2.68%`,
   const reproPanels = {
     bundle: {
       title: 'Pin the bundle and save it next to every output',
-      body:
-        'The user-facing reproducibility boundary in policyengine.py is the certified runtime bundle. It pins a policyengine.py version to an exact country-model version AND an exact certified data artifact. v4 adds a hard certification check at import time: the installed country package must match the bundled manifest. The practical workflow: pin policyengine in requirements, and write simulation.release_bundle to disk alongside the results you publish.',
+      body: isUS
+        ? 'The user-facing reproducibility boundary in policyengine.py is the certified runtime bundle. It pins a policyengine.py version to an exact country-model version and an exact certified data artifact. Importing policyengine compares the installed policyengine-us with the version the bundle pins and warns when they differ: calculations then run on the installed version, and policyengine.py no longer guarantees that the data suits it. So pin policyengine in requirements, and write simulation.release_bundle to disk alongside the results you publish.'
+        : 'The user-facing reproducibility boundary in policyengine.py is the certified runtime bundle. It pins a policyengine.py version to an exact country-model version AND an exact certified data artifact. v4 adds a hard certification check at import time: the installed country package must match the bundled manifest. The practical workflow: pin policyengine in requirements, and write simulation.release_bundle to disk alongside the results you publish.',
       blocks: [
         {
           title: 'Pin the release and capture the bundle',
           language: 'python',
           code: getPolicyenginePinBundleExample(country),
           output: isUS
-            ? `bundle_id: us-4.0.0
-country: us
-model: policyengine-us 1.653.3
-data: policyengine-us-data 1.73.0
-dataset: ./data/enhanced_cps_2024_year_2026.h5`
+            ? US_OUTPUTS['repro.pin_bundle']
             : `bundle_id: uk-4.0.0
 country: uk
 model: policyengine-uk 2.88.0
@@ -806,20 +750,16 @@ dataset: ./data/enhanced_frs_2023_24_year_2026.h5`,
     },
     manifests: {
       title: 'Two manifest layers: data build and certified runtime',
-      body:
-        'policyengine.py separates two responsibilities. The data build manifest is owned by the country *-data repo and records how the artifact bytes were produced (raw inputs, calibration targets, model version used in the build). The certified runtime bundle is owned by policyengine.py and records which model + data pair are supported together at runtime. The certification check is explicit: a model version may reuse an existing data artifact only if its data_build_fingerprint matches the one the data was built against. Mismatches are a hard failure, not a warning.',
+      body: isUS
+        ? "policyengine.py keeps two records. Microcosm publishes a data release manifest with each release: it pins each of the release's files by revision and sha256 and records the build, including the policyengine-us version the build ran with. policyengine.py's certification derives the country manifest that policyengine.py ships from that data release manifest, and the shipped manifest records which model and data pair policyengine.py supports together. On import, policyengine.py fetches the data release manifest and certifies the installed policyengine-us against it. The pair passes when the build ran with the installed version, when the installed package's data build fingerprint matches the build's, when the publisher's compatibility claim covers the installed version, or when policyengine.py's automated qualification tested that exact pair; otherwise the import raises an error. If the fetch fails, policyengine.py falls back to the certification it ships."
+        : 'policyengine.py separates two responsibilities. The data build manifest is owned by the country *-data repo and records how the artifact bytes were produced (raw inputs, calibration targets, model version used in the build). The certified runtime bundle is owned by policyengine.py and records which model + data pair are supported together at runtime. The certification check is explicit: a model version may reuse an existing data artifact only if its data_build_fingerprint matches the one the data was built against. Mismatches are a hard failure, not a warning.',
       blocks: [
         {
           title: 'Load and verify both manifests',
           language: 'python',
           code: getPolicyengineManifestExample(country),
           output: isUS
-            ? `runtime bundle: us-4.0.0
-certified dataset: enhanced_cps_2024
-certified model version: 1.653.3
-data build_id: policyengine-us-data-1.73.0
-compatibility basis: matching_data_build_fingerprint
-data manifest unavailable: No data release manifest was published for this data package.`
+            ? US_OUTPUTS['repro.manifests']
             : `runtime bundle: uk-4.0.0
 certified dataset: enhanced_frs_2023_24
 certified model version: 2.88.0
@@ -861,9 +801,7 @@ data manifest unavailable: No data release manifest was published for this data 
           language: 'python',
           code: getPolicyengineTraceExportExample(country),
           output: isUS
-            ? `data manifest unavailable: No data release manifest was published for this data package.
-wrote runtime-only bundle to outputs/release_bundle.json
-country: us`
+            ? US_OUTPUTS['repro.trace_export']
             : `data manifest unavailable: No data release manifest was published for this data package.
 wrote runtime-only bundle to outputs/release_bundle.json
 country: uk`,
@@ -873,24 +811,7 @@ country: uk`,
           language: 'bash',
           code: getPolicyengineTraceCliExample(country),
           output: isUS
-            ? `# policyengine release-manifest us  (first 5 lines)
-{
-  "bundle_id": "us-4.0.0",
-  "certification": {
-    "built_with_model_git_sha": null,
-    "built_with_model_version": "1.647.0",
-    ...
-
-# policyengine trace-tro us --out us.trace.tro.jsonld
-# (fails today because the policyengine-us-data release manifest is not yet
-# published to HF for version 1.73.0; from CI with a published manifest the
-# command writes a ~6KB JSON-LD file.)
-policyengine.provenance.manifest.DataReleaseManifestUnavailableError:
-  No data release manifest was published for this data package.
-
-# policyengine trace-tro-validate us.trace.tro.jsonld  (against a TRO
-# generated in CI or from the bundled release_manifests/us.trace.tro.jsonld)
-ok: us.trace.tro.jsonld`
+            ? US_OUTPUTS['repro.trace_cli']
             : `# policyengine release-manifest uk  (first 5 lines)
 {
   "bundle_id": "uk-4.0.0",
@@ -914,9 +835,7 @@ ok: uk.trace.tro.jsonld`,
           language: 'python',
           code: getPolicyengineSimulationTroExample(country),
           output: isUS
-            ? `bundle fingerprint: 9bec29b98c8189fe ...
-policyengine version: 4.0.0
-wrote simulation TRO`
+            ? US_OUTPUTS['repro.simulation_tro']
             : `# UK requires a published / CI-generated bundle TRO first
 # (the bundled manifest omits the dataset sha256 for the private repo).
 bundle fingerprint: <bundle sha256 prefix> ...
@@ -1074,11 +993,11 @@ wrote simulation TRO`,
           </p>
           <div className="mt-6">
             <CodeBlock
-              code={getPolicyengineReleaseBundleExample()}
+              code={getPolicyengineReleaseBundleExample(country)}
               language="python"
               title="Inspect the certified runtime bundle"
               output={isUS
-                ? `{'bundle_id': 'us-4.0.0', 'country_id': 'us', 'policyengine_version': '4.0.0', 'model_package': 'policyengine-us', 'model_version': '1.653.3', 'data_package': 'policyengine-us-data', 'data_version': '1.73.0', 'default_dataset': 'enhanced_cps_2024', 'certified_data_build_id': 'policyengine-us-data-1.73.0', 'compatibility_basis': 'matching_data_build_fingerprint', ...}`
+                ? US_OUTPUTS['reference.release_bundle']
                 : `{'bundle_id': 'uk-4.0.0', 'country_id': 'uk', 'policyengine_version': '4.0.0', 'model_package': 'policyengine-uk', 'model_version': '2.88.0', 'data_package': 'policyengine-uk-data', 'data_version': '1.40.4', 'default_dataset': 'enhanced_frs_2023_24', 'certified_data_build_id': 'policyengine-uk-data-1.40.4', 'compatibility_basis': 'matching_data_build_fingerprint', ...}`}
             />
           </div>
