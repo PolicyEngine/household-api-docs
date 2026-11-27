@@ -1150,14 +1150,16 @@ plain = pd.DataFrame(people[["snap"]])
 plain["is_child"] = simulation.output_dataset.data.person["is_child"].to_numpy()
 plain["person_weight"] = simulation.output_dataset.data.person["person_weight"].to_numpy()
 
+# snap is an SPM-unit amount, so this counts everyone in an SPM unit that
+# receives SNAP.
 snap_people = plain.loc[plain["snap"] > 0, "person_weight"].sum()
 snap_children = plain.loc[
     (plain["snap"] > 0) & (plain["is_child"]),
     "person_weight",
 ].sum()
 
-print(f"SNAP recipients: {snap_people:,.0f}")
-print(f"Children in SNAP units: {snap_children:,.0f}")
+print(f"People in SPM units receiving SNAP: {snap_people:,.0f}")
+print(f"Children among them: {snap_children:,.0f}")
 print(plain.head())`;
   }
 
