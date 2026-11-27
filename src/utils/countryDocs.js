@@ -809,14 +809,12 @@ export function getPolicyengineDatasetExample(country) {
 from policyengine.core import Simulation
 
 year = 2026
-# ensure_datasets downloads from HuggingFace on first run, caches locally,
-# and returns a {"<stem>_<year>": Dataset} dict.
-datasets = pe.us.ensure_datasets(
-    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
-    years=[year],
-    data_folder="./data",
-)
-dataset = datasets[f"enhanced_cps_2024_{year}"]
+# With no datasets argument, ensure_datasets loads the default US dataset
+# named in this policyengine.py release's manifest: Microcosm's national file.
+# It downloads from Hugging Face on first run, caches locally, and returns a
+# {"<stem>_<year>": Dataset} dict with one entry per year.
+datasets = pe.us.ensure_datasets(years=[year], data_folder="./data")
+dataset = next(iter(datasets.values()))
 
 # pe.us.model is the country model version pinned by this policyengine.py release.
 simulation = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
@@ -1152,14 +1150,16 @@ plain = pd.DataFrame(people[["snap"]])
 plain["is_child"] = simulation.output_dataset.data.person["is_child"].to_numpy()
 plain["person_weight"] = simulation.output_dataset.data.person["person_weight"].to_numpy()
 
+# snap is an SPM-unit amount, so this counts everyone in an SPM unit that
+# receives SNAP.
 snap_people = plain.loc[plain["snap"] > 0, "person_weight"].sum()
 snap_children = plain.loc[
     (plain["snap"] > 0) & (plain["is_child"]),
     "person_weight",
 ].sum()
 
-print(f"SNAP recipients: {snap_people:,.0f}")
-print(f"Children in SNAP units: {snap_children:,.0f}")
+print(f"People in SPM units receiving SNAP: {snap_people:,.0f}")
+print(f"Children among them: {snap_children:,.0f}")
 print(plain.head())`;
   }
 
@@ -1194,16 +1194,13 @@ from policyengine.outputs import ChangeAggregate, ChangeAggregateType
 
 # Ten-year budget window (the scoring convention used by CBO and JCT).
 years = list(range(2026, 2036))
-datasets = pe.us.ensure_datasets(
-    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
-    years=years,
-    data_folder="./data",
-)
+# One dataset per year, all built from the release's default US dataset.
+datasets = pe.us.ensure_datasets(years=years, data_folder="./data")
 reform = {"gov.irs.deductions.standard.amount.SINGLE": 30950}
 
 annual_changes = []
-for year in years:
-    dataset = datasets[f"enhanced_cps_2024_{year}"]
+for dataset in datasets.values():
+    year = dataset.year
     baseline = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
     reformed = Simulation(
         dataset=dataset,
@@ -1331,7 +1328,8 @@ export function getPolicyengineMicrosimAlignmentExample(country) {
 import policyengine as pe
 from policyengine.core import Simulation
 
-dataset = datasets[f"enhanced_cps_2024_{year}"]
+# datasets comes from the setup step above.
+dataset = next(iter(datasets.values()))
 simulation = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
 simulation.ensure()
 
@@ -1360,25 +1358,12 @@ print(type(simulation.output_dataset.data.household).__name__)`;
 
 export function getPolicyengineEconomicImpactExample(country) {
   if (country.id === 'us') {
-    return `# pe.us.economic_impact_analysis currently references a program name that
-# isn't a variable in policyengine-us 1.653.3 (tracked upstream). Compose the
-# same bundle manually with the primitives policyengine.outputs exposes -
-# calculate_decile_impacts + per-program ProgramStatistics.
-import policyengine as pe
+    return `import policyengine as pe
 from policyengine.core import Simulation
-from policyengine.outputs import (
-    Inequality,
-    ProgramStatistics,
-    calculate_decile_impacts,
-)
 
 year = 2026
-datasets = pe.us.ensure_datasets(
-    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
-    years=[year],
-    data_folder="./data",
-)
-dataset = datasets[f"enhanced_cps_2024_{year}"]
+datasets = pe.us.ensure_datasets(years=[year], data_folder="./data")
+dataset = next(iter(datasets.values()))
 
 baseline = Simulation(dataset=dataset, tax_benefit_model_version=pe.us.model)
 reformed = Simulation(
@@ -1387,50 +1372,20 @@ reformed = Simulation(
     policy={"gov.irs.deductions.standard.amount.SINGLE": 30950},
 )
 
-# Decile impacts (baseline vs. reform).
-deciles = calculate_decile_impacts(
-    baseline_simulation=baseline,
-    reform_simulation=reformed,
-    income_variable="household_net_income",
-)
-decile_df = deciles.dataframe[
+analysis = pe.us.economic_impact_analysis(baseline, reformed)
+
+deciles = analysis.decile_impacts.dataframe[
     ["decile", "baseline_mean", "reform_mean", "absolute_change"]
 ]
-print(decile_df.head().to_string(index=False))
-
-# Program-by-program stats for programs in the default output set.
-programs = []
-for name, entity, is_tax in [
-    ("income_tax", "tax_unit", True),
-    ("employee_payroll_tax", "tax_unit", True),
-    ("snap", "spm_unit", False),
-    ("eitc", "tax_unit", False),
-    ("ctc", "tax_unit", False),
-]:
-    stats = ProgramStatistics(
-        baseline_simulation=baseline,
-        reform_simulation=reformed,
-        program_name=name,
-        entity=entity,
-        is_tax=is_tax,
-    )
-    stats.run()
-    programs.append({
-        "program_name": name,
-        "change": stats.change,
-        "winners": stats.winners,
-        "losers": stats.losers,
-    })
-
-import pandas as pd
-print(pd.DataFrame(programs).to_string(index=False))
-
-# Inequality on each side.
-baseline_gini = Inequality(simulation=baseline, income_variable="household_net_income", entity="household")
-reform_gini = Inequality(simulation=reformed, income_variable="household_net_income", entity="household")
-baseline_gini.run()
-reform_gini.run()
-print(f"baseline Gini: {baseline_gini.gini:.4f}, reform Gini: {reform_gini.gini:.4f}")`;
+programs = analysis.program_statistics.dataframe[
+    ["program_name", "baseline_total", "reform_total", "change"]
+]
+print(deciles.head().to_string(index=False))
+print(programs.head().to_string(index=False))
+print(
+    f"baseline Gini: {analysis.baseline_inequality.gini:.4f}, "
+    f"reform Gini: {analysis.reform_inequality.gini:.4f}"
+)`;
   }
 
   return `import policyengine as pe
@@ -1468,10 +1423,13 @@ print(
 }
 
 export function getPolicyengineProgramExample(country) {
-  if (country.id === 'us') {
-    return `# programs list comes from the manual composition step above.
-import pandas as pd
-print(pd.DataFrame(programs).to_string(index=False))`;
+  if (country?.id === 'us') {
+    return `# analysis comes from the full reform analysis step above
+programs = analysis.program_statistics.dataframe[
+    ["program_name", "baseline_total", "reform_total", "change"]
+]
+
+print(programs.head())`;
   }
 
   return `# analysis comes from the full reform analysis step above
@@ -1489,12 +1447,8 @@ from policyengine.core import Simulation
 from policyengine.outputs import Aggregate, AggregateType
 
 year = 2026
-datasets = pe.us.ensure_datasets(
-    datasets=["hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"],
-    years=[year],
-    data_folder="./data",
-)
-dataset = datasets[f"enhanced_cps_2024_{year}"]
+datasets = pe.us.ensure_datasets(years=[year], data_folder="./data")
+dataset = next(iter(datasets.values()))
 simulation = Simulation(
     dataset=dataset,
     tax_benefit_model_version=pe.us.model,
@@ -1545,7 +1499,22 @@ london_uc.run()
 print(f"London universal credit: \u00a3{london_uc.result / 1e9:.1f}bn")`;
 }
 
-export function getPolicyengineReleaseBundleExample() {
+export function getPolicyengineReleaseBundleExample(country) {
+  if (country?.id === 'us') {
+    return `# After running a simulation, inspect the certified runtime bundle
+bundle = simulation.release_bundle
+for key in [
+    "bundle_id",
+    "policyengine_version",
+    "model_package",
+    "model_version",
+    "data_package",
+    "data_version",
+    "compatibility_basis",
+]:
+    print(f"{key}: {bundle[key]}")`;
+  }
+
   return `# After running a simulation, inspect the certified runtime bundle
 print(simulation.release_bundle)`;
 }
@@ -1908,12 +1877,18 @@ fig.show()`;
 export function getPolicyengineMicrosimVisualizationExample(country) {
   const isUS = country.id === 'us';
   const symbol = isUS ? '$' : '£';
-  const datasetUri = isUS
-    ? 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5'
-    : 'hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5';
-  const datasetKey = isUS ? 'enhanced_cps_2024_2026' : 'enhanced_frs_2023_24_2026';
+  // The US example loads the release's default dataset (Microcosm's national
+  // file); the UK example still names its dataset explicitly.
+  const loadDataset = isUS
+    ? `datasets = pe.us.ensure_datasets(years=[2026], data_folder="./data")
+dataset = next(iter(datasets.values()))`
+    : `datasets = pe.uk.ensure_datasets(
+    datasets=["hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5"],
+    years=[2026],
+    data_folder="./data",
+)
+dataset = datasets["enhanced_frs_2023_24_2026"]`;
   const model = isUS ? 'pe.us.model' : 'pe.uk.model';
-  const ensureCall = isUS ? 'pe.us.ensure_datasets' : 'pe.uk.ensure_datasets';
   const reform = isUS
     ? '{"gov.irs.deductions.standard.amount.SINGLE": 30950}'
     : '{"gov.hmrc.income_tax.allowances.personal_allowance.amount": 15000}';
@@ -1925,12 +1900,7 @@ from policyengine.core import Simulation
 from policyengine.outputs import calculate_decile_impacts
 
 # Baseline + reform over the calibrated microdata.
-datasets = ${ensureCall}(
-    datasets=["${datasetUri}"],
-    years=[2026],
-    data_folder="./data",
-)
-dataset = datasets["${datasetKey}"]
+${loadDataset}
 
 baseline = Simulation(dataset=dataset, tax_benefit_model_version=${model})
 reformed = Simulation(
@@ -2001,9 +1971,16 @@ fig.show()`;
 }
 
 export function getPolicyenginePinBundleExample(country) {
-  const pkg = country.id === 'us' ? 'policyengine[us]' : 'policyengine[uk]';
+  const isUS = country.id === 'us';
+  const pkg = isUS ? 'policyengine[us]' : 'policyengine[uk]';
+  const pinnedVersion = isUS ? '6.20.3' : '4.3.0';
+  // The US dataset path carries a frozen release id, so the US example prints
+  // the compatibility basis instead of the path.
+  const lastLine = isUS
+    ? 'print("compatibility basis:", bundle["compatibility_basis"])'
+    : 'print("dataset:", bundle["dataset_filepath"])';
   return `# Step 1: pin the exact policyengine.py release in your environment.
-# pip install "${pkg}==4.3.0"
+# pip install "${pkg}==${pinnedVersion}"
 
 # Step 2: capture the certified runtime bundle next to every output you save.
 import json
@@ -2026,12 +2003,51 @@ print("bundle_id:", bundle["bundle_id"])
 print("country:", bundle["country_id"])
 print("model:", bundle["model_package"], bundle["model_version"])
 print("data:", bundle["data_package"], bundle["data_version"])
-print("dataset:", bundle["dataset_filepath"])`;
+${lastLine}`;
 }
 
 export function getPolicyengineManifestExample(country) {
-  const dataPkg =
-    country.id === 'us' ? 'policyengine-us-data' : 'policyengine-uk-data';
+  if (country.id === 'us') {
+    return `# policyengine.py exposes two manifest layers.
+#
+# 1. Data release manifest (published with each Microcosm release):
+#      records the data package, the policyengine-us and policyengine-core
+#      versions the build ran with, and the build manifest and calibration
+#      diagnostics published alongside the data. This is the provenance
+#      record for the data.
+#
+# 2. Certified runtime bundle (owned by policyengine.py):
+#      records which model version and which staged data artifact are supported
+#      together at runtime. This is the user-facing reproducibility boundary.
+#
+# policyengine.py ships a bundled country manifest for each supported release.
+# get_release_manifest() returns the certified runtime bundle; the data release
+# manifest is fetched separately (from Hugging Face) via get_data_release_manifest.
+from policyengine.provenance.manifest import (
+    DataReleaseManifestUnavailableError,
+    get_data_release_manifest,
+    get_release_manifest,
+)
+
+country_manifest = get_release_manifest("us")
+artifact = country_manifest.certified_data_artifact
+print("runtime bundle:", country_manifest.bundle_id)
+print("certified data:", artifact.data_package.name, artifact.data_package.version)
+print("certified model version:", country_manifest.certification.certified_for_model_version)
+print("dataset sha256:", artifact.sha256[:16], "...")
+print("compatibility basis:", country_manifest.certification.compatibility_basis)
+
+# The fetch can fail offline or when the manifest has not yet been published
+# for a build.
+try:
+    data_manifest = get_data_release_manifest("us")
+    print("data manifest package:", data_manifest.data_package.name, data_manifest.data_package.version)
+    print("built with model:", data_manifest.build.built_with_model_package.version)
+except DataReleaseManifestUnavailableError as error:
+    print("data manifest unavailable:", error)`;
+  }
+
+  const dataPkg = 'policyengine-uk-data';
   const countryId = country.id;
   return `# policyengine.py exposes two manifest layers.
 #
@@ -2087,6 +2103,14 @@ policyengine trace-tro-validate ${cid}.trace.tro.jsonld`;
 
 export function getPolicyengineSimulationTroExample(country) {
   const cid = country.id;
+  const shippedTroPath =
+    cid === 'us'
+      ? 'src/policyengine/data/bundle/us.trace.tro.jsonld'
+      : `src/policyengine/data/release_manifests/\${cid}.trace.tro.jsonld`;
+  const shippedTroUrl =
+    cid === 'us'
+      ? '"6.20.3/src/policyengine/data/bundle/us.trace.tro.jsonld"'
+      : `"v4.0.0/src/policyengine/data/release_manifests/${cid}.trace.tro.jsonld"`;
   return `# Per-simulation TRO: chain a bundle TRO to the reform and the results
 # payload for the run. The composition pins three artifacts by sha256:
 #   - bundle TRO (hashed, plus a canonical bundle_tro_url anchor)
@@ -2104,7 +2128,7 @@ from policyengine.provenance.trace import (
 )
 
 # Load a bundle TRO you generated earlier (or the one shipped with the
-# release at src/policyengine/data/release_manifests/\${cid}.trace.tro.jsonld).
+# release at ${shippedTroPath}).
 bundle_tro = json.loads(Path("${cid}.trace.tro.jsonld").read_text())
 
 reference = extract_bundle_tro_reference(bundle_tro)
@@ -2131,7 +2155,7 @@ sim_tro = build_simulation_trace_tro(
     simulation_id="ctc-adult-dep-1000",
     bundle_tro_url=(
         "https://raw.githubusercontent.com/PolicyEngine/policyengine.py/"
-        "v4.0.0/src/policyengine/data/release_manifests/${cid}.trace.tro.jsonld"
+        ${shippedTroUrl}
     ),
 )
 Path("${cid}.simulation.trace.tro.jsonld").write_bytes(serialize_trace_tro(sim_tro))
@@ -2492,139 +2516,6 @@ reformed = Simulation(situation=household, reform=my_reform)
 
 print("Baseline:", baseline.calculate("${country.fullExampleVariable}", 2026).sum())
 print("Reformed:", reformed.calculate("${country.fullExampleVariable}", 2026).sum())`;
-}
-
-export function getUSMicrosimulationOverviewExample() {
-  return `from policyengine_us import Microsimulation
-
-# Microsimulation uses a weighted dataset of real households, not a single situation
-# The Enhanced CPS is PolicyEngine's primary US microdata source
-ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
-
-baseline = Microsimulation(dataset=ENHANCED_CPS)
-
-# calculate() on a Microsimulation works the same way as Simulation
-# but returns arrays representing the full population sample
-ctc = baseline.calculate("ctc_value", period=2026)
-weights = baseline.calculate("household_weight", period=2026)
-
-print("Records:", len(weights))
-# .sum() on microsimulation results is automatically weighted
-print("Weighted CTC total:", ctc.sum())`;
-}
-
-export function getUSMicrosimulationWeightingExample() {
-  return `from policyengine_us import Microsimulation
-import pandas as pd
-
-ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
-CORE_VARIABLES = [
-    "household_id",
-    "household_weight",
-    "ctc_value",
-    "snap",
-    "household_net_income",
-    "state_code",
-]
-
-baseline = Microsimulation(dataset=ENHANCED_CPS)
-
-# KEY DISTINCTION: calculate().sum() is automatically weighted
-auto_total = baseline.calculate("ctc_value", period=2026).sum()
-
-# calculate_dataframe() is NOT automatically weighted
-# You must multiply by household_weight (or person_weight) yourself
-df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2026))
-unweighted_total = df["ctc_value"].sum()
-manual_total = (df["ctc_value"] * df["household_weight"]).sum()
-
-# auto_total and manual_total should match; unweighted_total will not
-print("calculate() total:", auto_total)
-print("DataFrame total (unweighted — wrong):", unweighted_total)
-print("DataFrame total (manually weighted — correct):", manual_total)`;
-}
-
-export function getUSMicrosimulationReformExample() {
-  return `from policyengine_us import Microsimulation
-from policyengine_core.reforms import Reform
-
-ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
-
-# Same Reform.from_dict() pattern as household simulation
-ctc_expansion = Reform.from_dict(
-    {
-        "gov.irs.credits.ctc.amount.base[0].amount": {
-            "2026-01-01.2100-12-31": 3600
-        }
-    },
-    country_id="us",
-)
-
-# Compare baseline and reform at aggregate scale
-# The output is now a weighted national impact, not a single household
-baseline = Microsimulation(dataset=ENHANCED_CPS)
-reformed = Microsimulation(dataset=ENHANCED_CPS, reform=ctc_expansion)
-
-baseline_total = baseline.calculate("ctc_value", period=2026).sum()
-reformed_total = reformed.calculate("ctc_value", period=2026).sum()
-
-print("Annual increase:", reformed_total - baseline_total)`;
-}
-
-export function getUSMicrosimulationGeographyExample() {
-  return `from policyengine_us import Microsimulation
-import pandas as pd
-
-ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
-CORE_VARIABLES = ["state_code", "household_weight", "ctc_value"]
-
-baseline = Microsimulation(dataset=ENHANCED_CPS)
-df = pd.DataFrame(baseline.calculate_dataframe(CORE_VARIABLES, map_to="household", period=2026))
-
-# State-level analysis: group weighted DataFrames by geography
-# Remember to weight manually since this is a DataFrame
-state_totals = (
-    df.assign(weighted_ctc=df["ctc_value"] * df["household_weight"])
-      .groupby("state_code", as_index=False)["weighted_ctc"]
-      .sum()
-      .sort_values("weighted_ctc", ascending=False)
-)
-
-print(state_totals.head(10))
-
-# Multi-year budget window: loop over years
-# calculate().sum() handles weighting automatically
-annual_impacts = []
-for year in range(2026, 2036):
-    annual_impacts.append(
-        {
-            "year": year,
-            "ctc_total": baseline.calculate("ctc_value", period=year).sum(),
-        }
-    )
-
-print(annual_impacts[:3])`;
-}
-
-export function getUSMicrosimulationProgramExample() {
-  return `from policyengine_us import Microsimulation
-import pandas as pd
-
-ENHANCED_CPS = "hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5"
-
-# For enrollment-style analysis, use person-level data
-# map_to="person" gives one row per person in the dataset
-PERSON_VARIABLES = ["person_weight", "snap", "is_child"]
-
-baseline = Microsimulation(dataset=ENHANCED_CPS)
-people = pd.DataFrame(baseline.calculate_dataframe(PERSON_VARIABLES, map_to="person", period=2026))
-
-# Weight with person_weight when the question is about people, not households
-snap_enrolled = people[people["snap"] > 0]["person_weight"].sum()
-children = people[people["is_child"]]["person_weight"].sum()
-
-print("People enrolled in SNAP:", snap_enrolled)
-print("Children in dataset:", children)`;
 }
 
 export function getHostedCurlRequest(country) {
